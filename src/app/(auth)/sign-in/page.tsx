@@ -70,7 +70,7 @@ export default function SignInPage() {
       <div className="flex flex-col space-y-2 text-center">
         <h1 className="text-3xl font-bold tracking-tight text-white">Welcome back</h1>
         <p className="text-sm text-slate-400">
-          Sign in to your AI Sheild account
+          Sign in to your AI Shield account
         </p>
       </div>
 

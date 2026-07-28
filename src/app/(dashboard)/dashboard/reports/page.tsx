@@ -19,7 +19,7 @@ type Report = {
 
 const MOCK_REPORTS: Report[] = Array.from({ length: 10 }, (_, i) => ({
   id: `rep-${i}`,
-  title: `AI Sheild Analysis ${i + 1}`,
+  title: `AI Shield Analysis ${i + 1}`,
   type: ["Text", "Image", "Video", "URL"][i % 4] as any,
   result: ["Likely Human", "Likely AI-Generated", "Likely AI-Edited", "Mixed", "Inconclusive"][i % 5] as any,
   confidence: Math.floor(Math.random() * 40) + 60,
@@ -59,7 +59,7 @@ export default function ReportsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-white">Reports Library</h1>
           <p className="text-gray-400 mt-1 flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-amber-500" />
-            AI Sheild provides a probability-based analysis. Results may contain false positives or false negatives.
+            AI Shield provides a probability-based analysis. Results may contain false positives or false negatives.
           </p>
         </div>
       </div>

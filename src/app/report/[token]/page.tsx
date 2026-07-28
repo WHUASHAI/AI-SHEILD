@@ -20,7 +20,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
     confidence: confidence,
     date: new Date().toISOString().split('T')[0],
     text: "Sample analyzed content snippet...",
-    disclaimer: "AI Sheild provides a probability-based analysis. Results may contain false positives or false negatives."
+    disclaimer: "AI Shield provides a probability-based analysis. Results may contain false positives or false negatives."
   };
 
   return (
@@ -31,7 +31,7 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
             <div className="w-8 h-8 rounded-md bg-cyan-600 flex items-center justify-center">
               <ShieldAlert className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-lg text-white">AI Sheild</span>
+            <span className="font-bold text-lg text-white">AI Shield</span>
           </div>
           <span className="text-xs font-medium text-gray-400 bg-gray-800 px-3 py-1.5 rounded-full border border-gray-700">
             Shared Report

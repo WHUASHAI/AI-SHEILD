@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 :root {
-  /* AI Sheild Design Tokens - Light Mode */
+  /* AI Shield Design Tokens - Light Mode */
   --background: 220 33% 97%;
   --foreground: 222 47% 8%;
   --card: 0 0% 100%;

@@ -26,7 +26,7 @@ export function FreePlatform() {
                 <span className="text-cyan-400">Free for Everyone</span>
               </h2>
               <p className="text-lg text-muted-foreground">
-                We believe content authenticity tools should be accessible to all. That's why AI Sheild provides enterprise-grade detection capabilities completely free of charge.
+                We believe content authenticity tools should be accessible to all. That's why AI Shield provides enterprise-grade detection capabilities completely free of charge.
               </p>
               
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
@@ -47,7 +47,7 @@ export function FreePlatform() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-4">
-                *AI Sheild relies on fair-use limits to prevent abuse and ensure platform stability for all users.
+                *AI Shield relies on fair-use limits to prevent abuse and ensure platform stability for all users.
               </p>
             </div>
             

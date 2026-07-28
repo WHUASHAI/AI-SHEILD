@@ -208,7 +208,7 @@ console.log(result.result); // 'Likely AI-Generated'`;
   "signals": [
     { "name": "High Sentence Uniformity", "score": 0.82 }
   ],
-  "disclaimer": "AI Sheild provides a probability-based analysis. Results may contain false positives or false negatives."
+  "disclaimer": "AI Shield provides a probability-based analysis. Results may contain false positives or false negatives."
 }`}
               </pre>
             </div>

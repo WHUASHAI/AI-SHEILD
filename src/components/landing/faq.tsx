@@ -7,8 +7,8 @@ import {
 
 const faqs = [
   {
-    q: 'Is AI Sheild really free?',
-    a: 'Yes, AI Sheild is completely free to use. We do not have premium tiers, paywalls, or subscription fees. Our mission is to democratize access to AI detection tools. We rely on fair-use limits to prevent abuse.'
+    q: 'Is AI Shield really free?',
+    a: 'Yes, AI Shield is completely free to use. We do not have premium tiers, paywalls, or subscription fees. Our mission is to democratize access to AI detection tools. We rely on fair-use limits to prevent abuse.'
   },
   {
     q: 'How accurate is the detection?',
@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     q: 'Do you have an API?',
-    a: 'Yes, we offer a free API for developers to integrate AI Sheild into their own applications. Check our API documentation for details and rate limits.'
+    a: 'Yes, we offer a free API for developers to integrate AI Shield into their own applications. Check our API documentation for details and rate limits.'
   }
 ];
 
@@ -46,7 +46,7 @@ export function FAQ() {
       <div className="container mx-auto px-4 max-w-3xl">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold tracking-tight text-white mb-4">Frequently Asked Questions</h2>
-          <p className="text-muted-foreground">Everything you need to know about AI Sheild.</p>
+          <p className="text-muted-foreground">Everything you need to know about AI Shield.</p>
         </div>
 
         <Accordion type="single" collapsible className="w-full">

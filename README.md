@@ -1,10 +1,10 @@
-# AI SHEILD
+# AI SHIELD
 
 **Know Where Digital Content Really Came From**
 
 Free, open platform for AI content detection across text, images, videos, deepfakes, and enhanced media.
 
-> ⚠️ **Accuracy Notice:** AI Sheild provides probability-based analysis. Results may contain false positives or false negatives and should not be treated as definitive proof that content was generated or modified by AI.
+> ⚠️ **Accuracy Notice:** AI Shield provides probability-based analysis. Results may contain false positives or false negatives and should not be treated as definitive proof that content was generated or modified by AI.
 
 ---
 
@@ -208,7 +208,7 @@ See `/dashboard/api-keys` for keys and full documentation.
 
 ## Disclaimer
 
-Results are probabilistic. AI SHEILD should be used as one signal among many, not as definitive proof. See `/limitations` for full accuracy notes.
+Results are probabilistic. AI SHIELD should be used as one signal among many, not as definitive proof. See `/limitations` for full accuracy notes.
 
 No personal identification is performed. No AI-based accusations are made.
 

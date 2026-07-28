@@ -6,7 +6,7 @@ export default function LimitationsPage() {
     <div className="pt-32 pb-20 container mx-auto px-4 max-w-4xl">
       <h1 className="text-4xl font-bold text-white mb-6">Limitations & Responsible Use</h1>
       <p className="text-lg text-muted-foreground mb-12">
-        We believe in being fully transparent about the capabilities and boundaries of AI Sheild. Please read this guide to understand how to correctly interpret our results.
+        We believe in being fully transparent about the capabilities and boundaries of AI Shield. Please read this guide to understand how to correctly interpret our results.
       </p>
 
       <DisclaimerBanner className="mb-12" />
@@ -14,7 +14,7 @@ export default function LimitationsPage() {
       <section className="mb-12">
         <h2 className="text-2xl font-semibold text-white mb-4">Statistical Nature of Detection</h2>
         <p className="text-muted-foreground mb-4">
-          AI Sheild does not have a magical watermarking system that provides absolute certainty. Instead, it relies on complex statistical models and pattern recognition. It analyzes the content against known signatures of AI generation and provides a <strong>probability score</strong>.
+          AI Shield does not have a magical watermarking system that provides absolute certainty. Instead, it relies on complex statistical models and pattern recognition. It analyzes the content against known signatures of AI generation and provides a <strong>probability score</strong>.
         </p>
         <p className="text-muted-foreground">
           A high probability score (e.g., 90%) means that the content exhibits many characteristics commonly found in AI-generated material. It does <strong>not</strong> mean we are 90% sure, or that 90% of the document is AI. It is a statistical likelihood.

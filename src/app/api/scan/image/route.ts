@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         'Heavy compression may mask generation artifacts',
         'Upscaled real images may trigger false positives'
       ],
-      disclaimer: 'AI Sheild provides a probability-based analysis. Results may contain false positives or false negatives.',
+      disclaimer: 'AI Shield provides a probability-based analysis. Results may contain false positives or false negatives.',
       modelVersion: 'vision-1.2.0',
     };
     

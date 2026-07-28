@@ -29,7 +29,7 @@ export function Logo({ className, size = 'md', variant = 'full' }: LogoProps) {
       {variant === 'full' && (
         <span className={cn('font-bold tracking-tight', textSizes[size])}>
           <span className="text-foreground">AI</span>
-          <span className="text-cyan-400"> SHEILD</span>
+          <span className="text-cyan-400"> Shield</span>
         </span>
       )}
     </div>

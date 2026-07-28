@@ -58,7 +58,7 @@ export function Footer() {
 
         <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
-            &copy; {currentYear} AI Sheild. All rights reserved.
+            &copy; {currentYear} AI Shield. All rights reserved.
           </p>
           <div className="text-xs text-muted-foreground max-w-2xl text-center md:text-right">
             {DISCLAIMER}

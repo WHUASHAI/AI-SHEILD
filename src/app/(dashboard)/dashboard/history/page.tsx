@@ -84,7 +84,7 @@ export default function HistoryPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">Scan History</h1>
           <p className="text-gray-400 mt-1">
-            AI Sheild provides a probability-based analysis. Results may contain false positives or false negatives and should not be treated as definitive proof.
+            AI Shield provides a probability-based analysis. Results may contain false positives or false negatives and should not be treated as definitive proof.
           </p>
         </div>
         <div className="flex items-center gap-3">

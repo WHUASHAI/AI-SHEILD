@@ -251,7 +251,7 @@ export const PLATFORM_CONFIG: PlatformConfig = {
 };
 
 export const DISCLAIMER =
-  "AI SHEILD provides a probability-based analysis. Results may contain false positives or false negatives and should not be treated as definitive proof that content was generated or modified by AI.";
+  "AI Shield provides a probability-based analysis. Results may contain false positives or false negatives and should not be treated as definitive proof that content was generated or modified by AI.";
 
 export const RESULT_LABELS: Record<ScanResult, string> = {
   human: "Likely Human-Created",

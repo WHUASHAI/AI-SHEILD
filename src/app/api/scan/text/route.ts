@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       limitations: [
         'Results are probabilistic and may not be correct',
       ],
-      disclaimer: 'AI Sheild provides a probability-based analysis. Results may contain false positives or false negatives.',
+      disclaimer: 'AI Shield provides a probability-based analysis. Results may contain false positives or false negatives.',
       modelVersion: '1.0.0',
       wordCount: text.split(/\s+/).length,
     };

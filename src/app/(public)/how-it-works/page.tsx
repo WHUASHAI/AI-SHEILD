@@ -4,7 +4,7 @@ import { DisclaimerBanner } from '@/components/shared/disclaimer-banner';
 export default function HowItWorksPage() {
   return (
     <div className="pt-32 pb-20 container mx-auto px-4 max-w-4xl">
-      <h1 className="text-4xl font-bold text-white mb-6">How AI Sheild Works</h1>
+      <h1 className="text-4xl font-bold text-white mb-6">How AI Shield Works</h1>
       <p className="text-lg text-muted-foreground mb-12">
         Understanding the technology behind our multi-modal AI detection platform.
       </p>
@@ -19,7 +19,7 @@ export default function HowItWorksPage() {
           <h2 className="text-2xl font-semibold text-white">Detection Methodology</h2>
         </div>
         <p className="text-muted-foreground mb-4">
-          AI Sheild doesn't just look for "watermarks." Instead, it uses an ensemble of specialized machine learning models to analyze content at a deep, structural level. We look for the mathematical signatures left behind by generative algorithms.
+          AI Shield doesn't just look for "watermarks." Instead, it uses an ensemble of specialized machine learning models to analyze content at a deep, structural level. We look for the mathematical signatures left behind by generative algorithms.
         </p>
         <p className="text-muted-foreground">
           Generative AI models are fundamentally predictive engines. They choose the most statistically likely pixel or word based on their training data. This predictability leaves a "fingerprint" that our models are trained to detect.

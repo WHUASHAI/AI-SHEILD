@@ -7,13 +7,13 @@ const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin']
 
 export const metadata: Metadata = {
   title: {
-    default: 'AI SHEILD — Know Where Digital Content Really Came From',
-    template: '%s | AI SHEILD',
+    default: 'AI Shield — Know Where Digital Content Really Came From',
+    template: '%s | AI Shield',
   },
   description: 'Free AI detection platform for text, images, and videos. Analyze content for signs of AI generation, synthetic editing, enhancement, and deepfake manipulation.',
   keywords: ['AI detection', 'deepfake detector', 'AI image detection', 'AI text detection', 'content authenticity'],
   openGraph: {
-    title: 'AI SHEILD',
+    title: 'AI Shield',
     description: 'Know Where Digital Content Really Came From',
     type: 'website',
   },

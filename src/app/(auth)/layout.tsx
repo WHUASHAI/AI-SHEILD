@@ -22,7 +22,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="relative z-10 flex flex-col items-start space-y-6">
           <Link href="/" className="flex items-center gap-2 text-cyan-400">
             <Shield className="h-8 w-8" />
-            <span className="text-2xl font-bold tracking-tight text-white">AI Sheild</span>
+            <span className="text-2xl font-bold tracking-tight text-white">AI Shield</span>
           </Link>
           
           <div className="space-y-4 max-w-md">
@@ -60,8 +60,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         {/* Footer info */}
         <div className="relative z-10 text-sm text-slate-500">
-          <p>© {new Date().getFullYear()} AI Sheild. All rights reserved.</p>
-          <p className="mt-1">AI Sheild provides a probability-based analysis. Results may contain false positives or false negatives and should not be treated as definitive proof.</p>
+          <p>© {new Date().getFullYear()} AI Shield. All rights reserved.</p>
+          <p className="mt-1">AI Shield provides a probability-based analysis. Results may contain false positives or false negatives and should not be treated as definitive proof.</p>
         </div>
       </div>
       
@@ -70,7 +70,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="lg:hidden flex justify-center mb-8">
           <Link href="/" className="flex items-center gap-2 text-cyan-400">
             <Shield className="h-8 w-8" />
-            <span className="text-2xl font-bold tracking-tight text-white">AI Sheild</span>
+            <span className="text-2xl font-bold tracking-tight text-white">AI Shield</span>
           </Link>
         </div>
         

@@ -26,7 +26,7 @@ export default function DashboardPage() {
       <div className="max-w-4xl mx-auto mt-12">
         <EmptyState 
           icon={<Activity className="w-8 h-8" />}
-          title="Welcome to AI Sheild"
+          title="Welcome to AI Shield"
           description="You haven't run any content scans yet. Start by scanning text, images, or videos to detect AI generation."
           action={{ label: "Start Your First Scan", href: "/dashboard/new-scan" }}
         />

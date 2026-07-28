@@ -7,8 +7,8 @@ import Link from 'next/link';
 
 const FAQS = [
   {
-    q: "How accurate is AI Sheild?",
-    a: "AI Sheild provides highly accurate probability-based analysis using advanced machine learning models. However, it is not 100% foolproof and can occasionally produce false positives or negatives. Results should be used as one data point in a broader review process."
+    q: "How accurate is AI Shield?",
+    a: "AI Shield provides highly accurate probability-based analysis using advanced machine learning models. However, it is not 100% foolproof and can occasionally produce false positives or negatives. Results should be used as one data point in a broader review process."
   },
   {
     q: "What types of files can I scan?",
@@ -134,7 +134,7 @@ export default function HelpPage() {
       </div>
       
       <div className="text-center text-xs text-gray-500">
-        <p>AI Sheild Probability Disclaimer: Results may contain false positives/negatives.</p>
+        <p>AI Shield Probability Disclaimer: Results may contain false positives/negatives.</p>
       </div>
     </div>
   );

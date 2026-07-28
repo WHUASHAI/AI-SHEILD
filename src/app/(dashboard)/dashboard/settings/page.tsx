@@ -153,7 +153,7 @@ export default function SettingsPage() {
                     <option>Auto-delete after 30 days</option>
                     <option>Auto-delete after 7 days</option>
                   </select>
-                  <p className="text-xs text-gray-500 mt-2">Choose how long AI Sheild stores your scan history.</p>
+                  <p className="text-xs text-gray-500 mt-2">Choose how long AI Shield stores your scan history.</p>
                 </div>
 
                 <div className="pt-6 mt-6 border-t border-[#1f2937]">

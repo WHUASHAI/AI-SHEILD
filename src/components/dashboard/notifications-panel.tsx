@@ -47,7 +47,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: '4',
     title: 'New Team Member',
-    message: 'Sarah accepted your invitation to AI Sheild.',
+    message: 'Sarah accepted your invitation to AI Shield.',
     type: 'invite',
     time: '2h ago',
     read: true,
@@ -172,7 +172,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
               )}
             </div>
             <div className="p-4 border-t border-[#1f2937] text-xs text-center text-gray-500">
-              AI Sheild provides probability-based analysis. Results may contain false positives/negatives.
+              AI Shield provides probability-based analysis. Results may contain false positives/negatives.
             </div>
           </motion.div>
         </>

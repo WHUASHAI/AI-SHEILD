@@ -90,7 +90,7 @@ export function DashboardSidebar({
               exit={{ opacity: 0, width: 0 }}
               className="font-bold text-lg text-white whitespace-nowrap"
             >
-              AI SHEILD
+              AI Shield
             </motion.span>
           )}
         </Link>
