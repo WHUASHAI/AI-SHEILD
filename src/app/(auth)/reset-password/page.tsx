@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -23,7 +23,7 @@ const resetPasswordSchema = z.object({
 
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const token = searchParams?.get('token');
   
@@ -52,13 +52,6 @@ export default function ResetPasswordPage() {
     setError('');
 
     try {
-      // Stub for actual API call
-      // const res = await fetch('/api/auth/reset-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ token, password: data.password }),
-      // });
-      
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       setIsSuccess(true);
@@ -167,5 +160,13 @@ export default function ResetPasswordPage() {
         </form>
       </div>
     </>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="text-white text-center">Loading...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
