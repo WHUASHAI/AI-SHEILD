@@ -1,12 +1,8 @@
-import { defineConfig } from "prisma/config";
+import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
-  migrate: {
-    async adapter() {
-      const { PrismaPg } = await import("@prisma/adapter-pg");
-      const connectionString = process.env.DATABASE_URL!;
-      return new PrismaPg({ connectionString });
-    },
+  datasource: {
+    url: env("DATABASE_URL"),
   },
 });
