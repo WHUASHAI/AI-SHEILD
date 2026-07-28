@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Key, Copy, Eye, EyeOff, RefreshCw, Trash2, Plus, Server, Activity, Clock, Search, BookOpen, AlertCircle, Terminal } from "lucide-react";
+import { Key, Copy, Eye, EyeOff, RefreshCw, Trash2, Plus, Server, Activity, Clock, Search, BookOpen, AlertCircle, Terminal, Check } from "lucide-react";
 import CodeBlock from "@/components/api/code-block";
 
 const MOCK_KEYS = [
