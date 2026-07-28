@@ -59,8 +59,8 @@ export function FileDropzone({
     const newFiles = files.filter((f) => f !== fileToRemove);
     setFiles(newFiles);
     onFilesAccepted(newFiles);
-    if (fileToRemove.preview) {
-      URL.revokeObjectURL(fileToRemove.preview);
+    if ((fileToRemove as any).preview) {
+      URL.revokeObjectURL((fileToRemove as any).preview);
     }
   };
 
