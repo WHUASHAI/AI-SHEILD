@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          String    @default("user") // "user" | "admin"
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  scans         Scan[]
+  batchJobs     BatchJob[]
+  reports       Report[]
+  apiKeys       ApiKey[]
+  workspaceMembers WorkspaceMember[]
+  ownedWorkspaces  Workspace[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Scan {
+  id              String   @id @default(cuid())
+  userId          String?
+  guestSessionId  String?
+  contentName     String
+  contentType     String   // "text" | "image" | "video" | "url"
+  fileUrl         String?
+  fileHash        String?
+  fileSizeBytes   Int?
+  mimeType        String?
+  status          String   @default("queued")
+  result          String?
+  overallScore    Float?
+  confidenceScore Float?
+  evidenceStrength String?
+  modules         String[] // DetectionModule[]
+  modelVersion    String   @default("1.0.0")
+  workspaceId     String?
+  batchId         String?
+  errorMessage    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  completedAt     DateTime?
+
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id])
+  batch     BatchJob?  @relation(fields: [batchId], references: [id])
+  report    Report?
+  signals   ScanSignal[]
+  metadata  ScanMetadata?
+}
+
+model ScanSignal {
+  id          String  @id @default(cuid())
+  scanId      String
+  category    String  // "text" | "image" | "video" | "deepfake" | "enhancement"
+  name        String
+  description String
+  score       Float
+  confidence  Float
+  data        Json?   // regions, timestamps, passages etc.
+
+  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+}
+
+model ScanMetadata {
+  id                  String   @id @default(cuid())
+  scanId              String   @unique
+  fileName            String?
+  fileType            String?
+  width               Int?
+  height              Int?
+  fileSizeBytes       Int?
+  createdAt           DateTime?
+  modifiedAt          DateTime?
+  cameraManufacturer  String?
+  cameraModel         String?
+  editingSoftware     String?
+  colorProfile        String?
+  hasGps              Boolean?
+  compressionHistory  String?
+  integrityWarnings   String[]
+  rawExif             Json?
+
+  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+}
+
+model Report {
+  id              String    @id @default(cuid())
+  scanId          String    @unique
+  userId          String?
+  workspaceId     String?
+  title           String
+  summary         String?
+  tags            String[]
+  notes           String?
+  shareToken      String?   @unique
+  shareExpiresAt  DateTime?
+  downloadCount   Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  scan      Scan       @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id])
+}
+
+model BatchJob {
+  id              String    @id @default(cuid())
+  userId          String
+  workspaceId     String?
+  name            String
+  status          String    @default("queued")
+  totalItems      Int       @default(0)
+  completedItems  Int       @default(0)
+  failedItems     Int       @default(0)
+  modules         String[]
+  reportUrl       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  completedAt     DateTime?
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id])
+  scans     Scan[]
+}
+
+model ApiKey {
+  id           String    @id @default(cuid())
+  userId       String
+  name         String
+  keyHash      String    @unique
+  keyPrefix    String
+  requestCount Int       @default(0)
+  lastUsedAt   DateTime?
+  revokedAt    DateTime?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity ApiActivity[]
+}
+
+model ApiActivity {
+  id           String   @id @default(cuid())
+  apiKeyId     String
+  endpoint     String
+  method       String
+  statusCode   Int
+  responseTime Int
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+
+  apiKey ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  ownerId     String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner   User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members WorkspaceMember[]
+  scans   Scan[]
+  reports Report[]
+  batches BatchJob[]
+  auditLogs AuditLog[]
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        String   @default("viewer") // owner|admin|analyst|reviewer|viewer
+  joinedAt    DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  workspaceId String?
+  action      String
+  resource    String
+  resourceId  String?
+  metadata    Json?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  actionUrl String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
