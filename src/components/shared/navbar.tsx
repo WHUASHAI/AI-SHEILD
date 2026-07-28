@@ -108,10 +108,10 @@ export function Navbar() {
 
       {/* Mobile Nav */}
       {mobileMenuOpen && (
-        <div className="md:hidden absolute top-16 left-0 w-full bg-background border-b border-border py-4 px-4 flex flex-col gap-4 shadow-xl">
-          <div className="flex flex-col gap-2">
-            <div className="font-semibold px-2 py-1 text-foreground">Product</div>
-            <div className="pl-4 flex flex-col gap-2">
+        <div className="md:hidden fixed inset-0 top-16 z-40 bg-background/95 backdrop-blur-lg border-t border-border py-8 px-6 flex flex-col gap-8 shadow-2xl overflow-y-auto">
+          <div className="flex flex-col gap-4">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2">Product Tools</div>
+            <div className="grid grid-cols-1 gap-2">
                {[
                   'Text Detector',
                   'Image Detector',
@@ -123,7 +123,7 @@ export function Navbar() {
                   <Link
                     key={item}
                     href={`/tools/${item.toLowerCase().replace(' ', '-')}`}
-                    className="text-sm text-muted-foreground"
+                    className="flex items-center px-3 py-2.5 text-sm font-medium text-foreground rounded-lg hover:bg-muted/50 transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {item}
@@ -131,21 +131,25 @@ export function Navbar() {
                 ))}
             </div>
           </div>
-          {navLinks.map((link) => (
-             <Link
-             key={link.name}
-             href={link.href}
-             className="px-2 py-1 font-medium text-foreground"
-             onClick={() => setMobileMenuOpen(false)}
-           >
-             {link.name}
-           </Link>
-          ))}
-          <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
-             <Button variant="outline" className="w-full" asChild onClick={() => setMobileMenuOpen(false)}>
+          
+          <div className="flex flex-col gap-2 border-t border-border pt-8">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                className="px-3 py-3 text-base font-semibold text-foreground rounded-lg hover:bg-muted/50 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-3 mt-auto">
+            <Button variant="outline" className="w-full h-11" asChild onClick={() => setMobileMenuOpen(false)}>
               <Link href="/auth/signin">Sign In</Link>
             </Button>
-            <Button className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white" asChild onClick={() => setMobileMenuOpen(false)}>
+            <Button className="w-full h-11 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white" asChild onClick={() => setMobileMenuOpen(false)}>
               <Link href="/dashboard/new-scan">Start Scanning</Link>
             </Button>
           </div>
