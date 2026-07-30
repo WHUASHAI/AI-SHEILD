@@ -2,11 +2,15 @@
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/shared/logo';
 
 export function StartScanning() {
   return (
     <section className="py-20">
       <div className="container mx-auto px-4 text-center">
+        <div className="flex justify-center mb-6">
+          <Logo size="lg" />
+        </div>
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-6">
           Ready to Analyze Your Content?
         </h2>
