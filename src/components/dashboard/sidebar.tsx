@@ -23,6 +23,7 @@ import {
   ShieldAlert,
   X
 } from 'lucide-react';
+import { Logo } from '@/components/shared/logo';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SidebarProps {
@@ -82,17 +83,7 @@ export function DashboardSidebar({
       {/* Header / Logo */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-[#1f2937]">
         <Link href="/dashboard" className="flex items-center gap-2 overflow-hidden">
-          <ShieldAlert className="w-8 h-8 text-[#06b6d4] shrink-0" />
-          {!collapsed && (
-            <motion.span 
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: 'auto' }}
-              exit={{ opacity: 0, width: 0 }}
-              className="font-bold text-lg text-white whitespace-nowrap"
-            >
-              AI Shield
-            </motion.span>
-          )}
+          <Logo variant={collapsed ? 'icon' : 'full'} size="sm" />
         </Link>
         
         {/* Mobile close button */}
