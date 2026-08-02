@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { franc } from 'franc';
 
 const TextScanSchema = z.object({
   text: z.string().min(10).max(50000),
-  language: z.string().optional().default('en'),
+  // language: z.string().optional().default('en'), // Removed as we detect it now
   options: z.object({
     analyzePassages: z.boolean().optional().default(true),
   }).optional(),
@@ -20,12 +21,17 @@ export async function POST(req: NextRequest) {
     
     const { text } = validated.data;
     
+    // Detect language using franc
+    const detectedLanguage = franc(text, { minLength: 3 });
+    const language = detectedLanguage === 'und' ? 'en' : detectedLanguage;
+
     // Mock result - replace with real ML service later
     const confidence = Math.floor(Math.random() * 100);
     const isAi = confidence > 50;
     
     const mockResult = {
       scanId: `scan_${Date.now()}`,
+      language: language,
       status: 'completed',
       result: isAi ? 'Likely AI-Generated' : 'Likely Human-Created',
       confidence: confidence,

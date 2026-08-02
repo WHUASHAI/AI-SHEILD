@@ -16,16 +16,16 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  scans         Scan[]
-  batchJobs     BatchJob[]
-  reports       Report[]
-  apiKeys       ApiKey[]
+  accounts         Account[]
+  sessions         Session[]
+  scans            Scan[]
+  batchJobs        BatchJob[]
+  reports          Report[]
+  apiKeys          ApiKey[]
   workspaceMembers WorkspaceMember[]
   ownedWorkspaces  Workspace[]
-  auditLogs     AuditLog[]
-  notifications Notification[]
+  auditLogs        AuditLog[]
+  notifications    Notification[]
 }
 
 model Account {
@@ -64,86 +64,87 @@ model VerificationToken {
 }
 
 model Scan {
-  id              String   @id @default(cuid())
-  userId          String?
-  guestSessionId  String?
-  contentName     String
-  contentType     String   // "text" | "image" | "video" | "url"
-  fileUrl         String?
-  fileHash        String?
-  fileSizeBytes   Int?
-  mimeType        String?
-  status          String   @default("queued")
-  result          String?
-  overallScore    Float?
-  confidenceScore Float?
+  id               String    @id @default(cuid())
+  userId           String?
+  guestSessionId   String?
+  contentName      String
+  contentType      String // "text" | "image" | "video" | "url"
+  fileUrl          String?
+  fileHash         String?
+  fileSizeBytes    Int?
+  mimeType         String?
+  status           String    @default("queued")
+  result           String?
+  overallScore     Float?
+  confidenceScore  Float?
   evidenceStrength String?
-  modules         String[] // DetectionModule[]
-  modelVersion    String   @default("1.0.0")
-  workspaceId     String?
-  batchId         String?
-  errorMessage    String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  completedAt     DateTime?
+  modules          String[] // DetectionModule[]
+  language         String? // Added language field
+  modelVersion     String    @default("1.0.0")
+  workspaceId      String?
+  batchId          String?
+  errorMessage     String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  completedAt      DateTime?
 
-  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
-  workspace Workspace? @relation(fields: [workspaceId], references: [id])
-  batch     BatchJob?  @relation(fields: [batchId], references: [id])
+  user      User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  workspace Workspace?    @relation(fields: [workspaceId], references: [id])
+  batch     BatchJob?     @relation(fields: [batchId], references: [id])
   report    Report?
   signals   ScanSignal[]
   metadata  ScanMetadata?
 }
 
 model ScanSignal {
-  id          String  @id @default(cuid())
+  id          String @id @default(cuid())
   scanId      String
-  category    String  // "text" | "image" | "video" | "deepfake" | "enhancement"
+  category    String // "text" | "image" | "video" | "deepfake" | "enhancement"
   name        String
   description String
   score       Float
   confidence  Float
-  data        Json?   // regions, timestamps, passages etc.
+  data        Json? // regions, timestamps, passages etc.
 
   scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
 }
 
 model ScanMetadata {
-  id                  String   @id @default(cuid())
-  scanId              String   @unique
-  fileName            String?
-  fileType            String?
-  width               Int?
-  height              Int?
-  fileSizeBytes       Int?
-  createdAt           DateTime?
-  modifiedAt          DateTime?
-  cameraManufacturer  String?
-  cameraModel         String?
-  editingSoftware     String?
-  colorProfile        String?
-  hasGps              Boolean?
-  compressionHistory  String?
-  integrityWarnings   String[]
-  rawExif             Json?
+  id                 String    @id @default(cuid())
+  scanId             String    @unique
+  fileName           String?
+  fileType           String?
+  width              Int?
+  height             Int?
+  fileSizeBytes      Int?
+  createdAt          DateTime?
+  modifiedAt         DateTime?
+  cameraManufacturer String?
+  cameraModel        String?
+  editingSoftware    String?
+  colorProfile       String?
+  hasGps             Boolean?
+  compressionHistory String?
+  integrityWarnings  String[]
+  rawExif            Json?
 
   scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
 }
 
 model Report {
-  id              String    @id @default(cuid())
-  scanId          String    @unique
-  userId          String?
-  workspaceId     String?
-  title           String
-  summary         String?
-  tags            String[]
-  notes           String?
-  shareToken      String?   @unique
-  shareExpiresAt  DateTime?
-  downloadCount   Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  scanId         String    @unique
+  userId         String?
+  workspaceId    String?
+  title          String
+  summary        String?
+  tags           String[]
+  notes          String?
+  shareToken     String?   @unique
+  shareExpiresAt DateTime?
+  downloadCount  Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   scan      Scan       @relation(fields: [scanId], references: [id], onDelete: Cascade)
   user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -151,19 +152,19 @@ model Report {
 }
 
 model BatchJob {
-  id              String    @id @default(cuid())
-  userId          String
-  workspaceId     String?
-  name            String
-  status          String    @default("queued")
-  totalItems      Int       @default(0)
-  completedItems  Int       @default(0)
-  failedItems     Int       @default(0)
-  modules         String[]
-  reportUrl       String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  completedAt     DateTime?
+  id             String    @id @default(cuid())
+  userId         String
+  workspaceId    String?
+  name           String
+  status         String    @default("queued")
+  totalItems     Int       @default(0)
+  completedItems Int       @default(0)
+  failedItems    Int       @default(0)
+  modules        String[]
+  reportUrl      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  completedAt    DateTime?
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace Workspace? @relation(fields: [workspaceId], references: [id])
@@ -182,7 +183,7 @@ model ApiKey {
   isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
 
-  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   activity ApiActivity[]
 }
 
@@ -208,11 +209,11 @@ model Workspace {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  owner   User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  members WorkspaceMember[]
-  scans   Scan[]
-  reports Report[]
-  batches BatchJob[]
+  owner     User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members   WorkspaceMember[]
+  scans     Scan[]
+  reports   Report[]
+  batches   BatchJob[]
   auditLogs AuditLog[]
 }
 
