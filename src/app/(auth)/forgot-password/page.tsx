@@ -65,12 +65,12 @@ export default function ForgotPasswordPage() {
           <CheckCircle2 className="h-10 w-10 text-emerald-500" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-white">Check your email</h1>
-          <p className="text-slate-400 max-w-sm">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Check your email</h1>
+          <p className="text-muted-foreground max-w-sm">
             We've sent a password reset link to your email address. Please check your inbox and spam folder.
           </p>
         </div>
-        <Button asChild className="mt-4 w-full bg-slate-800 hover:bg-slate-700 text-white border border-slate-700">
+        <Button asChild className="mt-4 w-full bg-slate-800 hover:bg-slate-700 text-foreground border border-border">
           <Link href="/sign-in">Back to sign in</Link>
         </Button>
       </div>
@@ -80,8 +80,8 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <div className="flex flex-col space-y-2 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-white">Reset your password</h1>
-        <p className="text-sm text-slate-400">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Reset your password</h1>
+        <p className="text-sm text-muted-foreground">
           Enter your email address and we'll send you a link to reset your password.
         </p>
       </div>
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email" className="text-slate-300">Email</Label>
+              <Label htmlFor="email" className="text-foreground">Email</Label>
               <Input
                 id="email"
                 placeholder="name@example.com"
@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
                 autoComplete="email"
                 autoCorrect="off"
                 disabled={isLoading}
-                className={`bg-slate-900 border-slate-700 text-white ${errors.email ? 'border-red-500' : ''}`}
+                className={`bg-card border-border text-foreground ${errors.email ? 'border-red-500' : ''}`}
                 {...register('email')}
               />
               {errors.email && (
@@ -113,7 +113,7 @@ export default function ForgotPasswordPage() {
               </div>
             )}
 
-            <Button disabled={isLoading} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white">
+            <Button disabled={isLoading} className="w-full bg-cyan-600 hover:bg-cyan-700 text-foreground">
               {isLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
@@ -123,7 +123,7 @@ export default function ForgotPasswordPage() {
         </form>
       </div>
 
-      <p className="px-8 text-center text-sm text-slate-400 mt-6">
+      <p className="px-8 text-center text-sm text-muted-foreground mt-6">
         Remember your password?{' '}
         <Link
           href="/sign-in"

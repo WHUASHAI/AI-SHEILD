@@ -78,8 +78,8 @@ export default function SignUpPage() {
   return (
     <>
       <div className="flex flex-col space-y-2 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-white">Create your free account</h1>
-        <p className="text-sm text-slate-400">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Create your free account</h1>
+        <p className="text-sm text-muted-foreground">
           No payment information required
         </p>
       </div>
@@ -100,7 +100,7 @@ export default function SignUpPage() {
                 placeholder="Elijah"
                 type="text"
                 disabled={isLoading}
-                className={`bg-slate-900 border-slate-700 text-white ${errors.name ? 'border-red-500' : ''}`}
+                className={`bg-card border-border text-foreground ${errors.name ? 'border-red-500' : ''}`}
                 {...register('name')}
               />
               {errors.name && (
@@ -118,7 +118,7 @@ export default function SignUpPage() {
                 autoComplete="email"
                 autoCorrect="off"
                 disabled={isLoading}
-                className={`bg-slate-900 border-slate-700 text-white ${errors.email ? 'border-red-500' : ''}`}
+                className={`bg-card border-border text-foreground ${errors.email ? 'border-red-500' : ''}`}
                 {...register('email')}
               />
               {errors.email && (
@@ -133,7 +133,7 @@ export default function SignUpPage() {
                 type="password"
                 autoComplete="new-password"
                 disabled={isLoading}
-                className={`bg-slate-900 border-slate-700 text-white ${errors.password ? 'border-red-500' : ''}`}
+                className={`bg-card border-border text-foreground ${errors.password ? 'border-red-500' : ''}`}
                 {...register('password')}
               />
               <PasswordStrength password={watchPassword} />
@@ -149,7 +149,7 @@ export default function SignUpPage() {
                 type="password"
                 autoComplete="new-password"
                 disabled={isLoading}
-                className={`bg-slate-900 border-slate-700 text-white ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                className={`bg-card border-border text-foreground ${errors.confirmPassword ? 'border-red-500' : ''}`}
                 {...register('confirmPassword')}
               />
               {errors.confirmPassword && (
@@ -161,10 +161,10 @@ export default function SignUpPage() {
               <input
                 type="checkbox"
                 id="terms"
-                className="mt-1 bg-slate-900 border-slate-700 text-cyan-600 rounded"
+                className="mt-1 bg-card border-border text-cyan-600 rounded"
                 {...register('terms')}
               />
-              <Label htmlFor="terms" className="text-sm text-slate-400 font-normal leading-tight">
+              <Label htmlFor="terms" className="text-sm text-muted-foreground font-normal leading-tight">
                 I agree to the <Link href="/terms" className="text-cyan-500 hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-cyan-500 hover:underline">Privacy Policy</Link>
               </Label>
             </div>
@@ -178,7 +178,7 @@ export default function SignUpPage() {
               </div>
             )}
 
-            <Button disabled={isLoading} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white">
+            <Button disabled={isLoading} className="w-full bg-cyan-600 hover:bg-cyan-700 text-foreground">
               {isLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
@@ -201,7 +201,7 @@ export default function SignUpPage() {
         <SocialLoginButtons />
       </div>
 
-      <p className="px-8 text-center text-sm text-slate-400">
+      <p className="px-8 text-center text-sm text-muted-foreground">
         Already have an account?{' '}
         <Link
           href="/sign-in"

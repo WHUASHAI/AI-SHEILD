@@ -6,61 +6,98 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-background border-t border-border pt-16 pb-8">
-      <div className="container mx-auto px-4">
+    <footer className="bg-space-cadet-dark border-t border-cyan-azure/20 pt-16 pb-8 relative overflow-hidden">
+      {/* Subtle background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-t from-space-cadet/80 to-transparent pointer-events-none" />
+
+      <div className="container mx-auto px-4 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
+
+          {/* Brand column */}
           <div className="lg:col-span-2">
             <Link href="/" className="inline-block mb-6">
               <Logo size="md" />
             </Link>
-            <p className="text-muted-foreground text-sm mb-6 max-w-md">
-              Know where digital content really came from. Free, powerful AI detection for text, images, and videos.
+            <p className="text-air-sup-blue text-sm mb-6 max-w-md leading-relaxed">
+              Know where digital content really came from. Free, powerful AI detection for text,
+              images, and videos.
             </p>
-            {/* Social Icons Placeholder */}
-            <div className="flex gap-4">
-              <div className="w-8 h-8 rounded bg-surface border border-border hover:border-cyan-500/50 flex items-center justify-center cursor-pointer transition-colors" />
-              <div className="w-8 h-8 rounded bg-surface border border-border hover:border-cyan-500/50 flex items-center justify-center cursor-pointer transition-colors" />
-              <div className="w-8 h-8 rounded bg-surface border border-border hover:border-cyan-500/50 flex items-center justify-center cursor-pointer transition-colors" />
+            {/* Social icons */}
+            <div className="flex gap-3">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="w-9 h-9 rounded-lg glass-card hover:border-cyan-azure/50 hover:bg-cyan-azure/10 flex items-center justify-center cursor-pointer transition-all duration-200"
+                />
+              ))}
             </div>
           </div>
 
+          {/* Product links */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Product</h4>
+            <h4 className="font-semibold text-pink-lavender mb-4 text-sm uppercase tracking-wider">Product</h4>
             <ul className="space-y-3">
-              <li><Link href="/tools/text-detector" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">Text Detector</Link></li>
-              <li><Link href="/tools/image-detector" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">Image Detector</Link></li>
-              <li><Link href="/tools/video-detector" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">Video Detector</Link></li>
-              <li><Link href="/tools/deepfake-detector" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">Deepfake Detector</Link></li>
-              <li><Link href="/tools/batch-scanner" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">Batch Scanner</Link></li>
+              {[
+                ['Text Detector',      '/tools/text-detector'],
+                ['Image Detector',     '/tools/image-detector'],
+                ['Video Detector',     '/tools/video-detector'],
+                ['Deepfake Detector',  '/tools/deepfake-detector'],
+                ['Batch Scanner',      '/tools/batch-scanner'],
+              ].map(([label, href]) => (
+                <li key={label}>
+                  <Link href={href} className="text-sm text-air-sup-blue hover:text-pink-lavender transition-colors">
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
+          {/* Resources links */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Resources</h4>
+            <h4 className="font-semibold text-pink-lavender mb-4 text-sm uppercase tracking-wider">Resources</h4>
             <ul className="space-y-3">
-              <li><Link href="/how-it-works" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">How It Works</Link></li>
-              <li><Link href="/use-cases" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">Use Cases</Link></li>
-              <li><Link href="/api-docs" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">API Documentation</Link></li>
-              <li><Link href="/sample-report" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">Sample Report</Link></li>
+              {[
+                ['How It Works',       '/how-it-works'],
+                ['Use Cases',          '/use-cases'],
+                ['API Documentation',  '/api-docs'],
+                ['Sample Report',      '/sample-report'],
+              ].map(([label, href]) => (
+                <li key={label}>
+                  <Link href={href} className="text-sm text-air-sup-blue hover:text-pink-lavender transition-colors">
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
+          {/* Company links */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Company</h4>
+            <h4 className="font-semibold text-pink-lavender mb-4 text-sm uppercase tracking-wider">Company</h4>
             <ul className="space-y-3">
-              <li><Link href="/about" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">About Us</Link></li>
-              <li><Link href="/limitations" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">Limitations Policy</Link></li>
-              <li><Link href="/privacy" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">Terms of Service</Link></li>
+              {[
+                ['About Us',          '/about'],
+                ['Limitations Policy','/limitations'],
+                ['Privacy Policy',    '/privacy'],
+                ['Terms of Service',  '/terms'],
+              ].map(([label, href]) => (
+                <li key={label}>
+                  <Link href={href} className="text-sm text-air-sup-blue hover:text-pink-lavender transition-colors">
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
 
-        <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-muted-foreground">
-            &copy; {currentYear} AI Shield. All rights reserved.
+        {/* Bottom bar */}
+        <div className="pt-8 border-t border-cyan-azure/15 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-ucla-blue">
+            © {currentYear} AI Shield. All rights reserved.
           </p>
-          <div className="text-xs text-muted-foreground max-w-2xl text-center md:text-right">
+          <div className="text-xs text-ucla-blue max-w-2xl text-center md:text-right leading-relaxed">
             {DISCLAIMER}
           </div>
         </div>

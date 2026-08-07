@@ -26,7 +26,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="flex h-screen bg-[#0a0f1e] overflow-hidden text-[#f9fafb]">
+    <div className="flex h-screen bg-space-cadet overflow-hidden text-foreground">
       <DashboardSidebar 
         collapsed={sidebarCollapsed} 
         mobileOpen={mobileSidebarOpen}

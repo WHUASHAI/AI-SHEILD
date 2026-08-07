@@ -7,31 +7,31 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled]               = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen]         = useState(false);
   const [productDropdownOpen, setProductDropdownOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const navLinks = [
     { name: 'How It Works', href: '/how-it-works' },
-    { name: 'Use Cases', href: '/use-cases' },
-    { name: 'API', href: '/api-docs' },
-    { name: 'Resources', href: '/resources' },
-    { name: 'About', href: '/about' },
+    { name: 'Use Cases',    href: '/use-cases' },
+    { name: 'API',          href: '/api-docs' },
+    { name: 'Resources',    href: '/resources' },
+    { name: 'About',        href: '/about' },
   ];
 
   return (
     <header
       className={cn(
         'fixed top-0 z-50 w-full transition-all duration-300 border-b border-transparent',
-        isScrolled ? 'bg-background/80 backdrop-blur-md border-border shadow-sm' : 'bg-transparent'
+        isScrolled
+          ? 'bg-space-cadet/85 backdrop-blur-md border-cyan-azure/20 shadow-palette'
+          : 'bg-transparent'
       )}
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -43,7 +43,7 @@ export function Navbar() {
         <nav className="hidden md:flex items-center gap-6">
           <div className="relative group">
             <button
-              className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1 text-sm font-medium text-air-sup-blue hover:text-pink-lavender transition-colors"
               onMouseEnter={() => setProductDropdownOpen(true)}
               onMouseLeave={() => setProductDropdownOpen(false)}
             >
@@ -55,7 +55,7 @@ export function Navbar() {
                 onMouseEnter={() => setProductDropdownOpen(true)}
                 onMouseLeave={() => setProductDropdownOpen(false)}
               >
-                <div className="bg-surface border border-border rounded-lg shadow-lg overflow-hidden py-2">
+                <div className="glass-card rounded-xl shadow-palette overflow-hidden py-2">
                   {[
                     'Text Detector',
                     'Image Detector',
@@ -67,7 +67,7 @@ export function Navbar() {
                     <Link
                       key={item}
                       href={`/tools/${item.toLowerCase().replace(' ', '-')}`}
-                      className="block px-4 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                      className="block px-4 py-2.5 text-sm text-air-sup-blue hover:bg-cyan-azure/10 hover:text-pink-lavender transition-colors"
                     >
                       {item}
                     </Link>
@@ -80,26 +80,33 @@ export function Navbar() {
             <Link
               key={link.name}
               href={link.href}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm font-medium text-air-sup-blue hover:text-pink-lavender transition-colors"
             >
               {link.name}
             </Link>
           ))}
         </nav>
 
-        {/* Right side Actions */}
+        {/* Right-side Actions */}
         <div className="hidden md:flex items-center gap-4">
-          <Button variant="ghost" asChild>
+          <Button
+            variant="ghost"
+            className="text-air-sup-blue hover:text-pink-lavender hover:bg-cyan-azure/10"
+            asChild
+          >
             <Link href="/auth/signin">Sign In</Link>
           </Button>
-          <Button className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white border-0" asChild>
+          <Button
+            className="bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 shadow-palette-md"
+            asChild
+          >
             <Link href="/dashboard/new-scan">Start Scanning</Link>
           </Button>
         </div>
 
         {/* Mobile menu button */}
         <button
-          className="md:hidden z-50 text-foreground p-2"
+          className="md:hidden z-50 text-air-sup-blue hover:text-pink-lavender p-2 transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <X /> : <Menu />}
@@ -108,36 +115,38 @@ export function Navbar() {
 
       {/* Mobile Nav */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-16 z-40 bg-background/95 backdrop-blur-lg border-t border-border py-8 px-6 flex flex-col gap-8 shadow-2xl overflow-y-auto">
+        <div className="md:hidden fixed inset-0 top-16 z-40 bg-space-cadet/95 backdrop-blur-xl border-t border-cyan-azure/20 py-8 px-6 flex flex-col gap-8 shadow-2xl overflow-y-auto">
           <div className="flex flex-col gap-4">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2">Product Tools</div>
-            <div className="grid grid-cols-1 gap-2">
-               {[
-                  'Text Detector',
-                  'Image Detector',
-                  'Video Detector',
-                  'Deepfake Detector',
-                  'Enhancement Detector',
-                  'Batch Scanner'
-                ].map((item) => (
-                  <Link
-                    key={item}
-                    href={`/tools/${item.toLowerCase().replace(' ', '-')}`}
-                    className="flex items-center px-3 py-2.5 text-sm font-medium text-foreground rounded-lg hover:bg-muted/50 transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item}
-                  </Link>
-                ))}
+            <div className="text-xs font-semibold uppercase tracking-wider text-ucla-blue px-2">
+              Product Tools
+            </div>
+            <div className="grid grid-cols-1 gap-1">
+              {[
+                'Text Detector',
+                'Image Detector',
+                'Video Detector',
+                'Deepfake Detector',
+                'Enhancement Detector',
+                'Batch Scanner'
+              ].map((item) => (
+                <Link
+                  key={item}
+                  href={`/tools/${item.toLowerCase().replace(' ', '-')}`}
+                  className="flex items-center px-3 py-2.5 text-sm font-medium text-air-sup-blue rounded-lg hover:bg-cyan-azure/10 hover:text-pink-lavender transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item}
+                </Link>
+              ))}
             </div>
           </div>
-          
-          <div className="flex flex-col gap-2 border-t border-border pt-8">
+
+          <div className="flex flex-col gap-2 border-t border-cyan-azure/20 pt-8">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className="px-3 py-3 text-base font-semibold text-foreground rounded-lg hover:bg-muted/50 transition-colors"
+                className="px-3 py-3 text-base font-semibold text-foreground rounded-lg hover:bg-cyan-azure/10 hover:text-pink-lavender transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {link.name}
@@ -146,10 +155,19 @@ export function Navbar() {
           </div>
 
           <div className="flex flex-col gap-3 mt-auto">
-            <Button variant="outline" className="w-full h-11" asChild onClick={() => setMobileMenuOpen(false)}>
+            <Button
+              variant="outline"
+              className="w-full h-11 border-cyan-azure/40 text-air-sup-blue hover:bg-cyan-azure/10 hover:text-pink-lavender"
+              asChild
+              onClick={() => setMobileMenuOpen(false)}
+            >
               <Link href="/auth/signin">Sign In</Link>
             </Button>
-            <Button className="w-full h-11 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white" asChild onClick={() => setMobileMenuOpen(false)}>
+            <Button
+              className="w-full h-11 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white"
+              asChild
+              onClick={() => setMobileMenuOpen(false)}
+            >
               <Link href="/dashboard/new-scan">Start Scanning</Link>
             </Button>
           </div>

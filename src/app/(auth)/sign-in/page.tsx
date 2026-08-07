@@ -68,8 +68,8 @@ export default function SignInPage() {
   return (
     <>
       <div className="flex flex-col space-y-2 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-white">Welcome back</h1>
-        <p className="text-sm text-slate-400">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome back</h1>
+        <p className="text-sm text-muted-foreground">
           Sign in to your AI Shield account
         </p>
       </div>
@@ -78,7 +78,7 @@ export default function SignInPage() {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email" className="text-slate-300">Email</Label>
+              <Label htmlFor="email" className="text-foreground">Email</Label>
               <Input
                 id="email"
                 placeholder="name@example.com"
@@ -87,7 +87,7 @@ export default function SignInPage() {
                 autoComplete="email"
                 autoCorrect="off"
                 disabled={isLoading}
-                className={`bg-slate-900 border-slate-700 text-white ${errors.email ? 'border-red-500' : ''}`}
+                className={`bg-card border-border text-foreground ${errors.email ? 'border-red-500' : ''}`}
                 {...register('email')}
               />
               {errors.email && (
@@ -96,7 +96,7 @@ export default function SignInPage() {
             </div>
             <div className="grid gap-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-slate-300">Password</Label>
+                <Label htmlFor="password" className="text-foreground">Password</Label>
                 <Link
                   href="/forgot-password"
                   className="text-sm font-medium text-cyan-500 hover:text-cyan-400"
@@ -109,7 +109,7 @@ export default function SignInPage() {
                 type="password"
                 autoComplete="current-password"
                 disabled={isLoading}
-                className={`bg-slate-900 border-slate-700 text-white ${errors.password ? 'border-red-500' : ''}`}
+                className={`bg-card border-border text-foreground ${errors.password ? 'border-red-500' : ''}`}
                 {...register('password')}
               />
               {errors.password && (
@@ -123,7 +123,7 @@ export default function SignInPage() {
               </div>
             )}
 
-            <Button disabled={isLoading} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white">
+            <Button disabled={isLoading} className="w-full bg-cyan-600 hover:bg-cyan-700 text-foreground">
               {isLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
@@ -134,7 +134,7 @@ export default function SignInPage() {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-slate-800" />
+            <span className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-[#0a0f1e] px-2 text-slate-500">
@@ -146,7 +146,7 @@ export default function SignInPage() {
         <SocialLoginButtons />
       </div>
 
-      <p className="px-8 text-center text-sm text-slate-400">
+      <p className="px-8 text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
         <Link
           href="/sign-up"

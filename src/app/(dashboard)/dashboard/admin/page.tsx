@@ -16,47 +16,47 @@ export default function AdminDashboardPage() {
 
       <div className="flex justify-between items-end mb-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Admin Control Center</h1>
-          <p className="text-gray-400">Platform overview, user management, and system health.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Admin Control Center</h1>
+          <p className="text-muted-foreground">Platform overview, user management, and system health.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-gray-900/50 border border-gray-800 p-5 rounded-xl">
-          <div className="flex items-center gap-2 text-gray-400 mb-2">
+        <div className="bg-card/50 border border-border p-5 rounded-xl">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <Users className="w-4 h-4" /> Total Users
           </div>
-          <p className="text-2xl font-bold text-white">12,450</p>
+          <p className="text-2xl font-bold text-foreground">12,450</p>
         </div>
-        <div className="bg-gray-900/50 border border-gray-800 p-5 rounded-xl">
-          <div className="flex items-center gap-2 text-gray-400 mb-2">
+        <div className="bg-card/50 border border-border p-5 rounded-xl">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <Activity className="w-4 h-4" /> Scans Today
           </div>
-          <p className="text-2xl font-bold text-white">45,892</p>
+          <p className="text-2xl font-bold text-foreground">45,892</p>
         </div>
-        <div className="bg-gray-900/50 border border-gray-800 p-5 rounded-xl">
-          <div className="flex items-center gap-2 text-gray-400 mb-2">
+        <div className="bg-card/50 border border-border p-5 rounded-xl">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <Terminal className="w-4 h-4" /> Active Jobs
           </div>
-          <p className="text-2xl font-bold text-white">124</p>
+          <p className="text-2xl font-bold text-foreground">124</p>
         </div>
-        <div className="bg-gray-900/50 border border-gray-800 p-5 rounded-xl">
-          <div className="flex items-center gap-2 text-gray-400 mb-2">
+        <div className="bg-card/50 border border-border p-5 rounded-xl">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <HardDrive className="w-4 h-4" /> Storage Used
           </div>
-          <p className="text-2xl font-bold text-white">2.4 TB</p>
+          <p className="text-2xl font-bold text-foreground">2.4 TB</p>
         </div>
       </div>
 
-      <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden">
-        <div className="flex border-b border-gray-800 overflow-x-auto">
+      <div className="bg-card/50 border border-border rounded-xl overflow-hidden">
+        <div className="flex border-b border-border overflow-x-auto">
           {["users", "scans", "queue", "failed", "api", "abuse"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
                 "px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap capitalize",
-                activeTab === tab ? "border-cyan-500 text-cyan-400 bg-gray-800/30" : "border-transparent text-gray-400 hover:text-gray-200 hover:bg-gray-800/10"
+                activeTab === tab ? "border-cyan-500 text-cyan-400 bg-gray-800/30" : "border-transparent text-muted-foreground hover:text-gray-200 hover:bg-gray-800/10"
               )}
             >
               {tab === "queue" ? "Job Queue" : tab === "failed" ? "Failed Jobs" : tab === "api" ? "API Usage" : tab === "abuse" ? "Abuse Detection" : tab}
@@ -71,7 +71,7 @@ export default function AdminDashboardPage() {
                 <input type="text" placeholder="Search users by email or ID..." className="bg-gray-950 border border-gray-700 rounded-md px-4 py-2 text-sm w-full max-w-md focus:border-cyan-500 focus:outline-none" />
               </div>
               <table className="w-full text-sm text-left">
-                <thead className="text-xs text-gray-400 uppercase bg-gray-800/30 border-b border-gray-800">
+                <thead className="text-xs text-muted-foreground uppercase bg-gray-800/30 border-b border-border">
                   <tr>
                     <th className="px-4 py-3">User</th>
                     <th className="px-4 py-3">Role</th>
@@ -84,9 +84,9 @@ export default function AdminDashboardPage() {
                   <tr className="hover:bg-gray-800/20">
                     <td className="px-4 py-3 font-medium">test@originscan.ai</td>
                     <td className="px-4 py-3 text-cyan-400">Admin</td>
-                    <td className="px-4 py-3 text-gray-400">1,204</td>
+                    <td className="px-4 py-3 text-muted-foreground">1,204</td>
                     <td className="px-4 py-3"><span className="text-green-400 bg-green-900/20 px-2 py-0.5 rounded text-xs">Active</span></td>
-                    <td className="px-4 py-3 text-right"><button className="text-gray-400 hover:text-white">View</button></td>
+                    <td className="px-4 py-3 text-right"><button className="text-muted-foreground hover:text-foreground">View</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -95,9 +95,9 @@ export default function AdminDashboardPage() {
 
           {activeTab === "queue" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-white mb-4">Active Processing Jobs</h3>
+              <h3 className="text-lg font-medium text-foreground mb-4">Active Processing Jobs</h3>
               <table className="w-full text-sm text-left">
-                <thead className="text-xs text-gray-400 uppercase bg-gray-800/30 border-b border-gray-800">
+                <thead className="text-xs text-muted-foreground uppercase bg-gray-800/30 border-b border-border">
                   <tr>
                     <th className="px-4 py-3">Job ID</th>
                     <th className="px-4 py-3">Type</th>
@@ -108,10 +108,10 @@ export default function AdminDashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-800">
                   <tr className="hover:bg-gray-800/20">
-                    <td className="px-4 py-3 font-mono text-gray-400">job_8f7d6e5</td>
+                    <td className="px-4 py-3 font-mono text-muted-foreground">job_8f7d6e5</td>
                     <td className="px-4 py-3">Video Deepfake</td>
                     <td className="px-4 py-3 text-amber-400">Processing (45%)</td>
-                    <td className="px-4 py-3 text-gray-400">2 mins ago</td>
+                    <td className="px-4 py-3 text-muted-foreground">2 mins ago</td>
                     <td className="px-4 py-3 text-right">
                       <button className="text-red-400 hover:text-red-300 flex items-center justify-end gap-1 ml-auto">
                         <XCircle className="w-4 h-4" /> Cancel

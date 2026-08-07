@@ -44,11 +44,11 @@ const result = await response.json();
 console.log(result.result); // 'Likely AI-Generated'`;
 
   return (
-    <div className="p-6 min-h-screen bg-[#0a0f1e] text-gray-100 max-w-6xl mx-auto space-y-8">
+    <div className="p-6 min-h-screen bg-[#0a0f1e] text-foreground max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">API Keys & Access</h1>
-          <p className="text-gray-400">Free API access for all users. Rate limits apply to prevent abuse.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">API Keys & Access</h1>
+          <p className="text-muted-foreground">Free API access for all users. Rate limits apply to prevent abuse.</p>
         </div>
         <div className="flex items-center gap-3">
           <button className="flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-700 hover:bg-gray-800 rounded-md transition-colors text-sm font-medium">
@@ -58,41 +58,41 @@ console.log(result.result); // 'Likely AI-Generated'`;
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gray-900/50 border border-gray-800 p-5 rounded-xl">
-          <h3 className="text-sm font-medium text-gray-400 mb-1">Hourly Limit</h3>
-          <p className="text-2xl font-bold text-white">100 <span className="text-sm font-normal text-gray-500">reqs/hr</span></p>
+        <div className="bg-gray-900/50 border border-border p-5 rounded-xl">
+          <h3 className="text-sm font-medium text-muted-foreground mb-1">Hourly Limit</h3>
+          <p className="text-2xl font-bold text-foreground">100 <span className="text-sm font-normal text-gray-500">reqs/hr</span></p>
         </div>
-        <div className="bg-gray-900/50 border border-gray-800 p-5 rounded-xl">
-          <h3 className="text-sm font-medium text-gray-400 mb-1">Daily Limit</h3>
-          <p className="text-2xl font-bold text-white">1,000 <span className="text-sm font-normal text-gray-500">reqs/day</span></p>
+        <div className="bg-gray-900/50 border border-border p-5 rounded-xl">
+          <h3 className="text-sm font-medium text-muted-foreground mb-1">Daily Limit</h3>
+          <p className="text-2xl font-bold text-foreground">1,000 <span className="text-sm font-normal text-gray-500">reqs/day</span></p>
         </div>
-        <div className="bg-gray-900/50 border border-gray-800 p-5 rounded-xl">
-          <h3 className="text-sm font-medium text-gray-400 mb-1">Monthly Limit</h3>
-          <p className="text-2xl font-bold text-white">10,000 <span className="text-sm font-normal text-gray-500">reqs/mo</span></p>
+        <div className="bg-gray-900/50 border border-border p-5 rounded-xl">
+          <h3 className="text-sm font-medium text-muted-foreground mb-1">Monthly Limit</h3>
+          <p className="text-2xl font-bold text-foreground">10,000 <span className="text-sm font-normal text-gray-500">reqs/mo</span></p>
         </div>
         <div className="bg-cyan-900/10 border border-cyan-800/30 p-5 rounded-xl flex flex-col justify-center">
           <h3 className="text-sm font-medium text-cyan-400 mb-1 flex items-center gap-1.5">
             <Check className="w-4 h-4" /> 100% Free Tier
           </h3>
-          <p className="text-xs text-gray-400">No credit card required. All features included.</p>
+          <p className="text-xs text-muted-foreground">No credit card required. All features included.</p>
         </div>
       </div>
 
-      <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-gray-800">
-          <h2 className="text-lg font-semibold text-white mb-4">Create New API Key</h2>
+      <div className="bg-gray-900/50 border border-border rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Create New API Key</h2>
           <div className="flex gap-3">
             <input 
               type="text" 
               placeholder="e.g., Python Script, Zapier Integration" 
               value={newKey}
               onChange={(e) => setNewKey(e.target.value)}
-              className="flex-1 max-w-md bg-gray-950 border border-gray-700 rounded-md px-4 py-2 text-sm text-gray-100 placeholder:text-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+              className="flex-1 max-w-md bg-card border border-gray-700 rounded-md px-4 py-2 text-sm text-foreground placeholder:text-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
             />
             <button 
               onClick={handleCreateKey}
               disabled={!newKey.trim()}
-              className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-medium rounded-md transition-colors text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-foreground font-medium rounded-md transition-colors text-sm"
             >
               <Plus className="w-4 h-4" /> Create Key
             </button>
@@ -119,7 +119,7 @@ console.log(result.result); // 'Likely AI-Generated'`;
                       <Copy className="w-4 h-4" /> Copy
                     </button>
                   </div>
-                  <button onClick={() => setShowNewKey(null)} className="text-sm text-gray-400 hover:text-white underline underline-offset-2">
+                  <button onClick={() => setShowNewKey(null)} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2">
                     I have saved this key
                   </button>
                 </div>
@@ -130,7 +130,7 @@ console.log(result.result); // 'Likely AI-Generated'`;
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-gray-400 uppercase bg-gray-800/30 border-b border-gray-800">
+            <thead className="text-xs text-muted-foreground uppercase bg-gray-800/30 border-b border-border">
               <tr>
                 <th className="px-6 py-4 font-medium">Name</th>
                 <th className="px-6 py-4 font-medium">Key Prefix</th>
@@ -143,15 +143,15 @@ console.log(result.result); // 'Likely AI-Generated'`;
             <tbody className="divide-y divide-gray-800">
               {keys.map((key) => (
                 <tr key={key.id} className={`hover:bg-gray-800/20 transition-colors ${key.status === 'revoked' ? 'opacity-60' : ''}`}>
-                  <td className="px-6 py-4 font-medium text-gray-200">
+                  <td className="px-6 py-4 font-medium text-foreground">
                     <div className="flex items-center gap-2">
                       <Key className="w-4 h-4 text-gray-500" />
                       <span className={key.status === 'revoked' ? 'line-through' : ''}>{key.name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-mono text-gray-400">{key.prefix}••••••••</td>
-                  <td className="px-6 py-4 text-gray-400">{key.lastUsed}</td>
-                  <td className="px-6 py-4 text-gray-400">{key.requests.toLocaleString()}</td>
+                  <td className="px-6 py-4 font-mono text-muted-foreground">{key.prefix}••••••••</td>
+                  <td className="px-6 py-4 text-muted-foreground">{key.lastUsed}</td>
+                  <td className="px-6 py-4 text-muted-foreground">{key.requests.toLocaleString()}</td>
                   <td className="px-6 py-4">
                     {key.status === 'active' ? (
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">Active</span>
@@ -174,17 +174,17 @@ console.log(result.result); // 'Likely AI-Generated'`;
         </div>
       </div>
 
-      <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden">
-        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Terminal className="w-5 h-5 text-gray-400" /> API Documentation
+      <div className="bg-gray-900/50 border border-border rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-border flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <Terminal className="w-5 h-5 text-muted-foreground" /> API Documentation
           </h2>
         </div>
         <div className="p-6 space-y-6">
           <div className="space-y-4">
-            <h3 className="text-base font-medium text-gray-200">Text Analysis Endpoint</h3>
-            <p className="text-sm text-gray-400">Analyze text for AI generation, editing, or enhancement.</p>
-            <div className="flex items-center gap-2 text-sm font-mono bg-gray-950 p-3 rounded-lg border border-gray-800">
+            <h3 className="text-base font-medium text-foreground">Text Analysis Endpoint</h3>
+            <p className="text-sm text-muted-foreground">Analyze text for AI generation, editing, or enhancement.</p>
+            <div className="flex items-center gap-2 text-sm font-mono bg-card p-3 rounded-lg border border-border">
               <span className="text-cyan-400 font-bold">POST</span>
               <span className="text-gray-300">https://api.originscan.ai/v1/analyze/text</span>
             </div>
@@ -196,9 +196,9 @@ console.log(result.result); // 'Likely AI-Generated'`;
               onTabChange={setActiveTab}
             />
             
-            <div className="mt-4 p-4 bg-gray-950 border border-gray-800 rounded-lg">
+            <div className="mt-4 p-4 bg-card border border-border rounded-lg">
               <h4 className="text-sm font-medium text-gray-300 mb-2">Example Response</h4>
-              <pre className="text-xs font-mono text-gray-400 overflow-x-auto">
+              <pre className="text-xs font-mono text-muted-foreground overflow-x-auto">
 {`{
   "scanId": "scan_123456789",
   "status": "completed",
