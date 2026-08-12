@@ -26,8 +26,8 @@ const accents = [
 ];
 
 const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08 } },
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
 };
 const card = {
   hidden: { opacity: 0, y: 28, scale: 0.96 },
