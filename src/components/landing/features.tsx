@@ -1,6 +1,6 @@
 'use client';
 import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, Variants } from 'framer-motion';
 import {
   FileText, Image as ImageIcon, Video, UserX, Sparkles, Layers,
   Database, Files, BookOpen,
@@ -25,13 +25,13 @@ const accents = [
   { bg: 'bg-ucla-blue/20', border: 'border-ucla-blue/30', text: 'text-ucla-blue-light',      glow: 'rgba(80,105,141,0.3)'    },
 ];
 
-const container = {
+const container: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.08 } },
 };
-const card = {
+const card: Variants = {
   hidden: { opacity: 0, y: 28, scale: 0.96 },
-  show:   { opacity: 1, y: 0,  scale: 1,    transition: { duration: 0.5, ease: "easeInOut" } },
+  show:   { opacity: 1, y: 0,  scale: 1,    transition: { duration: 0.5 } },
 };
 
 export function Features() {
