@@ -31,7 +31,7 @@ const container: Variants = {
 };
 const card: Variants = {
   hidden: { opacity: 0, y: 28, scale: 0.96 },
-  show:   { opacity: 1, y: 0,  scale: 1,    transition: { duration: 0.5 } },
+  show:   { opacity: 1, y: 0,  scale: 1 },
 };
 
 export function Features() {
