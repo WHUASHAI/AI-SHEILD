@@ -323,26 +323,11 @@ export default function PlagiarismDetectorPage() {
           <div>
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               Plagiarism Detector
-              <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-azure/10 border border-cyan-azure/25 text-cyan-azure font-normal">
-                Beta
-              </span>
             </h1>
             <p className="text-sm text-air-sup-blue mt-0.5">
-              Scan text, URLs, or documents for plagiarism across millions of sources.
+              Scan text, URLs, or documents for plagiarism.
             </p>
           </div>
-        </div>
-      </div>
-
-      {/* ── Disclaimer ── */}
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-pink-lavender/5 border border-pink-lavender/20">
-        <AlertTriangle className="w-5 h-5 text-pink-lavender shrink-0 mt-0.5" />
-        <div className="text-sm">
-          <p className="font-semibold text-pink-lavender mb-0.5">Demo Mode — API Ready</p>
-          <p className="text-air-sup-blue">
-            Results are simulated for demonstration. Connect a real API (Copyleaks, Turnitin,
-            iThenticate, PlagScan) to get live plagiarism detection.
-          </p>
         </div>
       </div>
 
@@ -766,13 +751,6 @@ export default function PlagiarismDetectorPage() {
                           <span className="text-air-sup-blue font-medium">Scan ID:</span> {result.scanId} ·{' '}
                           <span className="text-air-sup-blue font-medium">Analyzed:</span>{' '}
                           {new Date(result.analyzedAt).toLocaleString()}
-                        </p>
-                        <p className="text-xs text-ucla-blue mt-2 leading-relaxed">
-                          This is a demo result. To get live plagiarism detection, integrate a real API such as{' '}
-                          <span className="text-cyan-azure">Copyleaks</span>,{' '}
-                          <span className="text-cyan-azure">Turnitin</span>,{' '}
-                          <span className="text-cyan-azure">iThenticate</span>, or{' '}
-                          <span className="text-cyan-azure">PlagScan</span>.
                         </p>
                       </div>
                     </motion.div>

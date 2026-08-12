@@ -23,8 +23,8 @@ export default function AboutPage() {
         </div>
         <div className="p-6 bg-surface border border-border rounded-xl text-center">
           <Heart className="w-10 h-10 text-cyan-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">Free for Everyone</h3>
-          <p className="text-sm text-muted-foreground">Committed to keeping our core detection tools completely free without paywalls.</p>
+          <h3 className="text-lg font-semibold text-white mb-2">Always Free</h3>
+          <p className="text-sm text-muted-foreground">Committed to keeping our core detection tools completely free for all users.</p>
         </div>
       </div>
 
@@ -34,7 +34,7 @@ export default function AboutPage() {
           The rapid advancement of generative AI has brought incredible creative tools to the world. However, it has also introduced significant challenges regarding trust, authenticity, and misinformation. As deepfakes become more convincing and AI-written text becomes indistinguishable from human writing, the need for robust verification tools has never been greater.
         </p>
         <p className="text-muted-foreground mb-10">
-          We noticed that most high-quality AI detection tools were locked behind expensive subscriptions or restricted to enterprise clients. We built AI Shield to democratize access to these vital technologies, ensuring that educators, journalists, and everyday users can verify the media they interact with.
+          We built AI Shield to democratize access to these vital technologies, ensuring that educators, journalists, and everyday users can verify the media they interact with.
         </p>
 
         <h2 className="text-2xl font-bold text-white mb-4">How It Works (Overview)</h2>
@@ -47,7 +47,7 @@ export default function AboutPage() {
 
         <h2 className="text-2xl font-bold text-white mb-4">Our Commitment</h2>
         <p className="text-muted-foreground mb-6">
-          We are committed to maintaining AI Shield as a free, open platform. We fund our infrastructure through fair-use policies and API usage for high-volume enterprise integrations, ensuring the web interface remains accessible to the public. We also pledge to continuously update our models to keep pace with the latest generative AI advancements while remaining radically transparent about the limitations of detection technology.
+          We are committed to maintaining AI Shield as a free, open platform accessible to the public. We also pledge to continuously update our models to keep pace with the latest generative AI advancements while remaining radically transparent about the limitations of detection technology.
         </p>
       </div>
     </div>

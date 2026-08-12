@@ -1,73 +1,69 @@
 'use client';
 
-import React from 'react';
-import { DisclaimerBanner } from '@/components/detection/disclaimer-banner';
-import { ScanFace, UserX, UserCheck, AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { UserX, ShieldCheck, Zap, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { FileDropzone } from '@/components/detection/file-dropzone';
+import { cn } from '@/lib/utils';
 
 export default function DeepfakeDetectorPage() {
+  const [loading, setLoading] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+
+  const handleScan = async () => {
+    setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setLoading(false);
+  };
+
   return (
-    <div className="container max-w-6xl py-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center">
-          <ScanFace className="w-8 h-8 mr-3 text-cyan-500" /> Deepfake Detection
-        </h1>
-        <p className="text-slate-400">Specialized biometric and facial manipulation analysis.</p>
+    <div className="space-y-8 pb-12">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-azure/20 to-air-sup-blue/20 border border-cyan-azure/30 flex items-center justify-center">
+          <UserX className="w-6 h-6 text-cyan-azure" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Deepfake Detection</h1>
+          <p className="text-sm text-air-sup-blue mt-0.5">Detect AI-generated faces and manipulation.</p>
+        </div>
       </div>
 
-      <DisclaimerBanner />
-
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="flex flex-col items-center justify-center p-8 bg-slate-950 rounded-xl border border-slate-800 shadow-inner">
-            <div className="relative w-48 h-48 mb-6">
-              {/* Fake Ring Chart */}
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#1e293b" strokeWidth="8" />
-                <circle cx="50" cy="50" r="40" fill="transparent" stroke="#ef4444" strokeWidth="8" strokeDasharray="251.2" strokeDashoffset="45" className="transition-all duration-1000 ease-out" />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-bold text-white">82%</span>
-                <span className="text-sm text-red-400 font-medium">Deepfake Likelihood</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 text-slate-300">
-               <UserX className="w-5 h-5 text-red-500" />
-               <span className="font-medium">Face Swap Detected</span>
-            </div>
-          </div>
-
-          <div className="md:col-span-2 space-y-6">
-            <h3 className="text-xl font-semibold border-b border-slate-800 pb-2">Biometric Analysis Breakdown</h3>
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+        <div className="xl:col-span-3 space-y-6">
+          <div className="glass-card rounded-2xl p-6 space-y-5">
+            <FileDropzone
+              onFilesAccepted={(files) => setFiles(files)}
+              acceptedTypes={{ 'video/*': ['.mp4', '.mov', '.webm'], 'image/*': ['.jpeg', '.jpg', '.png'] }}
+              maxSize={200 * 1024 * 1024}
+            />
             
-            <div className="space-y-4">
-              {[
-                { name: 'Facial Landmark Stability', score: 88, desc: 'Unnatural micro-movements detected around eyes and mouth.', status: 'fail' },
-                { name: 'Skin Texture Consistency', score: 75, desc: 'Over-smoothed regions adjacent to high-noise areas.', status: 'fail' },
-                { name: 'Eye/Blink Pattern', score: 40, desc: 'Blink rate is within normal human parameters.', status: 'pass' },
-                { name: 'Lighting/Shadow Geometry', score: 82, desc: 'Specular highlights on eyes do not match environmental lighting.', status: 'fail' },
-              ].map((metric, i) => (
-                <div key={i} className="flex flex-col p-4 bg-slate-950 rounded-lg border border-slate-800">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center space-x-2">
-                      {metric.status === 'fail' ? <AlertTriangle className="w-4 h-4 text-red-500" /> : <UserCheck className="w-4 h-4 text-emerald-500" />}
-                      <span className="font-medium text-slate-200">{metric.name}</span>
-                    </div>
-                    <span className={`font-mono text-sm ${metric.status === 'fail' ? 'text-red-400' : 'text-emerald-400'}`}>{metric.score}% Anomaly</span>
-                  </div>
-                  <p className="text-sm text-slate-400 mb-3">{metric.desc}</p>
-                  <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${metric.status === 'fail' ? 'bg-red-500' : 'bg-emerald-500'}`} style={{ width: `${metric.score}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex items-center p-4 bg-slate-800/30 text-slate-300 rounded-lg text-sm">
-              <ScanFace className="w-5 h-5 mr-3 text-cyan-500" />
-              Privacy Notice: This analysis maps generic facial landmarks. No personal identification or facial recognition against databases is performed.
-            </div>
+            <Button
+              onClick={handleScan}
+              disabled={loading || files.length === 0}
+              className="w-full h-12 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white font-semibold text-base shadow-palette-glow disabled:opacity-50 transition-all"
+            >
+              {loading ? 'Analyzing...' : 'Run AI Analysis'}
+              <ShieldCheck className="w-4 h-4 ml-2" />
+            </Button>
           </div>
+        </div>
+
+        <div className="xl:col-span-2 space-y-4">
+            <div className="glass-card rounded-2xl p-8 flex flex-col items-center justify-center text-center">
+                <Zap className="w-12 h-12 text-cyan-azure mb-4" />
+                <h3 className="text-lg font-semibold text-foreground">Awaiting Input</h3>
+                <p className="text-sm text-air-sup-blue mt-2">Upload media and run analysis to see AI detection results here.</p>
+            </div>
+            
+            <div className="glass-card rounded-2xl p-6 space-y-5">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <Info className="w-4 h-4 text-cyan-azure" /> How It Works
+              </h3>
+              <p className="text-xs text-ucla-blue leading-relaxed">
+                Upload your media, and our AI models will analyze for facial inconsistencies, unnatural blinking patterns, and biometric mismatches common in deepfakes.
+              </p>
+            </div>
         </div>
       </div>
     </div>

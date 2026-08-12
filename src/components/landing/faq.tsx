@@ -1,9 +1,7 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+'use client';
+import { useState, useRef } from 'react';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { Plus, Minus, HelpCircle } from 'lucide-react';
 
 const faqs = [
   {
@@ -40,37 +38,95 @@ const faqs = [
   },
 ];
 
-export function FAQ() {
+function FAQItem({ faq, index }: { faq: { q: string; a: string }; index: number }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <section className="py-24 bg-space-cadet-dark border-t border-cyan-azure/15">
-      <div className="container mx-auto px-4 max-w-3xl">
-        <div className="text-center mb-12">
-          <span className="inline-block px-3 py-1 rounded-full badge-primary text-xs font-semibold uppercase tracking-wider mb-4 text-cyan-azure">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.07 }}
+      className="group"
+    >
+      <div
+        className={`rounded-xl border transition-all duration-300 overflow-hidden ${
+          open
+            ? 'border-cyan-azure/40 bg-space-cadet-light/30'
+            : 'border-cyan-azure/15 bg-space-cadet-dark/60 hover:border-cyan-azure/30'
+        }`}
+      >
+        <button
+          onClick={() => setOpen(!open)}
+          className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
+          aria-expanded={open}
+        >
+          <span className={`font-medium text-sm md:text-base transition-colors ${open ? 'text-foreground' : 'text-foreground/80 group-hover:text-foreground'}`}>
+            {faq.q}
+          </span>
+          <span className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
+            open ? 'bg-cyan-azure/20 text-cyan-azure border border-cyan-azure/35' : 'bg-space-cadet-dark border border-cyan-azure/20 text-air-sup-blue'
+          }`}>
+            {open ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+          </span>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              key="content"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="px-6 pb-5 border-t border-cyan-azure/10 pt-4">
+                <p className="text-sm text-air-sup-blue leading-relaxed">{faq.a}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
+export function FAQ() {
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+
+  return (
+    <section className="py-28 relative overflow-hidden bg-space-cadet-dark">
+      <div className="absolute inset-0 bg-dot-pattern opacity-15 pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(78,122,177,0.3), rgba(206,181,212,0.2), rgba(78,122,177,0.3), transparent)' }} />
+
+      {/* Centre orb */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(78,122,177,0.05) 0%, transparent 70%)' }} />
+
+      <div className="container mx-auto px-4 max-w-3xl relative z-10" ref={ref}>
+        <motion.div
+          className="text-center mb-14"
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.55 }}
+        >
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full badge-primary text-xs font-semibold uppercase tracking-widest mb-5">
+            <HelpCircle className="w-3 h-3 text-cyan-azure" />
             FAQs
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-5">
             Frequently Asked{' '}
             <span className="gradient-text">Questions</span>
           </h2>
-          <p className="text-air-sup-blue">Everything you need to know about AI Shield.</p>
-        </div>
+          <p className="text-air-sup-blue text-lg">Everything you need to know about AI Shield.</p>
+        </motion.div>
 
-        <Accordion type="single" collapsible className="w-full space-y-2">
-          {faqs.map((faq, index) => (
-            <AccordionItem
-              key={index}
-              value={`item-${index}`}
-              className="glass-card rounded-xl border border-cyan-azure/15 px-2 overflow-hidden"
-            >
-              <AccordionTrigger className="text-left text-foreground hover:text-pink-lavender transition-colors py-4 px-2">
-                {faq.q}
-              </AccordionTrigger>
-              <AccordionContent className="text-air-sup-blue leading-relaxed pb-4 px-2">
-                {faq.a}
-              </AccordionContent>
-            </AccordionItem>
+        <div className="space-y-3">
+          {faqs.map((faq, i) => (
+            <FAQItem key={i} faq={faq} index={i} />
           ))}
-        </Accordion>
+        </div>
       </div>
     </section>
   );

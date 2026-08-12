@@ -1,81 +1,70 @@
 'use client';
 
-import React from 'react';
-import { DisclaimerBanner } from '@/components/detection/disclaimer-banner';
-import { Sparkles, Wand2, RefreshCcw, Eraser, Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Sparkles, ShieldCheck, Zap, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { FileDropzone } from '@/components/detection/file-dropzone';
+import { cn } from '@/lib/utils';
 
 export default function EnhancementDetectorPage() {
-  const categories = [
-    { name: 'AI Upscaling / Super Resolution', icon: RefreshCcw, probability: 95, confidence: 'High', desc: 'Resolution increased using neural networks, adding hallucinated details not present in original.', technical: 'High-frequency detail regeneration typical of ESRGAN or Real-ESRGAN architectures.' },
-    { name: 'Generative Fill / Inpainting', icon: Eraser, probability: 12, confidence: 'Low', desc: 'Replaced or removed objects using AI content generation.', technical: 'Latent diffusion noise patterns detected in masked regions.' },
-    { name: 'Face Restoration', icon: Sparkles, probability: 88, confidence: 'High', desc: 'Facial features synthetically enhanced or reconstructed.', technical: 'CodeFormer or GFPGAN artifact signatures in facial bounding boxes.' },
-    { name: 'AI Denoising', icon: Wand2, probability: 45, confidence: 'Medium', desc: 'Noise removed using AI algorithms, often resulting in plastic-like textures.', technical: 'Non-linear noise reduction exceeding traditional spatial filters.' }
-  ];
+  const [loading, setLoading] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+
+  const handleScan = async () => {
+    setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setLoading(false);
+  };
 
   return (
-    <div className="container max-w-6xl py-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center">
-          <Wand2 className="w-8 h-8 mr-3 text-cyan-500" /> AI Enhancement Detection
-        </h1>
-        <p className="text-slate-400">Detect if an authentic image was upscaled, restored, or modified using AI tools.</p>
+    <div className="space-y-8 pb-12">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-azure/20 to-air-sup-blue/20 border border-cyan-azure/30 flex items-center justify-center">
+          <Sparkles className="w-6 h-6 text-cyan-azure" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Enhancement Detector</h1>
+          <p className="text-sm text-air-sup-blue mt-0.5">Detect AI-applied enhancements and upscaling.</p>
+        </div>
       </div>
 
-      <DisclaimerBanner />
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+        <div className="xl:col-span-3 space-y-6">
+          <div className="glass-card rounded-2xl p-6 space-y-5">
+            <FileDropzone
+              onFilesAccepted={(files) => setFiles(files)}
+              acceptedTypes={{ 'image/*': ['.jpeg', '.jpg', '.png', '.webp'] }}
+              maxSize={50 * 1024 * 1024}
+            />
+            
+            <Button
+              onClick={handleScan}
+              disabled={loading || files.length === 0}
+              className="w-full h-12 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white font-semibold text-base shadow-palette-glow disabled:opacity-50 transition-all"
+            >
+              {loading ? 'Analyzing...' : 'Run AI Analysis'}
+              <ShieldCheck className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-         <div className="mb-8 p-6 bg-slate-950 rounded-xl border border-slate-800 text-center">
-            <h2 className="text-slate-400 text-sm font-medium uppercase tracking-wider mb-2">Overall Classification</h2>
-            <div className="text-3xl font-bold text-amber-500 mb-2">AI-Enhanced Original</div>
-            <p className="text-slate-400 max-w-2xl mx-auto">This content appears to be originally captured by a camera but has undergone significant processing using AI-based enhancement tools (e.g., AI upscaling, face restoration).</p>
-         </div>
-
-         <div className="space-y-6">
-            <h3 className="text-xl font-semibold">Enhancement Categories</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {categories.map((cat, i) => (
-                <div key={i} className="bg-slate-950 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-slate-900 rounded-lg border border-slate-800">
-                        <cat.icon className="w-5 h-5 text-cyan-500" />
-                      </div>
-                      <h4 className="font-medium text-slate-200">{cat.name}</h4>
-                    </div>
-                    <div className="text-right">
-                      <div className={`text-lg font-bold ${cat.probability > 70 ? 'text-amber-500' : cat.probability > 30 ? 'text-yellow-500' : 'text-slate-500'}`}>
-                        {cat.probability}%
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden mb-4">
-                    <div 
-                      className={`h-full rounded-full ${cat.probability > 70 ? 'bg-amber-500' : cat.probability > 30 ? 'bg-yellow-500' : 'bg-slate-500'}`} 
-                      style={{ width: `${cat.probability}%` }} 
-                    />
-                  </div>
-
-                  <p className="text-sm text-slate-400 mb-3">{cat.desc}</p>
-                  
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="inline-flex items-center text-xs text-slate-500 cursor-help hover:text-slate-300">
-                          <Info className="w-3 h-3 mr-1" /> Technical Details
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-slate-800 border-slate-700 max-w-xs">
-                        <p>{cat.technical}</p>
-                        <p className="mt-2 text-slate-400 border-t border-slate-700 pt-2">Confidence Level: {cat.confidence}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              ))}
+        <div className="xl:col-span-2 space-y-4">
+            <div className="glass-card rounded-2xl p-8 flex flex-col items-center justify-center text-center">
+                <Zap className="w-12 h-12 text-cyan-azure mb-4" />
+                <h3 className="text-lg font-semibold text-foreground">Awaiting Input</h3>
+                <p className="text-sm text-air-sup-blue mt-2">Upload an image and run analysis to see AI detection results here.</p>
             </div>
-         </div>
+            
+            <div className="glass-card rounded-2xl p-6 space-y-5">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <Info className="w-4 h-4 text-cyan-azure" /> How It Works
+              </h3>
+              <p className="text-xs text-ucla-blue leading-relaxed">
+                Upload your image, and our AI models will analyze for upscaling artifacts, unnatural texture enhancements, and synthetic detail generation.
+              </p>
+            </div>
+        </div>
       </div>
     </div>
   );

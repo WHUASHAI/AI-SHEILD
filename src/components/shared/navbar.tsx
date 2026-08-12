@@ -20,7 +20,6 @@ export function Navbar() {
   const navLinks = [
     { name: 'How It Works', href: '/how-it-works' },
     { name: 'Use Cases',    href: '/use-cases' },
-    { name: 'API',          href: '/api-docs' },
     { name: 'Resources',    href: '/resources' },
     { name: 'About',        href: '/about' },
   ];
@@ -28,14 +27,14 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        'fixed top-0 z-50 w-full transition-all duration-300 border-b border-transparent',
+        'fixed top-0 z-50 w-full transition-all duration-500',
         isScrolled
-          ? 'bg-space-cadet/85 backdrop-blur-md border-cyan-azure/20 shadow-palette'
+          ? 'bg-[rgba(7,15,29,0.88)] backdrop-blur-xl shadow-[0_1px_0_rgba(78,122,177,0.25),0_4px_24px_rgba(7,15,29,0.5)]'
           : 'bg-transparent'
       )}
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 z-50">
+        <Link href="/">
           <Logo size="md" />
         </Link>
 
@@ -57,19 +56,21 @@ export function Navbar() {
               >
                 <div className="glass-card rounded-xl shadow-palette overflow-hidden py-2">
                   {[
-                    'Text Detector',
-                    'Image Detector',
-                    'Video Detector',
-                    'Deepfake Detector',
-                    'Enhancement Detector',
-                    'Batch Scanner'
+                    { label: 'Text Detector', href: '/dashboard/text' },
+                    { label: 'Image Detector', href: '/dashboard/image' },
+                    { label: 'Video Detector', href: '/dashboard/video' },
+                    { label: 'Deepfake Detector', href: '/dashboard/deepfake' },
+                    { label: 'Enhancement Detector', href: '/dashboard/enhancement' },
+                    { label: 'Plagiarism Detector', href: '/dashboard/plagiarism' },
+                    { label: 'Batch Scanner', href: '/dashboard/batch' }
                   ].map((item) => (
                     <Link
-                      key={item}
-                      href={`/tools/${item.toLowerCase().replace(' ', '-')}`}
+                      key={item.label}
+                      href={item.href}
                       className="block px-4 py-2.5 text-sm text-air-sup-blue hover:bg-cyan-azure/10 hover:text-pink-lavender transition-colors"
+                      onClick={() => setProductDropdownOpen(false)}
                     >
-                      {item}
+                      {item.label}
                     </Link>
                   ))}
                 </div>
@@ -89,13 +90,6 @@ export function Navbar() {
 
         {/* Right-side Actions */}
         <div className="hidden md:flex items-center gap-4">
-          <Button
-            variant="ghost"
-            className="text-air-sup-blue hover:text-pink-lavender hover:bg-cyan-azure/10"
-            asChild
-          >
-            <Link href="/auth/signin">Sign In</Link>
-          </Button>
           <Button
             className="bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 shadow-palette-md"
             asChild
@@ -122,20 +116,20 @@ export function Navbar() {
             </div>
             <div className="grid grid-cols-1 gap-1">
               {[
-                'Text Detector',
-                'Image Detector',
-                'Video Detector',
-                'Deepfake Detector',
-                'Enhancement Detector',
-                'Batch Scanner'
+                { label: 'Text Detector', href: '/dashboard/text' },
+                { label: 'Image Detector', href: '/dashboard/image' },
+                { label: 'Video Detector', href: '/dashboard/video' },
+                { label: 'Deepfake Detector', href: '/dashboard/deepfake' },
+                { label: 'Enhancement Detector', href: '/dashboard/enhancement' },
+                { label: 'Batch Scanner', href: '/dashboard/batch' }
               ].map((item) => (
                 <Link
-                  key={item}
-                  href={`/tools/${item.toLowerCase().replace(' ', '-')}`}
+                  key={item.label}
+                  href={item.href}
                   className="flex items-center px-3 py-2.5 text-sm font-medium text-air-sup-blue rounded-lg hover:bg-cyan-azure/10 hover:text-pink-lavender transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  {item}
+                  {item.label}
                 </Link>
               ))}
             </div>
@@ -155,14 +149,6 @@ export function Navbar() {
           </div>
 
           <div className="flex flex-col gap-3 mt-auto">
-            <Button
-              variant="outline"
-              className="w-full h-11 border-cyan-azure/40 text-air-sup-blue hover:bg-cyan-azure/10 hover:text-pink-lavender"
-              asChild
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Link href="/auth/signin">Sign In</Link>
-            </Button>
             <Button
               className="w-full h-11 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white"
               asChild

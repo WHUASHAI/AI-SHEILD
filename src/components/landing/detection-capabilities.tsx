@@ -1,107 +1,176 @@
-import { FileText, Image as ImageIcon, Video, Database } from 'lucide-react';
+'use client';
+import { useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { FileText, Image as ImageIcon, Video, Database, BookOpen, Zap } from 'lucide-react';
 
 const columns = [
   {
     title: 'Text Signals',
     icon: FileText,
-    accent: 'text-cyan-azure bg-cyan-azure/15 border-cyan-azure/30',
-    dot: 'bg-cyan-azure',
+    accentColor: '#4E7AB1',
+    accentBg: 'rgba(78,122,177,0.12)',
+    accentBorder: 'rgba(78,122,177,0.25)',
     items: [
-      'Perplexity & Burstiness',
-      'Predictable token choices',
-      'Repetitive phrasing structures',
-      'Lack of semantic depth',
+      { label: 'Perplexity & Burstiness', strength: 92 },
+      { label: 'Predictable token choices', strength: 88 },
+      { label: 'Repetitive phrasing', strength: 74 },
+      { label: 'Lack of semantic depth', strength: 81 },
+    ],
+  },
+  {
+    title: 'Plagiarism Signals',
+    icon: BookOpen,
+    accentColor: '#9b8cc4',
+    accentBg: 'rgba(155,140,196,0.12)',
+    accentBorder: 'rgba(155,140,196,0.25)',
+    items: [
+      { label: 'Cross-source matching', strength: 95 },
+      { label: 'Paraphrased structure', strength: 79 },
+      { label: 'Originality scoring', strength: 88 },
+      { label: 'Source attribution ID', strength: 72 },
     ],
   },
   {
     title: 'Image Signals',
     icon: ImageIcon,
-    accent: 'text-pink-lavender bg-pink-lavender/15 border-pink-lavender/30',
-    dot: 'bg-pink-lavender',
+    accentColor: '#CEB5D4',
+    accentBg: 'rgba(206,181,212,0.12)',
+    accentBorder: 'rgba(206,181,212,0.25)',
     items: [
-      'Inconsistent lighting/shadows',
-      'Asymmetrical features (hands, eyes)',
-      'Unnatural texture patterns',
-      'Generative noise artifacts',
+      { label: 'Lighting inconsistencies', strength: 86 },
+      { label: 'Asymmetrical features', strength: 91 },
+      { label: 'Unnatural textures', strength: 83 },
+      { label: 'Generative noise', strength: 77 },
     ],
   },
   {
     title: 'Video Signals',
     icon: Video,
-    accent: 'text-air-sup-blue bg-air-sup-blue/15 border-air-sup-blue/30',
-    dot: 'bg-air-sup-blue',
+    accentColor: '#7D9FC0',
+    accentBg: 'rgba(125,159,192,0.12)',
+    accentBorder: 'rgba(125,159,192,0.25)',
     items: [
-      'Temporal inconsistency',
-      'Unnatural blinking patterns',
-      'Audio-visual desynchronization',
-      'Edge bleeding around subjects',
+      { label: 'Temporal inconsistency', strength: 89 },
+      { label: 'Unnatural blinking', strength: 84 },
+      { label: 'Audio-visual desync', strength: 93 },
+      { label: 'Edge bleeding', strength: 78 },
     ],
   },
   {
     title: 'Metadata Signals',
     icon: Database,
-    accent: 'text-ucla-blue-light bg-ucla-blue/20 border-ucla-blue/30',
-    dot: 'bg-ucla-blue-light',
+    accentColor: '#6a83a8',
+    accentBg: 'rgba(106,131,168,0.12)',
+    accentBorder: 'rgba(106,131,168,0.25)',
     items: [
-      'Missing EXIF data',
-      'Software signatures (e.g. Photoshop)',
-      'Inconsistent timestamps',
-      'Known AI tool footprints',
+      { label: 'Missing EXIF data', strength: 97 },
+      { label: 'Software signatures', strength: 85 },
+      { label: 'Inconsistent timestamps', strength: 90 },
+      { label: 'AI tool footprints', strength: 88 },
     ],
   },
 ];
 
-export function DetectionCapabilities() {
-  return (
-    <section className="py-24 bg-space-cadet relative overflow-hidden">
-      {/* Decorative orbs */}
-      <div className="absolute top-1/2 left-0 w-72 h-72 bg-cyan-azure/8 rounded-full blur-[80px] -translate-y-1/2 pointer-events-none" />
-      <div className="absolute top-1/2 right-0 w-72 h-72 bg-pink-lavender/8 rounded-full blur-[80px] -translate-y-1/2 pointer-events-none" />
+function SignalBar({ label, strength, color, delay }: { label: string; strength: number; color: string; delay: number }) {
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-40px' });
 
-      <div className="container mx-auto px-4 relative">
-        {/* Section header */}
-        <div className="text-center mb-16">
-          <span className="inline-block px-3 py-1 rounded-full badge-accent text-xs font-semibold uppercase tracking-wider mb-4">
+  return (
+    <div ref={ref} className="space-y-1.5">
+      <div className="flex justify-between text-xs">
+        <span className="text-air-sup-blue truncate pr-2">{label}</span>
+        <span className="text-foreground/70 font-medium shrink-0">{strength}%</span>
+      </div>
+      <div className="w-full h-1.5 bg-space-cadet-dark rounded-full overflow-hidden">
+        <motion.div
+          className="h-full rounded-full"
+          style={{ background: `linear-gradient(90deg, ${color}aa, ${color})` }}
+          initial={{ width: 0 }}
+          animate={inView ? { width: `${strength}%` } : { width: 0 }}
+          transition={{ duration: 0.9, delay, ease: 'easeOut' }}
+        />
+      </div>
+    </div>
+  );
+}
+
+export function DetectionCapabilities() {
+  const ref    = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+
+  return (
+    <section className="py-28 relative overflow-hidden" style={{ background: '#09182e' }}>
+      {/* Background */}
+      <div className="absolute inset-0 bg-grid-pattern bg-grid-fade opacity-40 pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse, rgba(78,122,177,0.08) 0%, transparent 70%)', top: '-100px' }} />
+      <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(206,181,212,0.06) 0%, transparent 70%)' }} />
+
+      <div className="container mx-auto px-4 relative z-10" ref={ref}>
+        {/* Header */}
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.55 }}
+        >
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full badge-accent text-xs font-semibold uppercase tracking-widest mb-5">
+            <Zap className="w-3 h-3 text-pink-lavender" />
             Multi-Modal Analysis
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-5">
             Comprehensive{' '}
             <span className="gradient-text">Detection Capabilities</span>
           </h2>
-          <p className="text-air-sup-blue max-w-2xl mx-auto leading-relaxed">
-            Our multi-modal approach looks at hundreds of subtle signals across different media types.
+          <p className="text-air-sup-blue max-w-2xl mx-auto text-lg leading-relaxed">
+            Our multi-modal approach looks at hundreds of subtle signals across different media types, providing nuanced probability scores.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+        {/* Bento grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5 max-w-7xl mx-auto">
           {columns.map((col, i) => (
-            <div key={i} className="glass-card glass-card-hover p-6 rounded-2xl">
-              {/* Column header */}
-              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cyan-azure/15">
-                <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${col.accent}`}>
-                  <col.icon className="w-5 h-5" />
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 28 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.55, delay: i * 0.1 }}
+              className="bento-card rounded-2xl p-6 group"
+            >
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-5 pb-4 border-b border-white/5">
+                <div className="w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-110"
+                  style={{ background: col.accentBg, borderColor: col.accentBorder }}
+                >
+                  <col.icon className="w-4 h-4" style={{ color: col.accentColor }} />
                 </div>
-                <h3 className="font-semibold text-foreground">{col.title}</h3>
+                <h3 className="font-semibold text-foreground text-sm">{col.title}</h3>
               </div>
 
-              {/* Signal list */}
-              <ul className="space-y-4">
+              {/* Signal bars */}
+              <div className="space-y-4">
                 {col.items.map((item, j) => (
-                  <li key={j} className="flex items-start gap-3">
-                    <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${col.dot}`} />
-                    <span className="text-sm text-air-sup-blue leading-relaxed">{item}</span>
-                  </li>
+                  <SignalBar
+                    key={j}
+                    label={item.label}
+                    strength={item.strength}
+                    color={col.accentColor}
+                    delay={0.4 + i * 0.08 + j * 0.07}
+                  />
                 ))}
-              </ul>
-            </div>
+              </div>
+
+              {/* Hover top glow line */}
+              <div className="absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{ background: `linear-gradient(90deg, transparent, ${col.accentColor}60, transparent)` }} />
+            </motion.div>
           ))}
         </div>
 
-        <p className="text-center text-xs text-ucla-blue mt-12 max-w-3xl mx-auto leading-relaxed">
-          Note: Not every signal is available for every file. Missing metadata does not automatically
-          indicate AI-generated content, but serves as one of many indicators in our overall
-          probability assessment.
+        <p className="text-center text-xs text-ucla-blue mt-10 max-w-3xl mx-auto leading-relaxed opacity-60">
+          Note: Not every signal is available for every file. Missing metadata does not automatically indicate AI-generated content,
+          but serves as one of many indicators in our overall probability assessment.
         </p>
       </div>
     </section>

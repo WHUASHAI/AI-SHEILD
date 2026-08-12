@@ -1,19 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
 import { DashboardHeader } from '@/components/dashboard/header';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    const collapsed = localStorage.getItem('sidebarCollapsed');
-    if (collapsed === 'true') {
-      setSidebarCollapsed(true);
-    }
-  }, []);
 
   const toggleSidebar = () => {
     const newState = !sidebarCollapsed;
@@ -26,7 +19,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="flex h-screen bg-space-cadet overflow-hidden text-foreground">
+    <div className="flex h-screen overflow-hidden text-foreground"
+      style={{ background: 'linear-gradient(160deg, #07111e 0%, #09182e 50%, #07111e 100%)' }}>
       <DashboardSidebar 
         collapsed={sidebarCollapsed} 
         mobileOpen={mobileSidebarOpen}
@@ -38,9 +32,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           onMenuClick={toggleMobileSidebar}
           isSidebarCollapsed={sidebarCollapsed}
         />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-          <div className="mx-auto max-w-7xl">
-            {children}
+        <main className="flex-1 overflow-y-auto">
+          {/* Subtle dot pattern overlay */}
+          <div className="absolute inset-0 bg-dot-pattern opacity-10 pointer-events-none" />
+          <div className="relative z-10 p-4 md:p-6 lg:p-8">
+            <div className="mx-auto max-w-7xl">
+              {children}
+            </div>
           </div>
         </main>
       </div>

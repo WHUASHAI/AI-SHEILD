@@ -4,18 +4,16 @@ import { useState } from 'react';
 import { User, Lock, Bell, Shield, Palette, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type Tab = 'profile' | 'security' | 'notifications' | 'privacy' | 'appearance';
+type Tab = 'notifications' | 'privacy' | 'appearance';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('profile');
+const [activeTab, setActiveTab] = useState<Tab>('notifications');
 
-  const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'security', label: 'Security', icon: Lock },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'privacy', label: 'Privacy', icon: Shield },
-    { id: 'appearance', label: 'Appearance', icon: Palette },
-  ];
+const tabs = [
+  { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'privacy', label: 'Privacy', icon: Shield },
+  { id: 'appearance', label: 'Appearance', icon: Palette },
+];
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -51,70 +49,6 @@ export default function SettingsPage() {
 
         {/* Content Area */}
         <div className="flex-1 bg-[#111827] border border-[#1f2937] rounded-xl p-6 min-h-[500px]">
-          {activeTab === 'profile' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <h2 className="text-lg font-medium text-white border-b border-[#1f2937] pb-4">Profile Information</h2>
-              
-              <div className="flex items-center gap-6">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#06b6d4] to-[#3b82f6] flex items-center justify-center text-white text-2xl font-bold">
-                  JD
-                </div>
-                <div>
-                  <button className="px-4 py-2 bg-[#1f2937] hover:bg-[#374151] text-white text-sm font-medium rounded-md transition-colors">
-                    Change Avatar
-                  </button>
-                  <p className="text-xs text-gray-500 mt-2">JPG, GIF or PNG. Max size of 800K</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">First Name</label>
-                  <input type="text" defaultValue="John" className="w-full bg-[#0a0f1e] border border-[#1f2937] text-white rounded-md px-3 py-2 focus:ring-1 focus:ring-[#06b6d4] focus:border-[#06b6d4] outline-none transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Last Name</label>
-                  <input type="text" defaultValue="Doe" className="w-full bg-[#0a0f1e] border border-[#1f2937] text-white rounded-md px-3 py-2 focus:ring-1 focus:ring-[#06b6d4] focus:border-[#06b6d4] outline-none transition-all" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium text-gray-300">Email Address</label>
-                  <input type="email" defaultValue="john@example.com" className="w-full bg-[#0a0f1e] border border-[#1f2937] text-white rounded-md px-3 py-2 focus:ring-1 focus:ring-[#06b6d4] focus:border-[#06b6d4] outline-none transition-all" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'security' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <h2 className="text-lg font-medium text-white border-b border-[#1f2937] pb-4">Security Settings</h2>
-              
-              <div className="space-y-4 max-w-md">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Current Password</label>
-                  <input type="password" placeholder="••••••••" className="w-full bg-[#0a0f1e] border border-[#1f2937] text-white rounded-md px-3 py-2 focus:ring-1 focus:ring-[#06b6d4] outline-none transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">New Password</label>
-                  <input type="password" placeholder="••••••••" className="w-full bg-[#0a0f1e] border border-[#1f2937] text-white rounded-md px-3 py-2 focus:ring-1 focus:ring-[#06b6d4] outline-none transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Confirm New Password</label>
-                  <input type="password" placeholder="••••••••" className="w-full bg-[#0a0f1e] border border-[#1f2937] text-white rounded-md px-3 py-2 focus:ring-1 focus:ring-[#06b6d4] outline-none transition-all" />
-                </div>
-              </div>
-
-              <div className="pt-4 mt-6 border-t border-[#1f2937]">
-                <h3 className="text-md font-medium text-white mb-4">Active Sessions</h3>
-                <div className="bg-[#0a0f1e] rounded-lg p-4 border border-[#1f2937] flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-white">Windows PC - Chrome</p>
-                    <p className="text-xs text-emerald-400 mt-1">Current Session • Active now</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {activeTab === 'notifications' && (
             <div className="space-y-6 animate-in fade-in duration-300">
               <h2 className="text-lg font-medium text-white border-b border-[#1f2937] pb-4">Email Notifications</h2>
@@ -154,14 +88,6 @@ export default function SettingsPage() {
                     <option>Auto-delete after 7 days</option>
                   </select>
                   <p className="text-xs text-gray-500 mt-2">Choose how long AI Shield stores your scan history.</p>
-                </div>
-
-                <div className="pt-6 mt-6 border-t border-[#1f2937]">
-                  <h3 className="text-sm font-medium text-rose-400 mb-2">Danger Zone</h3>
-                  <p className="text-xs text-gray-400 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
-                  <button className="px-4 py-2 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-md text-sm font-medium hover:bg-rose-500/20 transition-colors">
-                    Delete Account
-                  </button>
                 </div>
               </div>
             </div>
