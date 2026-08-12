@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { FileDropzone } from '@/components/detection/file-dropzone';
 
 export default function BatchScannerPage() {
+  const [files, setFiles] = React.useState<File[]>([]);
   return (
     <div className="space-y-8 pb-12">
       <div className="flex items-center gap-3">
@@ -22,7 +23,7 @@ export default function BatchScannerPage() {
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
         <div className="xl:col-span-3">
           <div className="glass-card rounded-2xl p-6 space-y-5">
-            <FileDropzone multiple />
+            <FileDropzone multiple onFilesAccepted={(acceptedFiles) => setFiles(acceptedFiles)} />
             <Button
               className="w-full h-12 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white font-semibold text-base shadow-palette-glow transition-all"
             >
