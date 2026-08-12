@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DisclaimerBanner } from '@/components/detection/disclaimer-banner';
@@ -24,11 +24,11 @@ const TABS = [
   { id: 'batch', label: 'Batch Upload', icon: Layers,    desc: 'Upload multiple files for simultaneous analysis.' },
 ];
 
-export default function NewScanPage() {
+function NewScanContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const scanType = searchParams.get('type');
-
+  
   // Filter tabs if a specific type is requested
   const visibleTabs = scanType 
     ? TABS.filter(t => t.id === scanType)
@@ -46,10 +46,6 @@ export default function NewScanPage() {
       setActiveTab(scanType);
     }
   }, [scanType]);
-
-  // ... (rest of component, ensure it uses visibleTabs)
-  // Inside Tab bar map:
-  // {visibleTabs.map((tab) => { ...
 
   const wordCount  = textToScan.trim().split(/\s+/).filter(Boolean).length;
   const charCount  = textToScan.length;
@@ -331,5 +327,13 @@ export default function NewScanPage() {
         ))}
       </motion.div>
     </div>
+  );
+}
+
+export default function NewScanPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewScanContent />
+    </Suspense>
   );
 }
