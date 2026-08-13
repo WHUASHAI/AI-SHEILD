@@ -89,18 +89,6 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-foreground">Overview</h1>
           <p className="text-sm text-air-sup-blue/70 mt-1">Your AI detection dashboard at a glance.</p>
         </div>
-        <Link
-          href="/dashboard/new-scan"
-          className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-300"
-          style={{
-            background: 'linear-gradient(135deg, #4E7AB1, #7D9FC0)',
-            boxShadow: '0 4px 16px rgba(78,122,177,0.35)',
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          New Scan
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-        </Link>
       </motion.div>
 
       {/* Stats grid */}
