@@ -24,21 +24,20 @@ const navGroups = [
     title: 'Main',
     items: [
       { label: 'Overview',  icon: LayoutDashboard, href: '/dashboard' },
-      { label: 'New Scan',  icon: Plus,            href: '/dashboard/new-scan', highlight: true },
     ],
   },
   {
-    title: 'Detectors',
-    items: [
-      { label: 'Text',        icon: FileText,  href: '/dashboard/text' },
-      { label: 'Image',       icon: ImageIcon, href: '/dashboard/image' },
-      { label: 'Video',       icon: Video,     href: '/dashboard/video' },
-      { label: 'Deepfake',    icon: UserX,     href: '/dashboard/deepfake' },
-      { label: 'Enhancement', icon: Sparkles,  href: '/dashboard/enhancement' },
-      { label: 'Batch',       icon: Files,     href: '/dashboard/batch' },
-      { label: 'Plagiarism',  icon: BookCopy,  href: '/dashboard/plagiarism' },
-    ],
+  title: 'Detectors',
+  items: [
+    { label: 'Text',        icon: FileText,  href: '/dashboard/text' },
+    { label: 'Image',       icon: ImageIcon, href: '/dashboard/image' },
+    { label: 'Video',       icon: Video,     href: '/dashboard/video' },
+    { label: 'Deepfake',    icon: UserX,     href: '/dashboard/deepfake' },
+    { label: 'Batch',       icon: Files,     href: '/dashboard/batch' },
+    { label: 'Plagiarism',  icon: BookCopy,  href: '/dashboard/plagiarism' },
+  ],
   },
+
   {
     title: 'Management',
     items: [

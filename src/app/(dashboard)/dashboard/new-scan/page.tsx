@@ -1,339 +1,170 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { DisclaimerBanner } from '@/components/detection/disclaimer-banner';
-import { FileDropzone } from '@/components/detection/file-dropzone';
-import { ProcessingStages, ProcessingStage } from '@/components/detection/processing-stages';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import {
-  FileText, Image as ImageIcon, Video, Link as LinkIcon,
-  Layers, ShieldCheck, AlertCircle, Zap, BookCopy,
+  FileText, ImageIcon, Video, UserX, BookOpen,
+  ShieldCheck, ChevronRight, ArrowLeft,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const TABS = [
-  { id: 'text',  label: 'Text',         icon: FileText,  desc: 'Paste or type text to analyze for AI writing patterns.' },
-  { id: 'image', label: 'Image',        icon: ImageIcon, desc: 'Upload an image to check for AI generation or editing.' },
-  { id: 'video', label: 'Video',        icon: Video,     desc: 'Detect deepfakes and AI manipulation in video files.' },
-  { id: 'url',   label: 'URL',          icon: LinkIcon,  desc: 'Enter a web URL to scan its content automatically.' },
-  { id: 'plagiarism', label: 'Plagiarism', icon: BookCopy, desc: 'Check text for plagiarism against a vast database.' },
-  { id: 'batch', label: 'Batch Upload', icon: Layers,    desc: 'Upload multiple files for simultaneous analysis.' },
-];
-
-function NewScanContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const scanType = searchParams.get('type');
-  
-  // Filter tabs if a specific type is requested
-  const visibleTabs = scanType 
-    ? TABS.filter(t => t.id === scanType)
-    : TABS;
-
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [stage, setStage] = useState<ProcessingStage>('queued');
-  const [textToScan, setTextToScan] = useState('');
-  const [urlToScan, setUrlToScan] = useState('');
-  const [filesToScan, setFilesToScan] = useState<File[]>([]);
-  const [activeTab, setActiveTab] = useState(visibleTabs[0]?.id || 'text');
-
-  useEffect(() => {
-    if (scanType) {
-      setActiveTab(scanType);
-    }
-  }, [scanType]);
-
-  const wordCount  = textToScan.trim().split(/\s+/).filter(Boolean).length;
-  const charCount  = textToScan.length;
-  const activeInfo = TABS.find(t => t.id === activeTab)!;
-
-  const handleScan = async () => {
-    setIsProcessing(true);
-    setStage('analyzing');
-    try {
-      if (activeTab === 'text') {
-        const res = await fetch('/api/scan/text', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: textToScan }),
-        });
-        if (!res.ok) throw new Error('Scan failed');
-        const data = await res.json();
-        router.push(`/report/${data.scanId}`);
-      } else if (activeTab === 'image') {
-        if (!filesToScan.length) throw new Error('No image selected');
-        const fd = new FormData();
-        fd.append('image', filesToScan[0]);
-        const res = await fetch('/api/scan/image', { method: 'POST', body: fd });
-        if (!res.ok) throw new Error('Scan failed');
-        const data = await res.json();
-        router.push(`/report/${data.scanId}`);
-      } else if (activeTab === 'url') {
-        const res = await fetch('/api/scan/url', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: urlToScan }),
-        });
-        if (!res.ok) throw new Error('Scan failed');
-        const data = await res.json();
-        router.push(`/report/${data.scanId}`);
-      } else if (activeTab === 'plagiarism') {
-        router.push('/dashboard/plagiarism');
-      } else {
-        throw new Error('Not implemented');
-      }
-    } catch (err) {
-      console.error(err);
-      setIsProcessing(false);
-      setStage('queued');
-    }
-  };
-
-  const canScan = activeTab === 'text'
-    ? textToScan.trim().length > 50
-    : activeTab === 'url'
-      ? urlToScan.trim().length > 5
-      : filesToScan.length > 0;
-
-  return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Page header */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <div className="flex items-start gap-3">
-          <div className="p-2.5 rounded-xl" style={{ background: 'rgba(78,122,177,0.15)', border: '1px solid rgba(78,122,177,0.3)' }}>
-            <ShieldCheck className="w-5 h-5 text-cyan-azure" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">New Analysis Scan</h1>
-            <p className="text-sm text-air-sup-blue/70 mt-0.5">Select content type and provide the content to analyze.</p>
-          </div>
-        </div>
-      </motion.div>
-
-      <DisclaimerBanner />
-
-      {/* Main scan card */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-        className="rounded-2xl overflow-hidden"
-        style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(78,122,177,0.18)' }}
-      >
-        {/* Tab bar */}
-        <div className="flex overflow-x-auto" style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(78,122,177,0.12)' }}>
-          {visibleTabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  'relative flex items-center gap-2 px-5 py-3.5 text-sm font-medium whitespace-nowrap transition-all duration-200 shrink-0',
-                  isActive ? 'text-foreground' : 'text-air-sup-blue/60 hover:text-air-sup-blue hover:bg-white/5'
-                )}
-              >
-                <tab.icon className={cn('w-4 h-4', isActive ? 'text-cyan-azure' : '')} />
-                {tab.label}
-                {isActive && (
-                  <motion.div
-                    layoutId="tabUnderline"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full"
-                    style={{ background: 'linear-gradient(90deg, #4E7AB1, #CEB5D4)' }}
-                  />
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Tab description */}
-        <div className="px-6 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(78,122,177,0.08)', background: 'rgba(78,122,177,0.04)' }}>
-          <AlertCircle className="w-3.5 h-3.5 text-air-sup-blue/50 shrink-0" />
-          <p className="text-xs text-air-sup-blue/60">{activeInfo.desc}</p>
-        </div>
-
-        {/* Content area */}
-        <div className="p-6">
-          <AnimatePresence mode="wait">
-            {!isProcessing ? (
-              <motion.div
-                key="input"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-5"
-              >
-                {activeTab === 'text' && (
-                  <div className="space-y-2">
-                    <Textarea
-                      value={textToScan}
-                      onChange={(e) => setTextToScan(e.target.value)}
-                      placeholder="Paste or type your text here... (minimum 50 characters)"
-                      className="min-h-[320px] resize-none text-sm leading-relaxed transition-all"
-                      style={{
-                        background: 'rgba(0,0,0,0.25)',
-                        border: '1px solid rgba(78,122,177,0.2)',
-                        color: 'var(--foreground)',
-                        borderRadius: '12px',
-                      }}
-                    />
-                    <div className="flex items-center justify-between text-xs text-air-sup-blue/50">
-                      <span>{wordCount} words · {charCount} characters</span>
-                      <select className="bg-transparent border-none outline-none cursor-pointer text-air-sup-blue/50 hover:text-air-sup-blue transition-colors">
-                        <option>Auto-detect Language</option>
-                        <option>English</option>
-                        <option>Spanish</option>
-                        <option>French</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'image' && (
-                  <div className="space-y-3">
-                    <FileDropzone
-                      onFilesAccepted={(files) => setFilesToScan(files)}
-                      acceptedTypes={{ 'image/*': ['.jpeg', '.jpg', '.png', '.webp', '.heic'] }}
-                      maxSize={50 * 1024 * 1024}
-                    />
-                    <p className="text-xs text-air-sup-blue/50 text-center">Accepted: JPG, PNG, WEBP, HEIC · Max 50MB</p>
-                  </div>
-                )}
-
-                {activeTab === 'video' && (
-                  <div className="space-y-3">
-                    <FileDropzone
-                      onFilesAccepted={(files) => setFilesToScan(files)}
-                      acceptedTypes={{ 'video/*': ['.mp4', '.mov', '.webm', '.avi'] }}
-                      maxSize={2 * 1024 * 1024 * 1024}
-                    />
-                    <p className="text-xs text-air-sup-blue/50 text-center">Accepted: MP4, MOV, WEBM, AVI · Max 2GB</p>
-                  </div>
-                )}
-
-                {activeTab === 'url' && (
-                  <div className="space-y-3">
-                    <label className="block text-sm font-medium text-air-sup-blue/80">Content URL</label>
-                    <div className="relative">
-                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-air-sup-blue/40 pointer-events-none" />
-                      <Input
-                        value={urlToScan}
-                        onChange={(e) => setUrlToScan(e.target.value)}
-                        placeholder="https://example.com/article"
-                        className="pl-10 h-12"
-                        style={{
-                          background: 'rgba(0,0,0,0.25)',
-                          border: '1px solid rgba(78,122,177,0.2)',
-                          borderRadius: '12px',
-                          color: 'var(--foreground)',
-                        }}
-                      />
-                    </div>
-                    <p className="text-xs text-air-sup-blue/50">Supports webpage URLs, direct image URLs, and video URLs.</p>
-                  </div>
-                )}
-
-                {activeTab === 'batch' && (
-                  <div className="space-y-3">
-                    <FileDropzone
-                      onFilesAccepted={(files) => setFilesToScan(files)}
-                      multiple
-                      maxFiles={50}
-                      maxSize={500 * 1024 * 1024}
-                    />
-                    <div className="flex justify-between text-xs text-air-sup-blue/50">
-                      <span>{filesToScan.length}/50 files</span>
-                      <span>Total: {(filesToScan.reduce((a, f) => a + f.size, 0) / 1024 / 1024).toFixed(1)} MB / 500 MB</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Scan button */}
-                <div className="pt-4" style={{ borderTop: '1px solid rgba(78,122,177,0.1)' }}>
-                  <button
-                    onClick={handleScan}
-                    disabled={!canScan}
-                    className="group relative w-full h-13 flex items-center justify-center gap-2.5 rounded-xl text-base font-semibold text-white transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden"
-                    style={{
-                      background: canScan
-                        ? 'linear-gradient(135deg, #4E7AB1 0%, #7D9FC0 60%, #CEB5D4 100%)'
-                        : 'rgba(78,122,177,0.3)',
-                      boxShadow: canScan ? '0 4px 24px rgba(78,122,177,0.4)' : 'none',
-                      paddingTop: '0.75rem',
-                      paddingBottom: '0.75rem',
-                    }}
-                  >
-                    {/* Shimmer sweep */}
-                    {canScan && (
-                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                        style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)' }} />
-                    )}
-                    <ShieldCheck className="w-5 h-5 shrink-0" />
-                    Run AI Analysis
-                    <Zap className="w-4 h-4 shrink-0 opacity-70" />
-                  </button>
-                  {!canScan && (
-                    <p className="text-center text-xs text-air-sup-blue/40 mt-2">
-                      {activeTab === 'text' ? 'Add at least 50 characters to enable scan' : 'Add content above to enable scan'}
-                    </p>
-                  )}
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="processing"
-                initial={{ opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center py-16 space-y-8 min-h-[320px]"
-              >
-                {/* Animated shield pulse */}
-                <div className="relative">
-                  <div className="absolute -inset-8 rounded-full animate-orb-pulse"
-                    style={{ background: 'radial-gradient(circle, rgba(78,122,177,0.2) 0%, transparent 70%)' }} />
-                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center"
-                    style={{ background: 'rgba(78,122,177,0.15)', border: '1px solid rgba(78,122,177,0.35)', boxShadow: '0 0 40px rgba(78,122,177,0.2)' }}>
-                    <ShieldCheck className="w-10 h-10 text-cyan-azure animate-pulse" />
-                  </div>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-semibold text-foreground mb-1">Analyzing Content...</p>
-                  <p className="text-sm text-air-sup-blue/60">Our AI models are processing your submission.</p>
-                </div>
-                <ProcessingStages currentStage={stage} className="w-full max-w-sm" />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.div>
-
-      {/* Info chips */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="flex flex-wrap gap-3 justify-center"
-      >
-        {['Results in ~2 seconds', 'Privacy-first processing', '97% accuracy', 'No data stored permanently'].map((t) => (
-          <span key={t} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs text-air-sup-blue/60"
-            style={{ background: 'rgba(78,122,177,0.07)', border: '1px solid rgba(78,122,177,0.15)' }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-azure/60" />
-            {t}
-          </span>
-        ))}
-      </motion.div>
-    </div>
-  );
-}
+const SCAN_TYPES = [
+  {
+    id: 'text',
+    label: 'Text Detection',
+    description: 'Detect if text was written by ChatGPT, Claude, Gemini, or any AI model.',
+    icon: FileText,
+    href: '/dashboard/text',
+    accent: 'from-blue-500/20 to-cyan-500/20',
+    border: 'border-blue-500/30',
+    iconColor: 'text-blue-400',
+    badge: 'AI Written · Paraphrased',
+  },
+  {
+    id: 'image',
+    label: 'Image Analysis',
+    description: 'Detect AI-generated images, deepfake faces, and AI enhancement on real photos.',
+    icon: ImageIcon,
+    href: '/dashboard/image',
+    accent: 'from-cyan-azure/20 to-air-sup-blue/20',
+    border: 'border-cyan-azure/30',
+    iconColor: 'text-cyan-azure',
+    badge: 'DALL-E · Midjourney · SD · Flux',
+    live: true,
+  },
+  {
+    id: 'video',
+    label: 'Video Analysis',
+    description: 'Frame-by-frame AI generation and deepfake detection across video content.',
+    icon: Video,
+    href: '/dashboard/video',
+    accent: 'from-violet-500/20 to-purple-500/20',
+    border: 'border-violet-500/30',
+    iconColor: 'text-violet-400',
+    badge: 'AI Video · Synthetic Media',
+    live: true,
+  },
+  {
+    id: 'deepfake',
+    label: 'Deepfake Detection',
+    description: 'Identify face swaps, lip-sync manipulation, and facial re-enactment in images and videos.',
+    icon: UserX,
+    href: '/dashboard/deepfake',
+    accent: 'from-red-500/20 to-rose-500/20',
+    border: 'border-red-500/30',
+    iconColor: 'text-red-400',
+    badge: 'Face Swap · Lip-Sync · GAN Faces',
+    live: true,
+  },
+  {
+    id: 'plagiarism',
+    label: 'Plagiarism Check',
+    description: 'Identify copied, paraphrased, or structurally similar content from web and academic sources.',
+    icon: BookOpen,
+    href: '/dashboard/plagiarism',
+    accent: 'from-amber-500/20 to-orange-500/20',
+    border: 'border-amber-500/30',
+    iconColor: 'text-amber-400',
+    badge: 'Web Sources · Academic',
+  },
+] as const;
 
 export default function NewScanPage() {
+  const router = useRouter();
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const handleStart = () => {
+    const target = SCAN_TYPES.find((s) => s.id === selected);
+    if (target) router.push(target.href);
+  };
+
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <NewScanContent />
-    </Suspense>
+    <div className="max-w-3xl mx-auto space-y-8 pb-16">
+      {/* Back */}
+      <button
+        onClick={() => router.back()}
+        className="flex items-center gap-2 text-sm text-air-sup-blue hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Dashboard
+      </button>
+
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold text-foreground">Start a New Scan</h1>
+        <p className="text-air-sup-blue">
+          Choose what type of content you want to analyze. Select a detector to get started.
+        </p>
+      </div>
+
+      {/* Scan type cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {SCAN_TYPES.map((type, i) => {
+          const Icon = type.icon;
+          const isSelected = selected === type.id;
+          return (
+            <motion.button
+              key={type.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06 }}
+              onClick={() => setSelected(type.id)}
+              className={cn(
+                'relative text-left w-full p-5 rounded-2xl border transition-all duration-200 glass-card',
+                'hover:scale-[1.02] hover:shadow-lg',
+                isSelected
+                  ? `bg-gradient-to-br ${type.accent} ${type.border} ring-2 ring-cyan-azure/30`
+                  : 'border-white/10 hover:border-white/20',
+              )}
+            >
+              {/* Live badge */}
+              {'live' in type && type.live && (
+                <span className="absolute top-3 right-3 flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-2 py-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  LIVE
+                </span>
+              )}
+
+              <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-gradient-to-br', type.accent, 'border', type.border)}>
+                <Icon className={cn('w-5 h-5', type.iconColor)} />
+              </div>
+
+              <h3 className="font-semibold text-foreground mb-1">{type.label}</h3>
+              <p className="text-xs text-air-sup-blue leading-relaxed mb-3">{type.description}</p>
+              <p className="text-[10px] font-bold text-ucla-blue/60 uppercase tracking-widest">{type.badge}</p>
+
+              {/* Selected check */}
+              {isSelected && (
+                <div className="absolute top-3 left-3 w-5 h-5 rounded-full bg-cyan-azure flex items-center justify-center">
+                  <ShieldCheck className="w-3 h-3 text-white" />
+                </div>
+              )}
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* CTA */}
+      <div className="flex items-center gap-4 pt-2">
+        <Button
+          onClick={handleStart}
+          disabled={!selected}
+          className="h-12 px-8 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white font-semibold text-base shadow-palette-glow disabled:opacity-40 transition-all"
+        >
+          Start Analysis
+          <ChevronRight className="w-4 h-4 ml-2" />
+        </Button>
+        {selected && (
+          <p className="text-sm text-air-sup-blue">
+            You selected:{' '}
+            <span className="text-foreground font-medium">
+              {SCAN_TYPES.find((s) => s.id === selected)?.label}
+            </span>
+          </p>
+        )}
+      </div>
+    </div>
   );
 }

@@ -65,46 +65,47 @@ export function FileDropzone({
   const hasFiles = files.length > 0 && !multiple;
 
   return (
-    <div className={cn('w-full space-y-3', className)}>
+    <div className={cn('w-full space-y-4', className)}>
       {/* Drop zone */}
       {!hasFiles && (
         <div
           {...getRootProps()}
-          className="relative rounded-2xl flex flex-col items-center justify-center min-h-[200px] p-8 cursor-pointer transition-all duration-300 overflow-hidden group"
-          style={{
-            background: isDragActive ? 'rgba(78,122,177,0.12)' : 'rgba(0,0,0,0.2)',
-            border: isDragActive ? '2px dashed rgba(78,122,177,0.7)' : '2px dashed rgba(78,122,177,0.2)',
-            boxShadow: isDragActive ? '0 0 0 4px rgba(78,122,177,0.12), inset 0 0 40px rgba(78,122,177,0.08)' : 'none',
-          }}
+          className={cn(
+            "relative rounded-3xl flex flex-col items-center justify-center min-h-[220px] p-8 cursor-pointer transition-all duration-500 overflow-hidden group border-2 border-dashed",
+            isDragActive 
+                ? "bg-cyan-azure/10 border-cyan-azure/50 shadow-palette-glow" 
+                : "bg-space-cadet-dark/40 border-white/10 hover:bg-space-cadet-dark/60 hover:border-cyan-azure/30"
+          )}
         >
           <input {...getInputProps()} />
 
           {/* Background glow on drag */}
-          {isDragActive && (
-            <div className="absolute inset-0 pointer-events-none"
-              style={{ background: 'radial-gradient(ellipse at center, rgba(78,122,177,0.15) 0%, transparent 70%)' }} />
+          <div className={cn(
+            "absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-500",
+            isDragActive ? "opacity-100" : "group-hover:opacity-40"
           )}
+            style={{ background: 'radial-gradient(circle at center, rgba(78,122,177,0.15) 0%, transparent 70%)' }} />
 
-          {/* Subtle corner dots */}
-          {['top-3 left-3', 'top-3 right-3', 'bottom-3 left-3', 'bottom-3 right-3'].map(pos => (
-            <span key={pos} className={`absolute ${pos} w-1.5 h-1.5 rounded-full`}
-              style={{ background: 'rgba(78,122,177,0.4)' }} />
-          ))}
+          {/* Corner accents */}
+          <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-cyan-azure/20 group-hover:border-cyan-azure/40 transition-colors" />
+          <div className="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-cyan-azure/20 group-hover:border-cyan-azure/40 transition-colors" />
+          <div className="absolute bottom-4 left-4 w-4 h-4 border-b-2 border-l-2 border-cyan-azure/20 group-hover:border-cyan-azure/40 transition-colors" />
+          <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-cyan-azure/20 group-hover:border-cyan-azure/40 transition-colors" />
 
           <div className={cn(
-            'w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300',
-            isDragActive ? 'scale-110' : 'group-hover:scale-105'
-          )} style={{ background: 'rgba(78,122,177,0.12)', border: '1px solid rgba(78,122,177,0.3)' }}>
-            <UploadCloud className={cn('w-7 h-7 transition-colors', isDragActive ? 'text-cyan-azure' : 'text-air-sup-blue/60 group-hover:text-air-sup-blue')} />
+            'w-16 h-16 rounded-2xl flex items-center justify-center mb-5 transition-all duration-500 relative z-10',
+            isDragActive ? 'scale-110 bg-cyan-azure/20' : 'bg-white/5 group-hover:bg-cyan-azure/10'
+          )} style={{ border: '1px solid rgba(78,122,177,0.2)' }}>
+            <UploadCloud className={cn('w-8 h-8 transition-colors duration-500', isDragActive ? 'text-cyan-azure' : 'text-air-sup-blue/40 group-hover:text-cyan-azure')} />
           </div>
 
-          <p className="text-sm font-medium text-foreground/80 mb-1">
-            {isDragActive ? 'Drop to upload' : 'Drag & drop files here'}
+          <p className="text-base font-bold text-foreground transition-colors relative z-10">
+            {isDragActive ? 'Drop files now' : 'Drag & drop files here'}
           </p>
-          <p className="text-xs text-air-sup-blue/50 mb-3">or click to browse</p>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs text-air-sup-blue/50"
-            style={{ background: 'rgba(78,122,177,0.07)', border: '1px solid rgba(78,122,177,0.15)' }}>
-            Max {formatBytes(maxSize)}{maxFiles > 1 ? ` · Up to ${maxFiles} files` : ''}
+          <p className="text-xs font-medium text-air-sup-blue/40 mt-1 mb-4 relative z-10 uppercase tracking-[0.1em]">or click to browse local storage</p>
+          
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold text-ucla-blue uppercase tracking-widest bg-white/5 border border-white/5 relative z-10">
+            MAX {formatBytes(maxSize)}{maxFiles > 1 ? ` · UP TO ${maxFiles} FILES` : ''}
           </div>
         </div>
       )}
@@ -113,12 +114,11 @@ export function FileDropzone({
       <AnimatePresence>
         {error && (
           <motion.div
-            initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-            className="flex items-center gap-2.5 p-3 rounded-xl text-sm"
-            style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)' }}
+            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+            className="flex items-center gap-3 p-4 rounded-2xl text-sm bg-destructive/10 border border-destructive/20 text-destructive shadow-palette-md"
           >
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span className="text-rose-400">{error}</span>
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <span className="font-semibold">{error}</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -126,49 +126,48 @@ export function FileDropzone({
       {/* File list */}
       <AnimatePresence>
         {files.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {files.map((file, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, scale: 0.97, y: 6 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.97, y: 6 }}
-                transition={{ duration: 0.2 }}
-                className="group flex items-center gap-3 p-3 rounded-xl"
-                style={{ background: 'rgba(78,122,177,0.08)', border: '1px solid rgba(78,122,177,0.2)' }}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="group flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-cyan-azure/20 hover:bg-white/10 transition-all shadow-palette-md"
               >
                 {/* Preview or icon */}
                 {file.preview ? (
-                  <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-cyan-azure/20">
-                    <img src={file.preview} alt="preview" className="w-full h-full object-cover" />
+                  <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/10 group-hover:border-cyan-azure/30 transition-colors">
+                    <img src={file.preview} alt="preview" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                   </div>
                 ) : (
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: 'rgba(78,122,177,0.15)', border: '1px solid rgba(78,122,177,0.25)' }}>
-                    <FileIcon className="w-5 h-5 text-cyan-azure/70" />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-space-cadet-dark/60 border border-white/5 group-hover:border-cyan-azure/30 transition-colors">
+                    <FileIcon className="w-6 h-6 text-cyan-azure/60 group-hover:text-cyan-azure transition-colors" />
                   </div>
                 )}
 
-                <div className="flex-1 overflow-hidden">
-                  <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
-                  <p className="text-xs text-air-sup-blue/50 mt-0.5">{formatBytes(file.size)}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate group-hover:text-cyan-azure-light transition-colors">{file.name}</p>
+                  <p className="text-[10px] font-bold text-air-sup-blue/40 mt-1 uppercase tracking-widest">{formatBytes(file.size)}</p>
                 </div>
 
-                <CheckCircle2 className="w-4 h-4 text-emerald-400/70 shrink-0" />
-
-                <button onClick={(e) => remove(file, e)}
-                  className="p-1.5 rounded-lg text-air-sup-blue/40 hover:text-rose-400 hover:bg-rose-400/10 transition-colors shrink-0">
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
+                    <button onClick={(e) => remove(file, e)}
+                    className="p-2 rounded-xl text-air-sup-blue/20 hover:text-rose-400 hover:bg-rose-400/10 transition-all shrink-0">
+                    <X className="w-4 h-4" />
+                    </button>
+                </div>
               </motion.div>
             ))}
 
             {/* Add more (multiple mode) */}
             {multiple && files.length < maxFiles && (
-              <div {...getRootProps()} className="flex items-center justify-center gap-2 p-2.5 rounded-xl cursor-pointer transition-colors text-xs text-air-sup-blue/50 hover:text-air-sup-blue hover:bg-cyan-azure/5"
-                style={{ border: '1px dashed rgba(78,122,177,0.2)' }}>
+              <div {...getRootProps()} className="flex items-center justify-center gap-3 p-4 rounded-2xl cursor-pointer transition-all text-xs font-bold text-air-sup-blue/40 uppercase tracking-widest hover:text-cyan-azure hover:bg-cyan-azure/5 border-2 border-dashed border-white/5 hover:border-cyan-azure/20">
                 <input {...getInputProps()} />
-                <UploadCloud className="w-3.5 h-3.5" />
+                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                    <UploadCloud className="w-4 h-4" />
+                </div>
                 Add more files ({files.length}/{maxFiles})
               </div>
             )}

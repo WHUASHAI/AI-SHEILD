@@ -19,73 +19,83 @@ function sentenceCount(text: string): number {
   return text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
 }
 
-/** Generate realistic-looking mock matched sources */
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+/** Generate realistic-looking mock matched sources deterministically */
 function generateMockSources(text: string, mode: string) {
+  const seed = hashString(text);
+  
+  // Intelligent mock heuristic: if the text is quite long (likely copy-pasted from Wikipedia)
+  // or contains encyclopedic structures like "is a", force it to be flagged as Wikipedia plagiarism.
+  const isWikipediaLike = text.length > 250 || /is a|was a|refers to/i.test(text.substring(0, 50));
+  const isHighPlagiarism = isWikipediaLike || (seed % 100) > 60; 
   const deepMultiplier = mode === 'deep' ? 1.3 : mode === 'academic' ? 1.15 : 1;
 
-  const sources = [
-    {
-      id: 'src_001',
-      title: 'Wikipedia – Artificial Intelligence',
-      url: 'https://en.wikipedia.org/wiki/Artificial_intelligence',
-      domain: 'en.wikipedia.org',
-      similarity: Math.min(Math.floor(31 * deepMultiplier), 100),
-      matchedWords: 47,
-      matchType: 'paraphrase' as const,
-      snippet:
-        'Artificial intelligence (AI) is the intelligence demonstrated by machines, as opposed to the natural intelligence displayed by animals including humans.',
-      publishedDate: '2024-01-15',
-    },
-    {
-      id: 'src_002',
-      title: 'MIT Technology Review – The Future of AI',
-      url: 'https://www.technologyreview.com/ai-future',
-      domain: 'technologyreview.com',
-      similarity: Math.min(Math.floor(18 * deepMultiplier), 100),
-      matchedWords: 29,
-      matchType: 'exact' as const,
-      snippet:
-        'AI systems have rapidly moved from science fiction to everyday reality, transforming industries from healthcare to finance.',
-      publishedDate: '2023-11-08',
-    },
-    {
-      id: 'src_003',
+  const sources = [];
+  
+  if (isHighPlagiarism) {
+    // If it triggered the intelligent heuristic, try to guess the subject from the first few words
+    const subject = text.trim().split(/\s+/).slice(0, 3).join('_').replace(/[^a-zA-Z_]/g, '');
+    const wikiUrl = isWikipediaLike ? `https://en.wikipedia.org/wiki/${subject || 'Article'}` : 'https://en.wikipedia.org/wiki/Artificial_intelligence';
+    const wikiTitle = isWikipediaLike ? `Wikipedia – ${subject.replace(/_/g, ' ') || 'Article'}` : 'Wikipedia – Artificial Intelligence';
+
+    sources.push(
+      {
+        id: `src_${seed % 1000}`,
+        title: wikiTitle,
+        url: wikiUrl,
+        domain: 'en.wikipedia.org',
+        similarity: Math.min(Math.floor((75 + (seed % 20)) * deepMultiplier), 100),
+        matchedWords: Math.floor(text.split(/\s+/).length * 0.8),
+        matchType: 'exact' as const,
+        snippet: text.substring(0, 150) + '...',
+        publishedDate: '2024-01-15',
+      },
+      {
+        id: `src_${(seed + 1) % 1000}`,
+        title: 'MIT Technology Review – Analysis',
+        url: 'https://www.technologyreview.com/analysis',
+        domain: 'technologyreview.com',
+        similarity: Math.min(Math.floor((25 + (seed % 15)) * deepMultiplier), 100),
+        matchedWords: 29 + (seed % 20),
+        matchType: 'paraphrase' as const,
+        snippet: text.length > 200 ? text.substring(100, 250) + '...' : text.substring(0, 50) + '...',
+        publishedDate: '2023-11-08',
+      }
+    );
+  } else if ((seed % 100) > 30) {
+    // Medium plagiarism
+    sources.push({
+      id: `src_${seed % 1000}`,
       title: 'Stanford Encyclopedia of Philosophy',
       url: 'https://plato.stanford.edu/entries/artificial-intelligence/',
       domain: 'plato.stanford.edu',
-      similarity: Math.min(Math.floor(9 * deepMultiplier), 100),
-      matchedWords: 14,
+      similarity: Math.min(Math.floor((15 + (seed % 15)) * deepMultiplier), 100),
+      matchedWords: 14 + (seed % 10),
       matchType: 'paraphrase' as const,
-      snippet:
-        'Questions about ethical implications of autonomous systems have become central to modern philosophy of mind and technology.',
+      snippet: text.substring(0, 100) + '...',
       publishedDate: '2023-09-20',
-    },
-    {
-      id: 'src_004',
-      title: 'Harvard Business Review – AI in the Workplace',
-      url: 'https://hbr.org/ai-workplace',
-      domain: 'hbr.org',
-      similarity: Math.min(Math.floor(7 * deepMultiplier), 100),
-      matchedWords: 11,
-      matchType: 'structural' as const,
-      snippet:
-        'Organizations must carefully manage the transition to AI-powered workflows to avoid widening the digital divide.',
-      publishedDate: '2024-02-29',
-    },
-  ];
+    });
+  }
 
-  // For 'deep' or 'academic' mode, add extra sources
-  if (mode !== 'standard') {
+  // Add random structural match for academic/deep modes
+  if (mode !== 'standard' && (seed % 2 === 0)) {
     sources.push({
-      id: 'src_005',
+      id: `src_${(seed + 2) % 1000}`,
       title: 'ResearchGate – Algorithmic Bias in ML Systems',
       url: 'https://www.researchgate.net/publication/12345678',
       domain: 'researchgate.net',
-      similarity: Math.min(Math.floor(5 * deepMultiplier), 100),
-      matchedWords: 8,
-      matchType: 'paraphrase' as const,
-      snippet:
-        'Systematic biases embedded in training data propagate through learned models, producing disparate outcomes across demographic groups.',
+      similarity: Math.min(Math.floor((8 + (seed % 10)) * deepMultiplier), 100),
+      matchedWords: 8 + (seed % 5),
+      matchType: 'structural' as const,
+      snippet: text.substring(0, 80) + '...',
       publishedDate: '2023-07-12',
     });
   }
@@ -93,17 +103,21 @@ function generateMockSources(text: string, mode: string) {
   return sources;
 }
 
-/** Produce a per-sentence breakdown with similarity scores */
+/** Produce a per-sentence breakdown with similarity scores deterministically */
 function generateSentenceAnalysis(text: string) {
+  const seed = hashString(text);
   const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 10);
+  
   return sentences.slice(0, 12).map((sentence, i) => {
-    const base = [0.82, 0.12, 0.45, 0.05, 0.67, 0.28, 0.91, 0.14, 0.53, 0.07, 0.39, 0.22];
-    const score = base[i % base.length];
+    const score = ((seed + i * 17) % 100) / 100;
+    // Boost score if it's a "plagiarized" document based on seed
+    const finalScore = ((seed % 100) > 60) ? Math.min(1, score + 0.3) : score * 0.5;
+
     return {
       sentence: sentence.trim().slice(0, 140),
-      similarityScore: score,
-      flag: score > 0.6 ? ('high' as const) : score > 0.3 ? ('medium' as const) : ('low' as const),
-      matchedSource: score > 0.6 ? 'en.wikipedia.org' : score > 0.3 ? 'technologyreview.com' : null,
+      similarityScore: finalScore,
+      flag: finalScore > 0.6 ? ('high' as const) : finalScore > 0.3 ? ('medium' as const) : ('low' as const),
+      matchedSource: finalScore > 0.6 ? 'en.wikipedia.org' : finalScore > 0.3 ? 'technologyreview.com' : null,
     };
   });
 }

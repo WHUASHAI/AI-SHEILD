@@ -53,6 +53,9 @@ type InputMode = 'text' | 'url' | 'file';
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function SimilarityMeter({ value }: { value: number }) {
+  const isOriginal = value < 10;
+  const displayValue = isOriginal ? (100 - value) : value;
+
   const color =
     value >= 60 ? '#ef4444' : value >= 30 ? '#f59e0b' : value >= 10 ? '#4E7AB1' : '#10b981';
   const label =
@@ -69,12 +72,12 @@ function SimilarityMeter({ value }: { value: number }) {
             strokeLinecap="round"
             strokeDasharray={`${2 * Math.PI * 50}`}
             initial={{ strokeDashoffset: 2 * Math.PI * 50 }}
-            animate={{ strokeDashoffset: 2 * Math.PI * 50 * (1 - value / 100) }}
+            animate={{ strokeDashoffset: 2 * Math.PI * 50 * (1 - displayValue / 100) }}
             transition={{ duration: 1.5, ease: 'easeOut' }}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-black text-foreground">{value}%</span>
+          <span className="text-3xl font-black text-foreground">{displayValue}%</span>
           <span className="text-xs font-medium mt-0.5" style={{ color }}>{label}</span>
         </div>
       </div>

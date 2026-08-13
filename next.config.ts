@@ -12,8 +12,10 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    serverActions: { bodySizeLimit: '100mb' },
+    serverActions: { bodySizeLimit: '200mb' },
   },
+  // Allow large multipart/form-data bodies in Route Handlers (images, videos)
+  serverExternalPackages: [],
 };
 
 export default nextConfig;

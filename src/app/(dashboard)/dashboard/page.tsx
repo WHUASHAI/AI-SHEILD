@@ -75,10 +75,14 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
+import { useRecentScans } from '@/lib/use-recent-scans';
+
 export default function DashboardPage() {
+  const { scans } = useRecentScans();
+  const displayScans = scans.length > 0 ? scans : MOCK_SCANS;
+
   return (
     <motion.div className="space-y-8" variants={container} initial="hidden" animate="show">
-
       {/* Page header */}
       <motion.div variants={item} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -187,7 +191,7 @@ export default function DashboardPage() {
               View all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          <RecentScansTable scans={MOCK_SCANS} />
+          <RecentScansTable scans={displayScans} />
         </div>
       </motion.div>
     </motion.div>
