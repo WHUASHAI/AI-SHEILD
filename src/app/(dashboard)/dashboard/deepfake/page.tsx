@@ -36,6 +36,7 @@ export default function DeepfakeDetectorPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [result, setResult] = useState<DeepfakeScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleScan = useCallback(async () => {
     if (files.length === 0) return;
@@ -60,12 +61,13 @@ export default function DeepfakeDetectorPage() {
       }
 
       setResult(data as DeepfakeScanResult);
+      router.push('/dashboard');
     } catch {
       setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
-  }, [files]);
+  }, [files, router]);
 
   const config = result ? (RESULT_CONFIG[result.result] ?? RESULT_CONFIG.human) : null;
   const Icon = config?.icon ?? Zap;

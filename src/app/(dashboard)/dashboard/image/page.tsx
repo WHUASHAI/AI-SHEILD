@@ -37,6 +37,7 @@ const RESULT_CONFIG = {
 };
 
 import { useRecentScans } from '@/lib/use-recent-scans';
+import { useRouter } from 'next/navigation';
 
 export default function ImageDetectorPage() {
   const [loading, setLoading] = useState(false);
@@ -44,6 +45,7 @@ export default function ImageDetectorPage() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { addScan } = useRecentScans();
+  const router = useRouter();
 
   const handleScan = useCallback(async () => {
     if (files.length === 0) return;
@@ -67,19 +69,19 @@ export default function ImageDetectorPage() {
         return;
       }
 
-      setResult(data as ScanResult);
       addScan({
         name: files[0].name,
         type: 'image',
         result: data.label,
         confidence: data.confidence,
       });
+      router.push('/dashboard');
     } catch {
       setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
-  }, [files, addScan]);
+  }, [files, addScan, router]);
 
   const config = result ? (RESULT_CONFIG[result.result] ?? RESULT_CONFIG.inconclusive) : null;
   const Icon = config?.icon ?? Zap;

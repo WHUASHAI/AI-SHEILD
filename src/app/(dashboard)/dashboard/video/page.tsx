@@ -41,6 +41,7 @@ const RESULT_CONFIG = {
 type InputMode = 'upload' | 'url';
 
 import { useRecentScans } from '@/lib/use-recent-scans';
+import { useRouter } from 'next/navigation';
 
 export default function VideoDetectorPage() {
   const [mode,    setMode]    = useState<InputMode>('upload');
@@ -51,6 +52,7 @@ export default function VideoDetectorPage() {
   const [error,   setError]   = useState<string | null>(null);
   const [hint,    setHint]    = useState<string | null>(null);
   const { addScan } = useRecentScans();
+  const router = useRouter();
 
   const reset = () => { setResult(null); setError(null); setHint(null); };
 
@@ -83,19 +85,19 @@ export default function VideoDetectorPage() {
         if (data.hint) setHint(data.hint);
         return;
       }
-      setResult(data as VideoScanResult);
       addScan({
         name: isUpload ? files[0].name : url.trim().substring(0, 30) + '...',
         type: 'video',
         result: data.label,
         confidence: data.confidence,
       });
+      router.push('/dashboard');
     } catch {
       setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
-  }, [mode, files, url, addScan]);
+  }, [mode, files, url, addScan, router]);
 
   const canRun   = mode === 'upload' ? files.length > 0 : url.trim().length > 0;
   const config   = result ? (RESULT_CONFIG[result.result] ?? RESULT_CONFIG.inconclusive) : null;

@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { useRecentScans } from '@/lib/use-recent-scans';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -226,6 +228,8 @@ export default function PlagiarismDetectorPage() {
   const [fileName, setFileName]   = useState<string | null>(null);
   const fileRef                   = useRef<HTMLInputElement>(null);
   const resultRef                 = useRef<HTMLDivElement>(null);
+  const { addScan }               = useRecentScans();
+  const router                    = useRouter();
 
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
   const charCount = text.length;
@@ -264,8 +268,13 @@ export default function PlagiarismDetectorPage() {
         throw new Error(data.error ?? 'Scan failed');
       }
       const data: ScanResult = await res.json();
-      setResult(data);
-      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      addScan({
+        name: content.substring(0, 30) + '...',
+        type: 'text',
+        result: data.verdict,
+        confidence: data.overallSimilarity,
+      });
+      router.push('/dashboard');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {

@@ -21,6 +21,7 @@ interface TextScanResult {
 }
 
 import { useRecentScans } from '@/lib/use-recent-scans';
+import { useRouter } from 'next/navigation';
 
 export default function TextDetectorPage() {
   const [text, setText] = useState('');
@@ -28,6 +29,7 @@ export default function TextDetectorPage() {
   const [result, setResult] = useState<TextScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { addScan } = useRecentScans();
+  const router = useRouter();
 
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
   const charCount = text.length;
@@ -48,13 +50,13 @@ export default function TextDetectorPage() {
       if (!res.ok) {
         setError(data.error ?? 'Failed to analyze text.');
       } else {
-        setResult(data as TextScanResult);
         addScan({
           name: text.substring(0, 20) + '...',
           type: 'text',
           result: data.result,
           confidence: data.confidence,
         });
+        router.push('/dashboard');
       }
     } catch (err) {
       setError('Network error analyzing text.');
