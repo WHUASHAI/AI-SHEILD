@@ -5,6 +5,8 @@ import { UserX, ShieldCheck, Zap, Info, AlertTriangle, CheckCircle2, XCircle } f
 import { Button } from '@/components/ui/button';
 import { FileDropzone } from '@/components/detection/file-dropzone';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { useRecentScans } from '@/lib/use-recent-scans';
 
 interface DeepfakeScanResult {
   scanId: string;
@@ -36,6 +38,7 @@ export default function DeepfakeDetectorPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [result, setResult] = useState<DeepfakeScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { addScan } = useRecentScans();
   const router = useRouter();
 
   const handleScan = useCallback(async () => {
@@ -61,6 +64,12 @@ export default function DeepfakeDetectorPage() {
       }
 
       setResult(data as DeepfakeScanResult);
+      addScan({
+        name: files[0].name,
+        type: data.isVideo ? 'video' : 'image',
+        result: data.label,
+        confidence: data.confidence,
+      });
       router.push('/dashboard');
     } catch {
       setError('Network error. Please check your connection and try again.');

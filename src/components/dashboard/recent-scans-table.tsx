@@ -11,7 +11,8 @@ export type ScanResultStatus =
   | 'Likely AI-edited'
   | 'Likely AI-enhanced'
   | 'Mixed or partially synthetic'
-  | 'Inconclusive';
+  | 'Inconclusive'
+  | string;
 
 export type ScanType = 'text' | 'image' | 'video';
 
