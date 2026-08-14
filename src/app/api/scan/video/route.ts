@@ -1,12 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  checkVideoFile,
-  checkVideoUrl,
-  interpretAiScore,
-  interpretDeepfakeScore,
-  avgVideoAiScore,
-  avgVideoDeepfakeScore,
-} from '@/lib/sightengine';
 
 export const runtime    = 'nodejs';
 export const maxDuration = 60;
@@ -23,20 +15,106 @@ const ALLOWED_VIDEO_MIMES = [
   'video/mpeg',
 ];
 
+// Seeded random generator for deterministic mock results
+function seededRandom(seed: number) {
+  const x = Math.sin(seed++) * 10000;
+  return x - Math.floor(x);
+}
+
+function generateMockVideoAnalysis(fileName: string, fileSize: number) {
+  const seed = fileName.length + fileSize;
+  const isAI = seededRandom(seed) > 0.5;
+  const baseScore = isAI ? 0.65 + seededRandom(seed + 1) * 0.3 : 0.05 + seededRandom(seed + 1) * 0.3;
+  const deepfakeBase = isAI ? seededRandom(seed + 2) * 0.4 : seededRandom(seed + 2) * 0.1;
+  
+  const frameCount = 30 + Math.floor(seededRandom(seed + 3) * 60);
+  const timeline = [];
+  
+  let aiSuspicious = 0;
+  let deepfakeSuspicious = 0;
+
+  for (let i = 0; i < frameCount; i++) {
+    const aiVariance = (seededRandom(seed + i) - 0.5) * 0.2;
+    const dfVariance = (seededRandom(seed + i + 100) - 0.5) * 0.1;
+    
+    const frameAi = Math.max(0, Math.min(1, baseScore + aiVariance));
+    const frameDf = Math.max(0, Math.min(1, deepfakeBase + dfVariance));
+    
+    if (frameAi > 0.5) aiSuspicious++;
+    if (frameDf > 0.5) deepfakeSuspicious++;
+
+    timeline.push({
+      timestamp: parseFloat((i * 0.5).toFixed(2)),
+      aiScore: Math.round(frameAi * 100),
+      deepfakeScore: Math.round(frameDf * 100)
+    });
+  }
+
+  const avgAi = timeline.reduce((acc, f) => acc + f.aiScore, 0) / frameCount / 100;
+  const avgDf = timeline.reduce((acc, f) => acc + f.deepfakeScore, 0) / frameCount / 100;
+  
+  let result = 'human';
+  let label = 'Likely Authentic';
+  let confidence = Math.round((1 - avgAi) * 100);
+  
+  if (avgAi > 0.7) {
+    result = 'ai_generated';
+    label = 'AI Generated Video';
+    confidence = Math.round(avgAi * 100);
+  } else if (avgAi > 0.4) {
+    result = 'ai_edited';
+    label = 'Suspicious/AI Edited';
+    confidence = Math.round(avgAi * 100);
+  }
+
+  return {
+    scanId: `vid_mock_${Date.now()}`,
+    status: 'completed',
+    provider: 'Intelligent Mock Generator',
+    result,
+    label,
+    confidence,
+    overallScore: confidence,
+    breakdown: {
+      avgAiGeneratedScore: Math.round(avgAi * 100),
+      avgDeepfakeScore: Math.round(avgDf * 100),
+      totalFramesAnalyzed: frameCount,
+      aiSuspiciousFrames: aiSuspicious,
+      deepfakeSuspiciousFrames: deepfakeSuspicious,
+    },
+    signals: [
+      {
+        name: 'Temporal Consistency',
+        score: avgAi,
+        description: 'Analysis of motion and temporal coherence across frames',
+      },
+      {
+        name: 'Frame-by-Frame Artifacts',
+        score: avgAi * 0.9,
+        description: 'Detection of synthetic generation artifacts in individual frames',
+      },
+      {
+        name: 'Deepfake Suspicion',
+        score: avgDf,
+        description: 'Face manipulation probability across video timeline',
+      },
+    ],
+    timeline,
+    limitations: [
+      'This is a deterministic mock generator used for demonstration purposes.',
+      'A real API subscription is required to process actual video files.',
+    ],
+    disclaimer: 'Running in Mock Mode. No actual analysis performed.',
+    modelVersion: 'mock-video-v2.0',
+  };
+}
+
 export async function POST(req: NextRequest) {
   try {
     const contentType = req.headers.get('content-type') ?? '';
-
-    // ── Validate credentials exist ──
-    if (!process.env.SIGHTENGINE_API_USER || !process.env.SIGHTENGINE_API_SECRET) {
-      console.error('[video-scan] Missing Sightengine credentials');
-      return NextResponse.json(
-        { error: 'Detection service is not configured. Contact support.' },
-        { status: 503 },
-      );
-    }
-
-    let seResponse;
+    
+    // Artificial delay to simulate video processing
+    await new Promise((resolve) => setTimeout(resolve, 3500));
 
     if (contentType.includes('application/json')) {
       let body: { url?: string };
@@ -46,144 +124,40 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
       }
 
-      if (!body.url || typeof body.url !== 'string') {
-        return NextResponse.json(
-          { error: 'Provide a JSON body with { "url": "https://..." } pointing to a public video.' },
-          { status: 400 },
-        );
+      if (!body.url) {
+        return NextResponse.json({ error: 'Provide a video URL.' }, { status: 400 });
       }
-
-      let urlToTest = body.url.trim();
-      if (!urlToTest.startsWith('http://') && !urlToTest.startsWith('https://')) {
-        urlToTest = 'https://' + urlToTest;
-      }
-
-      seResponse = await checkVideoUrl(urlToTest, 'genai,deepfake');
+      
+      const mockResult = generateMockVideoAnalysis(body.url, body.url.length * 1024);
+      return NextResponse.json(mockResult);
+      
     } else if (contentType.includes('multipart/form-data')) {
       const form = await req.formData();
       const file = form.get('file');
 
       if (!file || !(file instanceof File)) {
-        return NextResponse.json({ error: 'No video file provided. Add a "file" field.' }, { status: 400 });
+        return NextResponse.json({ error: 'No video file provided.' }, { status: 400 });
       }
 
       const mimeType = file.type.toLowerCase();
       if (!ALLOWED_VIDEO_MIMES.includes(mimeType)) {
         return NextResponse.json(
           {
-            error:  `❌ Wrong file type (${file.type || 'unknown'}). This detector only accepts video files: MP4, MOV, WebM, AVI, MKV.`,
-            hint:   'To analyze images use the Image detector. For text use the Text detector.',
+            error: `❌ Wrong file type (${file.type || 'unknown'}). This detector only accepts video files.`,
           },
           { status: 400 },
         );
       }
 
-      seResponse = await checkVideoFile(file, 'genai,deepfake');
+      const mockResult = generateMockVideoAnalysis(file.name, file.size);
+      return NextResponse.json(mockResult);
+      
     } else {
       return NextResponse.json(
         { error: 'Send a multipart file upload or a JSON body with { "url": "..." }.' },
         { status: 400 },
       );
     }
-
-    if (seResponse.status === 'failure' || seResponse.error) {
-      const detail = seResponse.error?.message ?? 'Unknown Sightengine error';
-      console.error('[video-scan] Sightengine error:', detail);
-      return NextResponse.json(
-        { error: `Detection service error: ${detail}` },
-        { status: 502 },
-      );
-    }
-
-    const frames = seResponse.data?.frames ?? [];
-    const frameCount = frames.length;
-
-    let aiSuspicious = 0;
-    let deepfakeSuspicious = 0;
-
-    const timeline = frames.map((frame) => {
-      const ts = frame.info.ts;
-      const aiScoreRaw = frame.type?.ai_generated ?? 0;
-      let dfScoreRaw = 0;
-      if (frame.faces && frame.faces.length > 0) {
-        dfScoreRaw = Math.max(...frame.faces.map(f => f.deepfake));
-      }
-
-      if (aiScoreRaw > 0.5) aiSuspicious++;
-      if (dfScoreRaw > 0.5) deepfakeSuspicious++;
-
-      return {
-        timestamp: ts,
-        aiScore: Math.round(aiScoreRaw * 100),
-        deepfakeScore: Math.round(dfScoreRaw * 100),
-      };
-    });
-
-    const avgAiRaw = avgVideoAiScore(seResponse);
-    const avgDeepfakeRaw = avgVideoDeepfakeScore(seResponse);
-
-    const ai = interpretAiScore(avgAiRaw);
-    const deepfake = interpretDeepfakeScore(avgDeepfakeRaw);
-
-    const isDeepfakeResult = deepfake.result === 'deepfake' && avgDeepfakeRaw > 0;
-    const finalResult = isDeepfakeResult ? 'deepfake' : ai.result;
-    
-    let finalScore = 0;
-    if (finalResult === 'deepfake') {
-      finalScore = Math.round(avgDeepfakeRaw * 100);
-    } else if (finalResult === 'ai_generated') {
-      finalScore = Math.round(avgAiRaw * 100);
-    } else {
-      finalScore = Math.round((1 - avgAiRaw) * 100);
-    }
-    const finalLabel = isDeepfakeResult ? deepfake.label : ai.label;
-
-    return NextResponse.json({
-      scanId:       `vid_${Date.now()}`,
-      status:       'completed',
-      provider:     'Sightengine',
-      result:       finalResult,
-      label:        finalLabel,
-      confidence:   finalScore,
-      overallScore: finalScore,
-
-      breakdown: {
-        avgAiGeneratedScore:    Math.round(avgAiRaw * 100),
-        avgDeepfakeScore:       Math.round(avgDeepfakeRaw * 100),
-        totalFramesAnalyzed:    frameCount,
-        aiSuspiciousFrames:     aiSuspicious,
-        deepfakeSuspiciousFrames: deepfakeSuspicious,
-      },
-
-      signals: [
-        {
-          name:        'Average AI Generation Score',
-          score:       avgAiRaw,
-          description: `Averaged across ${frameCount} analyzed frames`,
-        },
-        {
-          name:        'Deepfake Detection Score',
-          score:       avgDeepfakeRaw,
-          description: 'Face manipulation probability across detected faces in video frames',
-        },
-        {
-          name:        'Suspicious Frame Rate',
-          score:       frameCount > 0 ? aiSuspicious / frameCount : 0,
-          description: `${aiSuspicious} of ${frameCount} frames flagged as highly suspicious`,
-        },
-      ],
-
-      timeline,
-
-      limitations: [
-        'Video compression significantly reduces detection accuracy',
-        'Social media re-encoding may mask synthetic artifacts',
-        'Analysis is sampled per frame — rapid cuts may reduce coverage',
-        'Very short clips provide limited evidence',
-      ],
-      disclaimer: 'AI Shield uses Sightengine probability models. Results may contain false positives or negatives.',
-      modelVersion: 'sightengine-video-v1.0',
-    });
 
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
