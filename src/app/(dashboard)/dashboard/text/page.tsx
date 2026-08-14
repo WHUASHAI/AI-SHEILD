@@ -56,7 +56,7 @@ export default function TextDetectorPage() {
           result: data.result,
           confidence: data.confidence,
         });
-        router.push('/dashboard');
+        setResult(data);
       }
     } catch (err) {
       setError('Network error analyzing text.');

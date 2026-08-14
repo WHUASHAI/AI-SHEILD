@@ -302,7 +302,7 @@ export function Hero() {
                   className="group w-full sm:w-auto bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 text-base h-13 px-8 btn-shimmer shadow-palette-glow transition-all duration-300 hover:shadow-[0_0_40px_rgba(78,122,177,0.6)]"
                   asChild
                 >
-                  <Link href="/dashboard/new-scan">
+                  <Link href="/dashboard">
                     Start Scanning
                     <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Link>

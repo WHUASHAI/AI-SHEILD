@@ -274,7 +274,7 @@ export default function PlagiarismDetectorPage() {
         result: data.verdict,
         confidence: data.overallSimilarity,
       });
-      router.push('/dashboard');
+      setResult(data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {

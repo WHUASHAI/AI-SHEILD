@@ -94,7 +94,7 @@ export function Navbar() {
             className="bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 shadow-palette-md"
             asChild
           >
-            <Link href="/dashboard/new-scan">Start Scanning</Link>
+            <Link href="/dashboard">Start Scanning</Link>
           </Button>
         </div>
 
@@ -154,7 +154,7 @@ export function Navbar() {
               asChild
               onClick={() => setMobileMenuOpen(false)}
             >
-              <Link href="/dashboard/new-scan">Start Scanning</Link>
+              <Link href="/dashboard">Start Scanning</Link>
             </Button>
           </div>
         </div>

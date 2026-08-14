@@ -86,7 +86,7 @@ export function StartScanning() {
             className="group bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 text-base h-14 px-10 btn-shimmer animate-glow-pulse hover:animate-none hover:shadow-[0_0_50px_rgba(78,122,177,0.7)] transition-all duration-300"
             asChild
           >
-            <Link href="/dashboard/new-scan">
+            <Link href="/dashboard">
               Start Scanning Now
               <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
