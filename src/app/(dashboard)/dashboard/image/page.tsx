@@ -74,6 +74,7 @@ export default function ImageDetectorPage() {
         type: 'image',
         result: data.label,
         confidence: data.confidence,
+      });
       setResult(data);
     } catch {
       setError('Network error. Please check your connection and try again.');

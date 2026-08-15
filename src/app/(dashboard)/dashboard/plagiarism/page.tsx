@@ -50,7 +50,7 @@ interface ScanResult {
 }
 
 type ScanMode = 'standard' | 'deep' | 'academic';
-type InputMode = 'text' | 'url' | 'file';
+type InputMode = 'text' | 'file';
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -220,7 +220,6 @@ export default function PlagiarismDetectorPage() {
   const [inputMode, setInputMode] = useState<InputMode>('text');
   const [scanMode, setScanMode]   = useState<ScanMode>('standard');
   const [text, setText]           = useState('');
-  const [url, setUrl]             = useState('');
   const [loading, setLoading]     = useState(false);
   const [result, setResult]       = useState<ScanResult | null>(null);
   const [error, setError]         = useState<string | null>(null);
@@ -244,7 +243,7 @@ export default function PlagiarismDetectorPage() {
   }, []);
 
   const handleScan = async () => {
-    const content = inputMode === 'url' ? url : text;
+    const content = text;
     if (!content.trim() || content.trim().length < 20) {
       setError('Please enter at least 20 characters to scan.');
       return;
@@ -258,8 +257,8 @@ export default function PlagiarismDetectorPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: inputMode === 'url' ? `[URL analysis] ${url}` : text,
-          sourceUrl: inputMode === 'url' ? url : '',
+          text: text,
+          sourceUrl: '',
           mode: scanMode,
         }),
       });
@@ -284,7 +283,6 @@ export default function PlagiarismDetectorPage() {
 
   const handleClear = () => {
     setText('');
-    setUrl('');
     setResult(null);
     setError(null);
     setFileName(null);
@@ -353,7 +351,6 @@ export default function PlagiarismDetectorPage() {
             <div className="flex gap-1 p-1 rounded-xl bg-space-cadet-dark border border-cyan-azure/15">
               {([
                 { value: 'text', label: 'Paste Text', icon: FileText },
-                { value: 'url',  label: 'From URL',   icon: Globe },
                 { value: 'file', label: 'Upload File', icon: Upload },
               ] as { value: InputMode; label: string; icon: React.ElementType }[]).map((tab) => (
                 <button
@@ -399,22 +396,6 @@ export default function PlagiarismDetectorPage() {
                       {charCount < 20 ? `${20 - charCount} more chars needed` : '✓ Ready to scan'}
                     </span>
                   </div>
-                </motion.div>
-              )}
-
-              {inputMode === 'url' && (
-                <motion.div key="url" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
-                  <div className="relative">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ucla-blue" />
-                    <input
-                      type="url"
-                      value={url}
-                      onChange={(e) => setUrl(e.target.value)}
-                      placeholder="https://example.com/article-to-check"
-                      className="w-full bg-space-cadet-dark/60 border border-cyan-azure/20 rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-ucla-blue focus:outline-none focus:border-cyan-azure/50 focus:ring-1 focus:ring-cyan-azure/25 transition-all"
-                    />
-                  </div>
-                  <p className="text-xs text-ucla-blue px-1">We'll extract the main content from the URL and scan it for plagiarism.</p>
                 </motion.div>
               )}
 
@@ -478,7 +459,7 @@ export default function PlagiarismDetectorPage() {
           <div className="flex gap-3">
             <Button
               onClick={handleScan}
-              disabled={loading || (inputMode === 'text' && text.length < 20) || (inputMode === 'url' && !url.trim())}
+              disabled={loading || (inputMode === 'text' && text.length < 20)}
               className="flex-1 h-12 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white font-semibold text-base shadow-palette-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {loading ? (
@@ -487,7 +468,7 @@ export default function PlagiarismDetectorPage() {
                 <><ScanSearch className="w-5 h-5 mr-2" /> Check Plagiarism</>
               )}
             </Button>
-            {(text || url || result) && (
+            {(text || result) && (
               <Button
                 onClick={handleClear}
                 variant="outline"

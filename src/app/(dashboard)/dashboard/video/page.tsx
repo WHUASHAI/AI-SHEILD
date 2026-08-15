@@ -56,6 +56,51 @@ export default function VideoDetectorPage() {
 
   const reset = () => { setResult(null); setError(null); setHint(null); };
 
+  const extractFrames = async (file: File, frameCount: number): Promise<File[]> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.src = URL.createObjectURL(file);
+      video.crossOrigin = 'anonymous';
+      video.muted = true;
+      video.playsInline = true;
+
+      video.onloadedmetadata = () => {
+        const duration = video.duration;
+        const interval = duration / (frameCount + 1);
+        const frames: File[] = [];
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        let currentFrame = 1;
+
+        const captureFrame = () => {
+          if (currentFrame > frameCount) {
+            URL.revokeObjectURL(video.src);
+            resolve(frames);
+            return;
+          }
+          video.currentTime = currentFrame * interval;
+        };
+
+        video.onseeked = () => {
+          if (!ctx) return;
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              frames.push(new File([blob], `frame_${currentFrame}.jpg`, { type: 'image/jpeg' }));
+            }
+            currentFrame++;
+            captureFrame();
+          }, 'image/jpeg', 0.8);
+        };
+
+        video.onerror = (e) => reject(e);
+        captureFrame();
+      };
+    });
+  };
+
   const handleScan = useCallback(async () => {
     const isUpload = mode === 'upload';
     if (isUpload && files.length === 0) return;
@@ -68,8 +113,10 @@ export default function VideoDetectorPage() {
       let res: Response;
 
       if (isUpload) {
+        const extractedFrames = await extractFrames(files[0], 3); // Extract 3 keyframes
         const formData = new FormData();
-        formData.append('file', files[0]);
+        extractedFrames.forEach((f, i) => formData.append(`frame_${i}`, f));
+        formData.append('isFrames', 'true');
         res = await fetch('/api/scan/video', { method: 'POST', body: formData });
       } else {
         res = await fetch('/api/scan/video', {
@@ -90,6 +137,7 @@ export default function VideoDetectorPage() {
         type: 'video',
         result: data.label,
         confidence: data.confidence,
+      });
       setResult(data);
     } catch {
       setError('Network error. Please check your connection and try again.');
