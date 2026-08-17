@@ -29,40 +29,77 @@ export async function POST(req: NextRequest) {
 
     if (isMultipart) {
       const form = await req.formData();
-      const file = form.get('file');
+      const isFrames = form.get('isFrames') === 'true';
 
-      if (!file || !(file instanceof File)) {
-        return NextResponse.json({ error: 'No file provided' }, { status: 400 });
-      }
-
-      const isVideoFile = file.type.startsWith('video/');
-      const isImageFile = file.type.startsWith('image/');
-
-      if (!isVideoFile && !isImageFile) {
-        return NextResponse.json(
-          { error: 'Unsupported file type. Provide an image (JPEG/PNG/WebP) or video (MP4/MOV/WebM).' },
-          { status: 400 },
-        );
-      }
-
-      if (isVideoFile) {
+      if (isFrames) {
         isVideo = true;
-        // Mock Generator for video deepfake since free plan doesn't support video
-        const seed = file.name.length + file.size;
-        deepfakeScore = (seededRandom(seed) > 0.6) ? 0.7 + seededRandom(seed)*0.2 : seededRandom(seed)*0.3;
-        totalFrames = 30 + Math.floor(seededRandom(seed + 1) * 50);
-        
-        await new Promise((resolve) => setTimeout(resolve, 2500)); // Artificial delay
-        
+        const frames: File[] = [];
+        for (const [key, value] of form.entries()) {
+          if (key.startsWith('frame_') && value instanceof File) {
+            frames.push(value);
+          }
+        }
+
+        if (frames.length === 0) {
+          return NextResponse.json({ error: 'No frames provided.' }, { status: 400 });
+        }
+
+        totalFrames = frames.length;
+        let maxScore = 0;
+        let faceCount = 0;
+
+        for (const frame of frames) {
+          let seResponse;
+          try {
+             seResponse = await checkImageFile(frame, 'deepfake');
+          } catch(e) {
+             continue;
+          }
+          if (seResponse && seResponse.status === 'success' && seResponse.faces) {
+            for (const f of seResponse.faces) {
+               maxScore = Math.max(maxScore, f.deepfake);
+            }
+            if (seResponse.faces.length > 0) faceCount++;
+          }
+        }
+
+        if (faceCount === 0) {
+           return NextResponse.json({ error: 'No faces detected across video frames.' }, { status: 400 });
+        }
+
+        deepfakeScore = maxScore;
         faceData = [
           {
             id: 1,
-            deepfakeScore: Math.round(deepfakeScore * 100),
-            verdict: deepfakeScore >= 0.5 ? 'Deepfake' : 'Authentic',
+            deepfakeScore: Math.round(maxScore * 100),
+            verdict: maxScore >= 0.5 ? 'Deepfake' : 'Authentic',
           }
         ];
 
       } else {
+        const file = form.get('file');
+
+        if (!file || !(file instanceof File)) {
+          return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+        }
+
+        const isVideoFile = file.type.startsWith('video/');
+        const isImageFile = file.type.startsWith('image/');
+
+        if (!isVideoFile && !isImageFile) {
+          return NextResponse.json(
+            { error: 'Unsupported file type. Provide an image (JPEG/PNG/WebP) or video (MP4/MOV/WebM).' },
+            { status: 400 },
+          );
+        }
+
+        if (isVideoFile) {
+          return NextResponse.json(
+            { error: 'Video files must be processed via frame extraction.' },
+            { status: 400 },
+          );
+        }
+
         // Image deepfake check (Uses Real Sightengine API)
         const seResponse = await checkImageFile(file, 'deepfake');
 
