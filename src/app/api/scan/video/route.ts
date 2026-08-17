@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkImageFile } from '@/lib/sightengine';
+import { checkImageFile, checkVideoUrl, avgVideoAiScore, avgVideoDeepfakeScore } from '@/lib/sightengine';
 
 export const runtime    = 'nodejs';
 export const maxDuration = 60;
@@ -12,7 +12,64 @@ export async function POST(req: NextRequest) {
     if (!process.env.SIGHTENGINE_API_USER || !process.env.SIGHTENGINE_API_SECRET) {
       return NextResponse.json({ error: 'Sightengine credentials missing.' }, { status: 503 });
     }
+    
+    // ─── 1. Handle URL Inputs ────────────────────────────────────────────────
+    if (contentType.includes('application/json')) {
+      const body = await req.json();
+      if (body.url) {
+        const response = await checkVideoUrl(body.url, 'genai,deepfake');
+        
+        const avgAi = avgVideoAiScore(response);
+        const avgDf = avgVideoDeepfakeScore(response);
+        const frames = response.data?.frames ?? [];
 
+        let result = 'human';
+        let label = 'Likely Authentic';
+        let confidence = Math.round((1 - avgAi) * 100);
+
+        if (avgAi > 0.7 || avgDf > 0.5) {
+          result = avgDf > 0.5 ? 'deepfake' : 'ai_generated';
+          label = avgDf > 0.5 ? 'Deepfake Detected' : 'AI Generated Video';
+          confidence = Math.round(Math.max(avgAi, avgDf) * 100);
+        } else if (avgAi > 0.4) {
+          result = 'ai_enhanced';
+          label = 'Suspicious / Edited';
+          confidence = Math.round(avgAi * 100);
+        }
+
+        return NextResponse.json({
+          scanId: `vid_${Date.now()}`,
+          status: 'completed',
+          provider: 'Sightengine (URL Mode)',
+          result,
+          label,
+          confidence,
+          overallScore: confidence,
+          breakdown: {
+            avgAiGeneratedScore: Math.round(avgAi * 100),
+            avgDeepfakeScore: Math.round(avgDf * 100),
+            totalFramesAnalyzed: frames.length,
+            aiSuspiciousFrames: frames.filter(f => (f.type?.ai_generated ?? 0) > 0.5).length,
+            deepfakeSuspiciousFrames: frames.filter(f => (f.faces?.some(face => face.deepfake > 0.5) ?? false)).length,
+          },
+          signals: [
+            { name: 'Average AI Generation Score', score: avgAi, description: 'Average AI generated probability across all frames' },
+            { name: 'Average Deepfake Score', score: avgDf, description: 'Average face manipulation probability across all frames' },
+          ],
+          timeline: frames.map((f, i) => ({
+            timestamp: i + 1,
+            aiScore: Math.round((f.type?.ai_generated ?? 0) * 100),
+            deepfakeScore: Math.round(Math.max(...(f.faces?.map(face => face.deepfake) ?? [0])) * 100)
+          })),
+          limitations: [
+            'Analyzed natively via Sightengine Stream API.',
+          ],
+          disclaimer: 'Used Native API Mode.',
+        });
+      }
+    }
+
+    // ─── 2. Handle File Uploads (Bypass Mode) ────────────────────────────────
     if (contentType.includes('multipart/form-data')) {
       const form = await req.formData();
       const isFrames = form.get('isFrames') === 'true';

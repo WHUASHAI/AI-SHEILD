@@ -112,27 +112,21 @@ export async function POST(req: NextRequest) {
 
         const faces = seResponse.faces ?? [];
         
+        // If no faces are detected by the deepfake model, it might still be a fake image, 
+        // just not a 'face-swap'. We will gracefully fall back to 0 score rather than hard-crashing.
         if (faces.length === 0) {
-          return NextResponse.json(
-            { error: 'No faces detected. Deepfake analysis requires an image containing exactly one clear human face.' },
-            { status: 400 }
-          );
-        }
-        
-        if (faces.length > 1) {
-          return NextResponse.json(
-            { error: `Found ${faces.length} faces. For maximum accuracy, the Deepfake detector currently only supports analyzing one face at a time. Please crop the image to a single face.` },
-            { status: 400 }
-          );
+          deepfakeScore = 0;
+          faceData = [];
+        } else {
+          deepfakeScore = faces.reduce((max, f) => Math.max(max, f.deepfake), 0);
+          faceData = faces.map((f) => ({
+            id: f.id,
+            deepfakeScore: Math.round(f.deepfake * 100),
+            verdict: f.deepfake >= 0.5 ? 'Deepfake' : 'Authentic',
+            position: f.position,
+          }));
         }
 
-        deepfakeScore = faces.reduce((max, f) => Math.max(max, f.deepfake), 0);
-        faceData = faces.map((f) => ({
-          id: f.id,
-          deepfakeScore: Math.round(f.deepfake * 100),
-          verdict: f.deepfake >= 0.5 ? 'Deepfake' : 'Authentic',
-          position: f.position,
-        }));
       }
 
     } else {
@@ -156,27 +150,19 @@ export async function POST(req: NextRequest) {
 
       const faces = seResponse.faces ?? [];
       
+      // Graceful fallback for 0 faces
       if (faces.length === 0) {
-        return NextResponse.json(
-          { error: 'No faces detected. Deepfake analysis requires an image containing exactly one clear human face.' },
-          { status: 400 }
-        );
+        deepfakeScore = 0;
+        faceData = [];
+      } else {
+        deepfakeScore = faces.reduce((max, f) => Math.max(max, f.deepfake), 0);
+        faceData = faces.map((f) => ({
+          id: f.id,
+          deepfakeScore: Math.round(f.deepfake * 100),
+          verdict: f.deepfake >= 0.5 ? 'Deepfake' : 'Authentic',
+          position: f.position,
+        }));
       }
-      
-      if (faces.length > 1) {
-        return NextResponse.json(
-          { error: `Found ${faces.length} faces. For maximum accuracy, the Deepfake detector currently only supports analyzing one face at a time. Please crop the image to a single face.` },
-          { status: 400 }
-        );
-      }
-
-      deepfakeScore = faces.reduce((max, f) => Math.max(max, f.deepfake), 0);
-      faceData = faces.map((f) => ({
-        id: f.id,
-        deepfakeScore: Math.round(f.deepfake * 100),
-        verdict: f.deepfake >= 0.5 ? 'Deepfake' : 'Authentic',
-        position: f.position,
-      }));
     }
 
     const verdict = interpretDeepfakeScore(deepfakeScore);

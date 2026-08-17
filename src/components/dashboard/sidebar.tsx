@@ -94,6 +94,7 @@ export function DashboardSidebar({ collapsed, mobileOpen, onCloseMobile, onToggl
                     <Link
                       href={item.href}
                       title={collapsed ? item.label : undefined}
+                      onClick={onCloseMobile}
                       className={cn(
                         'relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group overflow-hidden',
                         isActive
