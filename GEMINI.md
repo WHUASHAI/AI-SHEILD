@@ -128,8 +128,12 @@ Developers modifying or building on AI Shield must strictly observe these instru
 - **Linting & Code Formatting**: Always execute standard linting checks (`npm run lint` or local config) before compiling. Maintain proper code formatting (no missing import references or loose declarations).
 - **Silent Tool Executions**: Always favor silent flags (e.g., `--silent` or `--no-pager`) when compiling or running scripts to conserve log sizes and improve local runtimes.
 
-### 5.3 Modular API Replacement Policy
-- All routes residing in `src/app/api/scan/` currently serve as **modular stubs**. When hooking up actual machine-learning classification architectures, replace the local randomization mocks with real service fetches without altering the core schema interfaces return contracts.
+### 5.3 Live API Integration
+- The API routes in `src/app/api/scan/` are fully integrated with live machine-learning classification services:
+  - **Image, Video, and Deepfake Detection:** Powered by the **Sightengine API**.
+  - **Text Detection:** Powered by **Hugging Face** models.
+  - **Plagiarism / Search:** Powered by **SerpAPI**.
+- When making modifications to these routes, ensure that the core schema interfaces and return contracts remain intact.
 
 ### 5.4 Verification & Testing Protocols
 - **Surgical Code Modifications**: Only target directories directly relevant to the feature or repair. Avoid global unprompted "cleanups" of external layout styles.

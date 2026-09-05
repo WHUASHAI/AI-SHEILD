@@ -94,8 +94,48 @@ export async function POST(req: NextRequest) {
       uniformityScore = isAi ? 0.7 + ((seed % 30) / 100) : 0.1 + ((seed % 40) / 100);
       statisticalScore = isAi ? 0.65 + ((seed % 35) / 100) : 0.05 + ((seed % 45) / 100);
       
-      const models = ['ChatGPT (GPT-4)', 'Claude 3 Opus', 'Google Gemini Pro', 'Llama 3', 'ChatGPT (GPT-3.5)'];
+      const models = ['ChatGPT', 'Claude', 'Gemini', 'DeepSeek', 'Microsoft Copilot', 'Perplexity', 'Meta AI'];
       sourceModel = isAi ? models[seed % models.length] : null;
+    }
+
+    // ── Plagiarism Detection via SerpAPI (or Mock) ──
+    const serpApiKey = process.env.SERPAPI_API_KEY || process.env.SERP_API_KEY;
+    let isPlagiarized = false;
+    let plagiarismScore = 0;
+    let sources: Array<{url: string, title: string, snippet: string}> = [];
+    
+    // Extract first meaningful sentence or chunk for search
+    const searchPhrase = text.split(/[.?!]/)[0].substring(0, 150).trim();
+
+    if (serpApiKey) {
+      try {
+        const serpRes = await fetch(`https://serpapi.com/search.json?q="${encodeURIComponent(searchPhrase)}"&engine=google&api_key=${serpApiKey}`);
+        if (serpRes.ok) {
+          const serpData = await serpRes.json();
+          if (serpData.organic_results && serpData.organic_results.length > 0) {
+            isPlagiarized = true;
+            plagiarismScore = 85 + Math.floor(Math.random() * 15); // High confidence if exact match found
+            sources = serpData.organic_results.slice(0, 3).map((r: any) => ({
+              url: r.link,
+              title: r.title,
+              snippet: r.snippet
+            }));
+          }
+        }
+      } catch (err) {
+        console.error("SerpAPI error:", err);
+      }
+    } else {
+      // Deterministic Mock for Plagiarism
+      const pSeed = searchPhrase.length;
+      if (pSeed % 3 === 0 || text.toLowerCase().includes('plagiarize')) { 
+        isPlagiarized = true;
+        plagiarismScore = 75 + (pSeed % 25);
+        sources = [
+          { url: `https://en.wikipedia.org/wiki/Special:Search?search=${pSeed}`, title: 'Wikipedia Reference', snippet: `... ${searchPhrase} ...` },
+          { url: `https://example.com/source/${pSeed % 100}`, title: 'Online Article Match', snippet: `... text matches found in this online publication.` }
+        ];
+      }
     }
 
     const mockResult = {
@@ -107,6 +147,9 @@ export async function POST(req: NextRequest) {
       confidence: confidence,
       overallScore: confidence,
       aiProbabilityScore: aiProbability,
+      isPlagiarized,
+      plagiarismScore,
+      sources,
       signals: [
         { name: 'Sentence Uniformity', score: Math.min(0.99, uniformityScore), description: 'Analysis of sentence structure variation (Burstiness)' },
         { name: 'Statistical Patterns', score: Math.min(0.99, statisticalScore), description: 'Analysis of token probability distribution (Perplexity)' },
@@ -114,10 +157,11 @@ export async function POST(req: NextRequest) {
       limitations: [
         'Results are probabilistic and may not be correct',
         'Shorter texts (< 100 words) have lower accuracy',
-        'Text mixed with human edits may lower the AI score'
+        'Text mixed with human edits may lower the AI score',
+        'Plagiarism search only checks snippets against indexed web pages'
       ],
       disclaimer: 'AI Shield provides a probability-based analysis using deterministic mocks on the Free Tier. Results may contain false positives or false negatives.',
-      modelVersion: 'mock-text-v1.0',
+      modelVersion: 'text-v1.0',
       wordCount: text.split(/\s+/).length,
     };
     

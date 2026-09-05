@@ -94,15 +94,10 @@ export async function POST(req: NextRequest) {
 
         for (let i = 0; i < frames.length; i++) {
           const frame = frames[i];
-          const res = await checkImageFile(frame, 'genai');
+          const res = await checkImageFile(frame, 'genai,deepfake');
           
-          let dfRes = null;
-          try {
-            dfRes = await checkImageFile(frame, 'deepfake');
-          } catch(e) {}
-
           const aiRaw = res.type?.ai_generated ?? 0;
-          const faces = (dfRes?.status === 'success' ? dfRes.faces : null) ?? [];
+          const faces = res.faces ?? [];
           const dfRaw = faces.reduce((max: number, f: any) => Math.max(max, f.deepfake), 0);
 
           totalAi += aiRaw;

@@ -44,10 +44,12 @@ export default function DeepfakeDetectorPage() {
   const extractFrames = async (file: File, frameCount: number): Promise<File[]> => {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');
-      video.src = URL.createObjectURL(file);
-      video.crossOrigin = 'anonymous';
+      video.style.display = 'none';
       video.muted = true;
       video.playsInline = true;
+      document.body.appendChild(video);
+      video.src = URL.createObjectURL(file);
+      video.load();
 
       video.onloadedmetadata = () => {
         const duration = video.duration;
@@ -60,6 +62,7 @@ export default function DeepfakeDetectorPage() {
         const captureFrame = () => {
           if (currentFrame > frameCount) {
             URL.revokeObjectURL(video.src);
+            if (video.parentNode) video.parentNode.removeChild(video);
             resolve(frames);
             return;
           }
@@ -67,20 +70,26 @@ export default function DeepfakeDetectorPage() {
         };
 
         video.onseeked = () => {
-          if (!ctx) return;
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob((blob) => {
-            if (blob) {
-              frames.push(new File([blob], `frame_${currentFrame}.jpg`, { type: 'image/jpeg' }));
-            }
-            currentFrame++;
-            captureFrame();
-          }, 'image/jpeg', 0.8);
+          // Give browser decoder time to paint the frame buffer
+          setTimeout(() => {
+            if (!ctx) return;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+              if (blob) {
+                frames.push(new File([blob], `frame_${currentFrame}.jpg`, { type: 'image/jpeg' }));
+              }
+              currentFrame++;
+              captureFrame();
+            }, 'image/jpeg', 0.8);
+          }, 150);
         };
 
-        video.onerror = (e) => reject(e);
+        video.onerror = (e) => {
+          if (video.parentNode) video.parentNode.removeChild(video);
+          reject(e);
+        };
         captureFrame();
       };
     });

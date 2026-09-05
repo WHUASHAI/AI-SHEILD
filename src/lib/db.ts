@@ -1,10 +1,8 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
+// Removed PrismaPg
 
 function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL!;
-  const adapter = new PrismaPg({ connectionString });
-  return new PrismaClient({ adapter, log: ['error'] });
+  return new PrismaClient({ log: ['error'] });
 }
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };

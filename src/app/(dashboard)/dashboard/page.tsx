@@ -175,9 +175,9 @@ export default function DashboardPage() {
               <Clock className="w-4 h-4 text-air-sup-blue/60" />
               <h3 className="text-sm font-semibold text-foreground">Recent Scans</h3>
             </div>
-            <Link href="/dashboard/history" className="flex items-center gap-1 text-xs text-cyan-azure hover:text-pink-lavender transition-colors">
-              View all <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            <div className="flex items-center gap-1 text-xs text-cyan-azure opacity-50">
+              Local Session
+            </div>
           </div>
           <RecentScansTable scans={displayScans} />
         </div>

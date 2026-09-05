@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FileText, ShieldCheck, Zap, Info, Bot, User, AlertTriangle } from 'lucide-react';
+import { FileText, ShieldCheck, Zap, Info, Bot, User, AlertTriangle, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,9 @@ interface TextScanResult {
   sourceModel?: string | null;
   confidence: number;
   overallScore: number;
+  isPlagiarized?: boolean;
+  plagiarismScore?: number;
+  sources?: Array<{url: string, title: string, snippet: string}>;
   signals: Array<{ name: string; score: number; description: string }>;
   limitations: string[];
   disclaimer: string;
@@ -202,6 +205,34 @@ export default function TextDetectorPage() {
                     </div>
                   </div>
                 </div>
+
+                {result.isPlagiarized !== undefined && (
+                  <div className={cn('glass-card rounded-2xl p-6 border', result.isPlagiarized ? 'bg-amber-500/10 border-amber-500/20' : 'bg-emerald-500/10 border-emerald-500/20')}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Globe className={cn('w-6 h-6', result.isPlagiarized ? 'text-amber-400' : 'text-emerald-400')} />
+                      <div>
+                        <p className="text-xs text-air-sup-blue">Plagiarism Check</p>
+                        <h3 className={cn('text-md font-bold', result.isPlagiarized ? 'text-amber-400' : 'text-emerald-400')}>
+                          {result.isPlagiarized ? `Plagiarism Detected (${result.plagiarismScore}%)` : 'Original / No Matches Found'}
+                        </h3>
+                      </div>
+                    </div>
+                    
+                    {result.isPlagiarized && result.sources && result.sources.length > 0 && (
+                      <div className="space-y-3 mt-4 border-t border-white/10 pt-4">
+                        <p className="text-xs font-medium text-foreground">Web Sources Found:</p>
+                        {result.sources.map((source, idx) => (
+                          <div key={idx} className="bg-space-cadet-dark/50 rounded-lg p-3 space-y-1">
+                            <a href={source.url} target="_blank" rel="noreferrer" className="text-cyan-azure text-xs font-semibold hover:underline truncate block" title={source.url}>
+                              {source.title}
+                            </a>
+                            <p className="text-[10px] text-ucla-blue line-clamp-2">{source.snippet}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="glass-card rounded-2xl p-4 text-xs text-ucla-blue space-y-2">
                   <p className="font-medium text-foreground">Limitations</p>

@@ -40,7 +40,6 @@ const navGroups = [
   {
     title: 'Management',
     items: [
-      { label: 'History',  icon: Clock,      href: '/dashboard/history' },
       { label: 'Reports',  icon: FolderOpen, href: '/dashboard/reports' },
       { label: 'Settings', icon: Settings,   href: '/dashboard/settings' },
     ],
