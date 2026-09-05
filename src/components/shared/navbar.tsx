@@ -61,8 +61,7 @@ export function Navbar() {
                     { label: 'Video Detector', href: '/dashboard/video' },
                     { label: 'Deepfake Detector', href: '/dashboard/deepfake' },
                     { label: 'Enhancement Detector', href: '/dashboard/enhancement' },
-                    { label: 'Plagiarism Detector', href: '/dashboard/plagiarism' },
-                    { label: 'Batch Scanner', href: '/dashboard/batch' }
+                    { label: 'Plagiarism Detector', href: '/dashboard/plagiarism' }
                   ].map((item) => (
                     <Link
                       key={item.label}
@@ -120,8 +119,7 @@ export function Navbar() {
                 { label: 'Image Detector', href: '/dashboard/image' },
                 { label: 'Video Detector', href: '/dashboard/video' },
                 { label: 'Deepfake Detector', href: '/dashboard/deepfake' },
-                { label: 'Enhancement Detector', href: '/dashboard/enhancement' },
-                { label: 'Batch Scanner', href: '/dashboard/batch' }
+                { label: 'Enhancement Detector', href: '/dashboard/enhancement' }
               ].map((item) => (
                 <Link
                   key={item.label}
