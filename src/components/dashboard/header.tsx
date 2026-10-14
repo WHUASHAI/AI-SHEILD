@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Menu, Search, Home } from 'lucide-react';
+import { Menu, Search, Home, LogOut, Loader2 } from 'lucide-react';
+import { signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -12,6 +13,20 @@ interface HeaderProps {
 
 export function DashboardHeader({ onMenuClick }: HeaderProps) {
   const [searchFocused, setSearchFocused]         = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState('');
+
+  const handleSignOut = async () => {
+    setSignOutError('');
+    setIsSigningOut(true);
+    try {
+      await signOut({ redirectTo: '/' });
+    } catch {
+      setSignOutError('Could not sign out. Please try again.');
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   return (
     <>
@@ -56,6 +71,12 @@ export function DashboardHeader({ onMenuClick }: HeaderProps) {
 
         {/* Right */}
         <div className="flex items-center gap-2">
+          <Button asChild className="bg-gradient-to-r from-cyan-azure-dark to-ucla-blue-dark text-white hover:from-cyan-azure-dark hover:to-space-cadet-light">
+            <Link href="/dashboard/new-scan">Start Scanning</Link>
+          </Button>
+          <Button type="button" variant="ghost" size="icon" disabled={isSigningOut} onClick={() => void handleSignOut()} aria-label="Sign out" title="Sign out">
+            {isSigningOut ? <Loader2 aria-hidden="true" className="animate-spin" /> : <LogOut aria-hidden="true" />}
+          </Button>
           <Link
             href="/"
             className="flex items-center justify-center w-10 h-10 rounded-xl text-air-sup-blue hover:text-white hover:bg-cyan-azure/10 transition-all"
@@ -64,6 +85,7 @@ export function DashboardHeader({ onMenuClick }: HeaderProps) {
             <Home className="w-5 h-5" />
           </Link>
         </div>
+        {signOutError && <p role="alert" className="absolute right-4 top-16 rounded-lg bg-card p-3 text-sm text-red-300">{signOutError}</p>}
       </header>
     </>
   );

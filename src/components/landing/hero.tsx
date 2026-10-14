@@ -302,7 +302,7 @@ export function Hero() {
                   className="group w-full sm:w-auto bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 text-base h-13 px-8 btn-shimmer shadow-palette-glow transition-all duration-300 hover:shadow-[0_0_40px_rgba(78,122,177,0.6)]"
                   asChild
                 >
-                  <Link href="/dashboard">
+                  <Link href="/sign-in">
                     Start Scanning
                     <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
@@ -314,7 +314,7 @@ export function Hero() {
                 {[
                   { icon: Lock,     label: 'Privacy-First' },
                   { icon: Zap,      label: 'Results in Seconds' },
-                  { icon: Eye,      label: 'No Account Needed' },
+                  { icon: Eye,      label: 'Free to Use' },
                 ].map((c) => (
                   <div key={c.label} className="flex items-center gap-1.5 text-xs text-air-sup-blue">
                     <c.icon className="w-3.5 h-3.5 text-cyan-azure" />

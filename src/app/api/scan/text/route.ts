@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireSessionResponse } from '@/lib/require-session';
 import { z } from 'zod';
 import { franc } from 'franc';
 
@@ -11,6 +12,8 @@ const TextScanSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireSessionResponse();
+  if (unauthorized) return unauthorized;
   try {
     const body = await req.json();
     const validated = TextScanSchema.safeParse(body);

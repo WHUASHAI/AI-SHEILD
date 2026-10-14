@@ -93,12 +93,16 @@ export function Navbar() {
             className="bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 shadow-palette-md"
             asChild
           >
-            <Link href="/dashboard">Start Scanning</Link>
+            <Link href="/sign-in">Start Scanning</Link>
           </Button>
         </div>
 
         {/* Mobile menu button */}
         <button
+          type="button"
+          aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-navigation"
           className="md:hidden z-50 text-air-sup-blue hover:text-pink-lavender p-2 transition-colors"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
@@ -108,7 +112,7 @@ export function Navbar() {
 
       {/* Mobile Nav */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-16 z-40 bg-space-cadet/95 backdrop-blur-xl border-t border-cyan-azure/20 py-8 px-6 flex flex-col gap-8 shadow-2xl overflow-y-auto">
+        <div id="mobile-navigation" className="md:hidden fixed inset-0 top-16 z-40 bg-space-cadet/95 backdrop-blur-xl border-t border-cyan-azure/20 py-8 px-6 flex flex-col gap-8 shadow-2xl overflow-y-auto">
           <div className="flex flex-col gap-4">
             <div className="text-xs font-semibold uppercase tracking-wider text-ucla-blue px-2">
               Product Tools
@@ -152,7 +156,7 @@ export function Navbar() {
               asChild
               onClick={() => setMobileMenuOpen(false)}
             >
-              <Link href="/dashboard">Start Scanning</Link>
+              <Link href="/sign-in">Start Scanning</Link>
             </Button>
           </div>
         </div>

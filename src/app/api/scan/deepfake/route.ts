@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireSessionResponse } from '@/lib/require-session';
 import {
   checkImageFile,
   checkImageUrl,
@@ -18,6 +19,8 @@ function seededRandom(seed: number) {
 }
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireSessionResponse();
+  if (unauthorized) return unauthorized;
   try {
     const contentType = req.headers.get('content-type') ?? '';
     const isMultipart = contentType.includes('multipart/form-data');

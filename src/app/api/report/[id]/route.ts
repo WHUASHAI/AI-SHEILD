@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireSessionResponse } from '@/lib/require-session';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const unauthorized = await requireSessionResponse();
+  if (unauthorized) return unauthorized;
   const { id } = await params;
   
   // Return mock report data

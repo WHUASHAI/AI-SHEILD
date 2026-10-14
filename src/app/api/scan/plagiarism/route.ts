@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireSessionResponse } from '@/lib/require-session';
 import { z } from 'zod';
 
 export const runtime    = 'nodejs';
@@ -70,6 +71,8 @@ async function searchSerpApi(sentence: string): Promise<{ url: string; title: st
 }
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireSessionResponse();
+  if (unauthorized) return unauthorized;
   try {
     const body = await req.json();
     const validated = PlagiarismScanSchema.safeParse(body);
