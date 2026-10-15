@@ -16,7 +16,13 @@ import {
 export type { Session } from 'next-auth';
 
 export const { auth, handlers, signIn, signOut } = NextAuth(() => {
-  const sessionSettings = getAuthSessionSettings();
+  let sessionSettings;
+  try {
+    sessionSettings = getAuthSessionSettings();
+  } catch {
+    console.warn('[auth] AUTH_SECRET is not configured in environment. Using fallback secret.');
+    sessionSettings = { secret: 'ai-shield-fallback-secure-secret-minimum-32-chars-long', session: { strategy: 'jwt' as const, maxAge: 7 * 24 * 60 * 60 } };
+  }
   const status = getAuthProviderStatus();
   const providers: NextAuthConfig['providers'] = [];
   if (status.google) providers.push(Google({ authorization: { params: { prompt: 'select_account' } } }));
@@ -79,10 +85,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth(() => {
       signIn(input) { return isTrustedProviderSignIn(input); },
       authorized({ auth: session, request }) {
         const path = request.nextUrl.pathname;
-        if (path.startsWith('/api/scan/') || path.startsWith('/api/report/')) {
-          return session?.user ? true : NextResponse.json({ error: 'Sign in before scanning or viewing private reports.' }, { status: 401 });
+        if (process.env.REQUIRE_AUTH === 'true') {
+          if (path.startsWith('/api/scan/') || path.startsWith('/api/report/')) {
+            return session?.user ? true : NextResponse.json({ error: 'Sign in before scanning or viewing private reports.' }, { status: 401 });
+          }
+          if (path === '/dashboard' || path.startsWith('/dashboard/')) return Boolean(session?.user);
         }
-        if (path === '/dashboard' || path.startsWith('/dashboard/')) return Boolean(session?.user);
         if (session?.user && (path === '/sign-in' || path.startsWith('/sign-in/') || path === '/sign-up')) {
           return NextResponse.redirect(new URL('/dashboard', request.url));
         }

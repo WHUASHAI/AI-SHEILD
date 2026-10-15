@@ -12,7 +12,10 @@ export function getAuthSessionSettings(env: NodeJS.ProcessEnv = process.env) {
 }
 
 export function getTrustedAuthOrigin(requestUrl: string, env: NodeJS.ProcessEnv = process.env): string | null {
-  const configuredUrl = env.AUTH_URL ?? env.NEXTAUTH_URL;
+  const vercelUrl = env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : (env.VERCEL_URL ? `https://${env.VERCEL_URL}` : undefined);
+  const configuredUrl = env.AUTH_URL ?? env.NEXTAUTH_URL ?? vercelUrl;
   try {
     const url = new URL(configuredUrl ?? requestUrl);
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return null;
