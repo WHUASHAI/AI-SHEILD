@@ -1,13 +1,12 @@
 import NextAuth, { AuthError, type NextAuthConfig } from 'next-auth';
 import Google from 'next-auth/providers/google';
-import Facebook from 'next-auth/providers/facebook';
 import Credentials from 'next-auth/providers/credentials';
 import { NextResponse } from 'next/server';
 import { getAuthProviderStatus, getAuthSessionSettings, getPasswordDatabaseUrl, getSafeAuthRedirect, isUsableAuthSecret } from './auth-settings';
 import { findPasswordAccount } from './auth-db';
 import { authenticatePasswordAccount, consumePasswordAttempt } from './password-auth';
 import { getVerifiedSessionToken, isTrustedProviderSignIn } from './provider-verification';
-import { getFacebookIdentity, requestFacebookProfile } from './facebook-auth';
+import { createFacebookProvider } from './facebook-auth';
 import {
   WHATSAPP_CHALLENGE_COOKIE, consumeWhatsAppQuota, getWhatsAppConfig,
   normalizePhone, readWhatsAppChallenge, verifyWhatsAppCode,
@@ -28,17 +27,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth(() => {
   if (status.google) providers.push(Google({ authorization: { params: { prompt: 'select_account' } } }));
   if (status.facebook) {
     // Use the version selected in the Meta app, rather than Auth.js's older v19 default.
-    const version = process.env.AUTH_FACEBOOK_API_VERSION;
-    providers.push(Facebook({
-      authorization: { url: `https://www.facebook.com/${version}/dialog/oauth`, params: { scope: 'email' } },
-      token: `https://graph.facebook.com/${version}/oauth/access_token`,
-      userinfo: {
-        url: `https://graph.facebook.com/${version}/me?fields=id,name,email,picture`,
-        async request({ tokens }: { tokens: { access_token?: string } }) { return requestFacebookProfile(tokens.access_token, version); },
-      },
-      profile: getFacebookIdentity,
-      checks: ['state'],
-    }));
+    providers.push(createFacebookProvider(process.env.AUTH_FACEBOOK_API_VERSION));
   }
   if (getPasswordDatabaseUrl()) {
     providers.push(Credentials({

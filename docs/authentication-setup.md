@@ -2,7 +2,7 @@
 
 The application now has real Auth.js integration for Google and Facebook, a WhatsApp verification flow backed by Twilio Verify, and email/password sign-in for existing verified PostgreSQL accounts. Successful authentication creates an encrypted HTTP-only cookie session lasting up to seven days. The dashboard, scanning APIs, and private report API require that session. Sign-out clears it.
 
-**Provider credentials are still missing in this workspace. These services cannot authenticate real accounts until you complete the provider-side setup below.** A secure local `AUTH_SECRET` has been generated. Keep secrets in `.env.local`; do not paste them into chat or commit them.
+**Each provider needs its own credentials.** Working Google sign-in does not configure Facebook. Run `npm.cmd run auth:check` to check this workspace without printing secrets. Keep secrets in `.env.local`; do not paste them into chat or commit them.
 
 The current PostgreSQL address is also a placeholder and its hostname does not resolve. Password sign-in cannot authenticate real users until the account database and verified records exist. No demo users or passwords are created.
 
@@ -38,6 +38,12 @@ See [the Auth.js Google setup](https://authjs.dev/getting-started/providers/goog
 3. Put the app ID and app secret into `AUTH_FACEBOOK_ID` and `AUTH_FACEBOOK_SECRET`.
 4. Set `AUTH_FACEBOOK_API_VERSION` to a **supported Graph API version shown for your app**, using the `vNN.N` format. This deliberately avoids the older version hardcoded in the installed Auth.js provider.
 5. In development mode, test with an app administrator/developer/tester account that Meta permits for that application.
+
+All three Facebook settings must be present before Auth.js enables the Facebook button's login flow. Use the **App ID and App Secret from your Meta developer application**, not your personal Facebook email/password. Add the values to `.env.local` for local development and to your hosting project's environment settings for deployment. Restart the development server or redeploy after changing them.
+
+The intended flow is **Continue with Facebook → Facebook's own login/credential confirmation page → consent if needed → AI SHIELD dashboard**. The app requests `auth_type=reauthenticate` so Facebook can ask for credential confirmation even when the browser already has a Facebook session. Facebook controls the exact screen and may remember the account identifier or require additional checks. AI SHIELD never receives or stores Facebook passwords.
+
+If the button says Facebook sign-in is unavailable, check the three `AUTH_FACEBOOK_*` settings first. If Facebook opens but rejects login, check the exact callback URL, Facebook Login configuration, allowed testers/app roles, and the app's publication/access status. Use a dedicated development application for localhost; production callbacks must use your deployed HTTPS address.
 
 See [the Auth.js Facebook setup](https://authjs.dev/getting-started/providers/facebook).
 

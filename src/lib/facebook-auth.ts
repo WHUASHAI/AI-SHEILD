@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import Facebook from 'next-auth/providers/facebook';
 
 const identitySchema = z.object({ id: z.string().max(32).regex(/^[1-9][0-9]*$/) });
 const emailSchema = z.string().max(254).email();
@@ -6,6 +7,26 @@ const emailSchema = z.string().max(254).email();
 function failed() { return new Error('Facebook account verification failed.'); }
 function record(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
+export function createFacebookProvider(apiVersion: string | undefined) {
+  if (!apiVersion || !/^v\d{2}\.\d+$/.test(apiVersion) || apiVersion.length > 12) throw failed();
+  return Facebook({
+    // Request credential confirmation on Facebook, including for an existing Facebook session.
+    authorization: {
+      url: `https://www.facebook.com/${apiVersion}/dialog/oauth`,
+      params: { scope: 'email', auth_type: 'reauthenticate' },
+    },
+    token: `https://graph.facebook.com/${apiVersion}/oauth/access_token`,
+    userinfo: {
+      url: `https://graph.facebook.com/${apiVersion}/me?fields=id,name,email,picture`,
+      async request({ tokens }: { tokens: { access_token?: string } }) {
+        return requestFacebookProfile(tokens.access_token, apiVersion);
+      },
+    },
+    profile: getFacebookIdentity,
+    checks: ['state'],
+  });
 }
 
 export function getFacebookIdentity(value: unknown) {

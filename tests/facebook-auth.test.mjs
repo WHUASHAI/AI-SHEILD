@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { Auth, setEnvDefaults } from '@auth/core';
 import Facebook from '@auth/core/providers/facebook';
 import parseProviders from '../node_modules/@auth/core/lib/utils/providers.js';
 import { getUserAndAccount } from '../node_modules/@auth/core/lib/actions/callback/oauth/callback.js';
@@ -13,6 +14,39 @@ function implementation(name) {
   assert.equal(typeof facebook[name], 'function', `${name} must be implemented`);
   return facebook[name];
 }
+
+test('Facebook sign-in opens the configured Facebook login dialog with reauthentication and OAuth state', async () => {
+  const config = {
+    providers: [implementation('createFacebookProvider')('v25.0')],
+    secret: 'synthetic-facebook-test-session-secret-at-least-32-characters',
+    trustHost: true,
+    basePath: '/api/auth',
+    logger: { error(error) { throw error; }, warn() {}, debug() {} },
+  };
+  setEnvDefaults({ AUTH_FACEBOOK_ID: '123456789', AUTH_FACEBOOK_SECRET: 'synthetic-app-secret' }, config, true);
+  const csrfResponse = await Auth(new Request('http://localhost:3000/api/auth/csrf'), config);
+  const { csrfToken } = await csrfResponse.json();
+  const cookie = csrfResponse.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
+  const response = await Auth(new Request('http://localhost:3000/api/auth/signin/facebook', {
+    method: 'POST',
+    headers: { cookie, 'Content-Type': 'application/x-www-form-urlencoded', 'X-Auth-Return-Redirect': '1' },
+    body: new URLSearchParams({ csrfToken, callbackUrl: 'http://localhost:3000/dashboard' }),
+  }), config);
+
+  assert.equal(response.status, 200);
+  const { url } = await response.json();
+  const destination = new URL(url);
+  assert.equal(destination.origin, 'https://www.facebook.com');
+  assert.equal(destination.pathname, '/v25.0/dialog/oauth');
+  assert.equal(destination.searchParams.get('auth_type'), 'reauthenticate');
+  assert.equal(destination.searchParams.get('client_id'), '123456789');
+  assert.equal(destination.searchParams.get('redirect_uri'), 'http://localhost:3000/api/auth/callback/facebook');
+  assert.equal(destination.searchParams.get('response_type'), 'code');
+  assert.equal(destination.searchParams.get('scope'), 'email');
+  assert.ok(destination.searchParams.get('state'));
+  assert.equal(destination.searchParams.has('client_secret'), false);
+  assert.ok(response.headers.getSetCookie().some(value => value.startsWith('authjs.state=') && /HttpOnly/i.test(value)));
+});
 
 test('Facebook accounts without email or a profile photo still pass Auth.js profile conversion', async () => {
   const profile = { id: '12345678', name: 'Provider profile' };
