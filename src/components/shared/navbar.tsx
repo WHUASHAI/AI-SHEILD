@@ -89,17 +89,11 @@ export function Navbar() {
 
         {/* Right-side Actions */}
         <div className="hidden md:flex items-center gap-4">
-          <Link
-            href="/sign-in"
-            className="text-sm font-medium text-air-sup-blue hover:text-white transition-colors"
-          >
-            Sign In
-          </Link>
           <Button
-            className="bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 shadow-palette-md"
+            className="bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 shadow-palette-md px-6"
             asChild
           >
-            <Link href="/dashboard">Start Scanning</Link>
+            <Link href="/sign-in">Sign In</Link>
           </Button>
         </div>
 
@@ -157,19 +151,12 @@ export function Navbar() {
           </div>
 
           <div className="flex flex-col gap-3 mt-auto">
-            <Link
-              href="/sign-in"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-center py-2 text-sm font-medium text-air-sup-blue hover:text-white transition-colors"
-            >
-              Sign In
-            </Link>
             <Button
               className="w-full h-11 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white"
               asChild
               onClick={() => setMobileMenuOpen(false)}
             >
-              <Link href="/dashboard">Start Scanning</Link>
+              <Link href="/sign-in">Sign In</Link>
             </Button>
           </div>
         </div>
