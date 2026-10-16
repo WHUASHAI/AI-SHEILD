@@ -78,8 +78,7 @@ const item = {
 import { useRecentScans } from '@/lib/use-recent-scans';
 
 export default function DashboardPage() {
-  const { scans } = useRecentScans();
-  const displayScans = scans.length > 0 ? scans : MOCK_SCANS;
+  const { scans, isGuest, isClient, maxScans } = useRecentScans();
 
   return (
     <motion.div className="space-y-8" variants={container} initial="hidden" animate="show">
@@ -88,6 +87,30 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Overview</h1>
           <p className="text-sm text-air-sup-blue/70 mt-1">Your AI detection dashboard at a glance.</p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {isClient && (
+            <div
+              className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs border ${
+                isGuest
+                  ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+                  : 'border-cyan-azure/30 bg-cyan-azure/10 text-cyan-azure'
+              }`}
+            >
+              <span className={`h-2 w-2 rounded-full ${isGuest ? 'bg-amber-400 animate-pulse' : 'bg-cyan-azure'}`} />
+              {isGuest ? 'Guest Session (Temporary)' : `Account Active (FIFO: ${scans.length}/${maxScans})`}
+            </div>
+          )}
+
+          {isGuest && (
+            <Link
+              href="/sign-in"
+              className="text-xs font-medium text-pink-lavender hover:text-white underline underline-offset-2"
+            >
+              Sign In to Save
+            </Link>
+          )}
         </div>
       </motion.div>
 
@@ -172,14 +195,39 @@ export default function DashboardPage() {
         <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(78,122,177,0.14)' }}>
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(78,122,177,0.1)' }}>
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-air-sup-blue/60" />
+              <Clock className="w-4 h-4 text-cyan-azure" />
               <h3 className="text-sm font-semibold text-foreground">Recent Scans</h3>
+              {isClient && (
+                <span className="text-[11px] text-air-sup-blue/60 ml-2">
+                  ({scans.length} {scans.length === 1 ? 'scan' : 'scans'} {isGuest ? 'in session' : 'saved'})
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-1 text-xs text-cyan-azure opacity-50">
-              Local Session
-            </div>
+            <Link
+              href="/dashboard/history"
+              className="flex items-center gap-1 text-xs text-cyan-azure hover:text-white transition-colors"
+            >
+              View Full History
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
-          <RecentScansTable scans={displayScans} />
+
+          {isClient && scans.length > 0 ? (
+            <RecentScansTable scans={scans} />
+          ) : (
+            <div className="p-8 text-center space-y-3">
+              <p className="text-sm text-air-sup-blue/70">
+                No scans recorded yet in this {isGuest ? 'session' : 'account'}.
+              </p>
+              <Link
+                href="/dashboard/new-scan"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-azure hover:text-white bg-cyan-azure/10 hover:bg-cyan-azure/20 px-3 py-1.5 rounded-lg border border-cyan-azure/30 transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Start a New Scan
+              </Link>
+            </div>
+          )}
         </div>
       </motion.div>
     </motion.div>

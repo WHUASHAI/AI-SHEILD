@@ -5,6 +5,7 @@ import { Menu, X, ChevronDown } from 'lucide-react';
 import { Logo } from './logo';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { ScanChoiceDialog } from '@/components/landing/scan-choice-dialog';
 
 export function Navbar() {
   const [isScrolled, setIsScrolled]               = useState(false);
@@ -88,9 +89,17 @@ export function Navbar() {
         </nav>
 
         {/* Right-side Actions */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-3">
+          <ScanChoiceDialog>
+            <Button
+              className="bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 shadow-palette-md px-5 cursor-pointer"
+            >
+              Start Scanning
+            </Button>
+          </ScanChoiceDialog>
           <Button
-            className="bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 shadow-palette-md px-6"
+            variant="ghost"
+            className="text-air-sup-blue hover:text-white hover:bg-white/5 px-4"
             asChild
           >
             <Link href="/sign-in">Sign In</Link>
@@ -151,8 +160,17 @@ export function Navbar() {
           </div>
 
           <div className="flex flex-col gap-3 mt-auto">
+            <ScanChoiceDialog>
+              <Button
+                className="w-full h-11 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Start Scanning
+              </Button>
+            </ScanChoiceDialog>
             <Button
-              className="w-full h-11 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white"
+              variant="outline"
+              className="w-full h-11 border-cyan-azure/30 text-air-sup-blue hover:bg-cyan-azure/10"
               asChild
               onClick={() => setMobileMenuOpen(false)}
             >

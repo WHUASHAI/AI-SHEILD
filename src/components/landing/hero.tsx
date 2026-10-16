@@ -7,6 +7,7 @@ import {
   ChevronRight, Sparkles, Zap, Lock, Eye, ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ScanChoiceDialog } from '@/components/landing/scan-choice-dialog';
 
 /* ─ Animated particle canvas ─ */
 function ParticleField() {
@@ -297,16 +298,15 @@ export function Hero() {
 
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-6">
-                <Button
-                  size="lg"
-                  className="group w-full sm:w-auto bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 text-base h-13 px-8 btn-shimmer shadow-palette-glow transition-all duration-300 hover:shadow-[0_0_40px_rgba(78,122,177,0.6)]"
-                  asChild
-                >
-                  <Link href="/dashboard">
+                <ScanChoiceDialog>
+                  <Button
+                    size="lg"
+                    className="group w-full sm:w-auto bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 text-base h-13 px-8 btn-shimmer shadow-palette-glow transition-all duration-300 hover:shadow-[0_0_40px_rgba(78,122,177,0.6)] cursor-pointer"
+                  >
                     Start Scanning
                     <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </Button>
+                  </Button>
+                </ScanChoiceDialog>
               </div>
 
               {/* Trust chips */}

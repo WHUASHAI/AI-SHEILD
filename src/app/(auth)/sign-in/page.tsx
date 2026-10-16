@@ -95,6 +95,19 @@ export default function SignInPage() {
           <span className="h-px flex-1 bg-border" />
         </div>
         <SocialLoginButtons disabled={isContinuing} />
+
+        <div className="pt-1">
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-air-sup-blue hover:text-white hover:bg-white/5 border border-cyan-azure/20 rounded-xl py-5"
+            asChild
+          >
+            <Link href="/dashboard/new-scan">
+              Continue as Guest (No account needed)
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <p className="px-8 text-center text-sm text-muted-foreground">

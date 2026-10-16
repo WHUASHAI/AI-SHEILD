@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronRight, Sparkles, Zap, Lock, Eye, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/shared/logo';
+import { ScanChoiceDialog } from '@/components/landing/scan-choice-dialog';
 
 export function StartScanning() {
   const ref    = useRef<HTMLDivElement>(null);
@@ -81,16 +82,15 @@ export function StartScanning() {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.55, delay: 0.4 }}
         >
-          <Button
-            size="lg"
-            className="group bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 text-base h-14 px-10 btn-shimmer animate-glow-pulse hover:animate-none hover:shadow-[0_0_50px_rgba(78,122,177,0.7)] transition-all duration-300"
-            asChild
-          >
-            <Link href="/dashboard">
+          <ScanChoiceDialog>
+            <Button
+              size="lg"
+              className="group bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 text-base h-14 px-10 btn-shimmer animate-glow-pulse hover:animate-none hover:shadow-[0_0_50px_rgba(78,122,177,0.7)] transition-all duration-300 cursor-pointer"
+            >
               Start Scanning Now
               <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </Button>
+            </Button>
+          </ScanChoiceDialog>
         </motion.div>
 
         {/* Feature chips */}
