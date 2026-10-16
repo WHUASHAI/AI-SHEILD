@@ -24,7 +24,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth(() => {
   }
   const status = getAuthProviderStatus();
   const providers: NextAuthConfig['providers'] = [];
-  if (status.google) providers.push(Google({ authorization: { params: { prompt: 'select_account' } } }));
+  if (status.google) {
+    providers.push(Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      authorization: { params: { prompt: 'select_account' } },
+    }));
+  }
   if (status.facebook) {
     // Use the version selected in the Meta app, rather than Auth.js's older v19 default.
     providers.push(createFacebookProvider(process.env.AUTH_FACEBOOK_API_VERSION));
