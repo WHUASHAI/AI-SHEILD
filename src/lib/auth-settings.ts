@@ -47,10 +47,6 @@ export function getAuthProviderStatus(env: NodeJS.ProcessEnv = process.env) {
     google: secretReady && isConfiguredValue(env.AUTH_GOOGLE_ID) && isConfiguredValue(env.AUTH_GOOGLE_SECRET),
     facebook: secretReady && isConfiguredValue(env.AUTH_FACEBOOK_ID) && isConfiguredValue(env.AUTH_FACEBOOK_SECRET)
       && /^v\d{2}\.\d+$/.test(env.AUTH_FACEBOOK_API_VERSION ?? ''),
-    whatsapp: secretReady
-      && /^AC[0-9a-f]{32}$/i.test(env.TWILIO_ACCOUNT_SID ?? '')
-      && isConfiguredValue(env.TWILIO_AUTH_TOKEN)
-      && /^VA[0-9a-f]{32}$/i.test(env.TWILIO_VERIFY_SERVICE_SID ?? ''),
   };
 }
 

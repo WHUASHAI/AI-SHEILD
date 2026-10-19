@@ -7,9 +7,6 @@ const validEnv = {
   AUTH_GOOGLE_ID: 'google-client', AUTH_GOOGLE_SECRET: 'google-secret',
   AUTH_FACEBOOK_ID: 'facebook-client', AUTH_FACEBOOK_SECRET: 'facebook-secret',
   AUTH_FACEBOOK_API_VERSION: 'v25.0',
-  AUTH_GITHUB_ID: 'github-client', AUTH_GITHUB_SECRET: 'github-secret',
-  TWILIO_ACCOUNT_SID: `AC${'a'.repeat(32)}`, TWILIO_AUTH_TOKEN: 'twilio-token',
-  TWILIO_VERIFY_SERVICE_SID: `VA${'b'.repeat(32)}`,
 };
 
 test('password authentication rejects missing and placeholder database addresses', () => {
@@ -21,13 +18,12 @@ test('password authentication rejects missing and placeholder database addresses
 });
 
 test('configured providers are available only with a usable session secret and complete credentials', () => {
-  assert.deepEqual(getAuthProviderStatus(validEnv), { google: true, facebook: true, whatsapp: true });
-  assert.deepEqual(getAuthProviderStatus({}), { google: false, facebook: false, whatsapp: false });
-  assert.deepEqual(getAuthProviderStatus({ ...validEnv, AUTH_SECRET: 'your-secret-here-min-32-chars' }), { google: false, facebook: false, whatsapp: false });
+  assert.deepEqual(getAuthProviderStatus(validEnv), { google: true, facebook: true });
+  assert.deepEqual(getAuthProviderStatus({}), { google: false, facebook: false });
+  assert.deepEqual(getAuthProviderStatus({ ...validEnv, AUTH_SECRET: 'your-secret-here-min-32-chars' }), { google: false, facebook: false });
   assert.equal(getAuthProviderStatus({ ...validEnv, AUTH_GOOGLE_SECRET: '' }).google, false);
   assert.equal(getAuthProviderStatus({ ...validEnv, AUTH_FACEBOOK_ID: 'your-facebook-id' }).facebook, false);
   assert.equal(getAuthProviderStatus({ ...validEnv, AUTH_FACEBOOK_API_VERSION: '' }).facebook, false);
-  assert.equal(getAuthProviderStatus({ ...validEnv, TWILIO_VERIFY_SERVICE_SID: 'invalid' }).whatsapp, false);
 });
 
 test('session secrets reject missing, short, and example values', () => {

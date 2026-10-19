@@ -50,17 +50,17 @@ test('Auth.js authenticates with the validated primary key and rejects legacy pl
 
 test('the configured public origin controls verification behind a reverse proxy', () => {
   const env = { AUTH_URL: 'https://shield.example/api/auth', NODE_ENV: 'production' };
-  assert.equal(getTrustedAuthOrigin('http://localhost:3000/api/auth/whatsapp/request', env), 'https://shield.example');
-  assert.equal(getTrustedAuthOrigin('http://untrusted.example/api/auth/whatsapp/request', env), 'https://shield.example');
+  assert.equal(getTrustedAuthOrigin('http://localhost:3000/api/auth/signin', env), 'https://shield.example');
+  assert.equal(getTrustedAuthOrigin('http://untrusted.example/api/auth/signin', env), 'https://shield.example');
 });
 
 test('origin configuration rejects unsafe URLs and limits development fallback to loopback', () => {
-  const requestUrl = 'http://localhost:3000/api/auth/whatsapp/request';
+  const requestUrl = 'http://localhost:3000/api/auth/signin';
   for (const value of ['broken', 'javascript:alert(1)', 'https://user:password@shield.example', 'http://shield.example']) {
     assert.equal(getTrustedAuthOrigin(requestUrl, { AUTH_URL: value, NODE_ENV: 'production' }), null);
   }
   assert.equal(getTrustedAuthOrigin(requestUrl, { NODE_ENV: 'production' }), null);
   assert.equal(getTrustedAuthOrigin(requestUrl, { NODE_ENV: 'development' }), 'http://localhost:3000');
-  assert.equal(getTrustedAuthOrigin('http://127.0.0.1:3000/api/auth/whatsapp/request', { NODE_ENV: 'development' }), 'http://127.0.0.1:3000');
-  assert.equal(getTrustedAuthOrigin('http://untrusted.example/api/auth/whatsapp/request', { NODE_ENV: 'development' }), null);
+  assert.equal(getTrustedAuthOrigin('http://127.0.0.1:3000/api/auth/signin', { NODE_ENV: 'development' }), 'http://127.0.0.1:3000');
+  assert.equal(getTrustedAuthOrigin('http://untrusted.example/api/auth/signin', { NODE_ENV: 'development' }), null);
 });

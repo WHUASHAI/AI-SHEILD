@@ -1,8 +1,6 @@
 import { getAuthProviderStatus, getPasswordDatabaseUrl, isUsableAuthSecret } from '../src/lib/auth-settings.ts';
-import { getWhatsAppConfig } from '../src/lib/whatsapp.ts';
 
 const status = getAuthProviderStatus();
-status.whatsapp = status.whatsapp && getWhatsAppConfig() !== null;
 console.log(`Session secret: ${isUsableAuthSecret(process.env.AUTH_SECRET) ? 'ready' : 'needs setup'}`);
 console.log(`Email/password: ${getPasswordDatabaseUrl() ? 'database URL present (connection, schema, and verified accounts still need checking)' : 'needs a real PostgreSQL database with verified accounts'}`);
 for (const [provider, ready] of Object.entries(status)) {

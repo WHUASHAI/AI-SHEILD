@@ -58,15 +58,12 @@ test('Facebook requires matching authenticated provider IDs; unknown providers a
   assert.equal(implementation('isTrustedProviderSignIn')({ account: null, user }), false);
 });
 
-test('credentials and WhatsApp require internal verification flags, never just user-supplied identifiers', () => {
+test('credentials require internal verification flags, never just user-supplied identifiers', () => {
   const account = { provider: 'credentials', type: 'credentials', providerAccountId: 'stored-id' };
   const user = { id: 'stored-id', email: 'stored@example.test' };
   assert.equal(implementation('isTrustedProviderSignIn')({ account, user }), false);
   assert.equal(implementation('isTrustedProviderSignIn')({ account, user: { ...user, emailVerified: true } }), true);
-  const whatsapp = { provider: 'whatsapp', type: 'credentials', providerAccountId: '+639171234567' };
-  assert.equal(implementation('isTrustedProviderSignIn')({ account: whatsapp, user: { id: whatsapp.providerAccountId } }), false);
-  assert.equal(implementation('isTrustedProviderSignIn')({ account: whatsapp, user: { id: whatsapp.providerAccountId, phoneVerified: true } }), true);
-  assert.equal(implementation('isTrustedProviderSignIn')({ account: { ...whatsapp, providerAccountId: '+6907290' }, user: { id: '+6907290', phoneVerified: true } }), true);
+  assert.equal(implementation('isTrustedProviderSignIn')({ account: { ...account, provider: 'whatsapp' }, user }), false);
 });
 
 test('legacy or manually assembled JWTs are denied by the actual session callback', async () => {

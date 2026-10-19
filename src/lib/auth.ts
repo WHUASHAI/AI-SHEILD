@@ -7,10 +7,6 @@ import { findPasswordAccount } from './auth-db';
 import { authenticatePasswordAccount, consumePasswordAttempt } from './password-auth';
 import { getVerifiedSessionToken, isTrustedProviderSignIn } from './provider-verification';
 import { createFacebookProvider } from './facebook-auth';
-import {
-  WHATSAPP_CHALLENGE_COOKIE, consumeWhatsAppQuota, getWhatsAppConfig,
-  normalizePhone, readWhatsAppChallenge, verifyWhatsAppCode,
-} from './whatsapp';
 
 export type { Session } from 'next-auth';
 
@@ -46,31 +42,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth(() => {
       },
     }));
   }
-  if (status.whatsapp && getWhatsAppConfig()) {
-    providers.push(Credentials({
-      id: 'whatsapp',
-      name: 'WhatsApp',
-      credentials: { phone: { type: 'tel' }, code: { type: 'text' } },
-      async authorize(credentials, request) {
-        const phone = normalizePhone(credentials.phone);
-        const code = credentials.code;
-        const secret = process.env.AUTH_SECRET;
-        if (!phone || typeof code !== 'string' || !/^\d{6}$/.test(code) || !isUsableAuthSecret(secret)) return null;
-        const cookie = request.headers.get('cookie')?.split(';')
-          .map(value => value.trim()).find(value => value.startsWith(`${WHATSAPP_CHALLENGE_COOKIE}=`));
-        const challenge = readWhatsAppChallenge(cookie?.slice(WHATSAPP_CHALLENGE_COOKIE.length + 1), secret);
-        if (!challenge || challenge.phone !== phone) return null;
-        const clientId = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local';
-        if (!consumeWhatsAppQuota('verify', phone, clientId).allowed) return null;
-        try {
-          if (!await verifyWhatsAppCode(phone, code, challenge.sid)) return null;
-          return { id: phone, name: 'WhatsApp user', email: null, phoneVerified: true };
-        } catch {
-          return null;
-        }
-      },
-    }));
-  }
+
   return {
     ...sessionSettings,
     providers,

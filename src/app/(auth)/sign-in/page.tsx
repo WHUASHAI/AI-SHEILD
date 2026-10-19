@@ -110,15 +110,6 @@ export default function SignInPage() {
         </div>
       </div>
 
-      <p className="px-8 text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{' '}
-        <Link
-          href="/sign-up"
-          className="underline underline-offset-4 hover:text-cyan-400 text-cyan-500"
-        >
-          Create one
-        </Link>
-      </p>
 
       <div className="text-center">
         <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
