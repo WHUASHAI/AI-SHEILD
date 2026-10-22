@@ -6,6 +6,14 @@ datasource db {
   provider = "postgresql"
 }
 
+// Anonymous website-wide counters; independent of browser scan history.
+model ScanStatisticsDay {
+  day           DateTime @id @db.Date
+  totalScans    Int      @default(0)
+  aiDetected    Int      @default(0)
+  humanVerified Int      @default(0)
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -88,13 +96,25 @@ model Scan {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   completedAt      DateTime?
+  resultSnapshot   Json?
 
-  user      User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([userId, createdAt, id])
+  @@index([guestSessionId, createdAt, id])
+
+  user      User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace Workspace?    @relation(fields: [workspaceId], references: [id])
   batch     BatchJob?     @relation(fields: [batchId], references: [id])
   report    Report?
   signals   ScanSignal[]
   metadata  ScanMetadata?
+}
+
+// Independent receipts survive history deletion and prevent duplicate counting.
+model ScanCompletion {
+  id                 String   @id
+  requestFingerprint String
+  scanId             String
+  completedAt        DateTime @default(now())
 }
 
 model ScanSignal {

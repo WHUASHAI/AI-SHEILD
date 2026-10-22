@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Plus, FileText, Image as ImageIcon, Video, UserX, Sparkles,
-  Files, Clock, FolderOpen, Key, Users, Settings, HelpCircle,
+  Files, Clock, Key, Users, Settings, HelpCircle,
   ChevronLeft, ChevronRight, X, BookCopy, Zap,
 } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
@@ -40,7 +40,7 @@ const navGroups = [
   {
     title: 'Management',
     items: [
-      { label: 'Reports',  icon: FolderOpen, href: '/dashboard/reports' },
+      { label: 'History',  icon: Clock,      href: '/dashboard/history' },
       { label: 'Settings', icon: Settings,   href: '/dashboard/settings' },
     ],
   },

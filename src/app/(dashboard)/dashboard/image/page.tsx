@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 interface ScanResult {
   scanId: string;
   status: string;
+  deepfakeAnalyzed?: boolean;
   provider: string;
   result: 'ai_generated' | 'ai_enhanced' | 'human' | 'deepfake' | 'inconclusive';
   label: string;
@@ -36,16 +37,15 @@ const RESULT_CONFIG = {
   inconclusive: { icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', badge: 'Inconclusive' },
 };
 
-import { useRecentScans } from '@/lib/use-recent-scans';
-import { useRouter } from 'next/navigation';
+import { useScanSubmission } from '@/lib/use-scan-submission';
+
 
 export default function ImageDetectorPage() {
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { addScan } = useRecentScans();
-  const router = useRouter();
+  const { submitScan, historyNotice } = useScanSubmission();
 
   const handleScan = useCallback(async () => {
     if (files.length === 0) return;
@@ -57,7 +57,7 @@ export default function ImageDetectorPage() {
       const formData = new FormData();
       formData.append('file', files[0]);
 
-      const res = await fetch('/api/scan/image', {
+      const res = await submitScan('/api/scan/image', {
         method: 'POST',
         body: formData,
       });
@@ -68,26 +68,20 @@ export default function ImageDetectorPage() {
         setError(data.error ?? 'Analysis failed. Please try again.');
         return;
       }
-
-      addScan({
-        name: files[0].name,
-        type: 'image',
-        result: data.label,
-        confidence: data.confidence,
-      });
       setResult(data);
     } catch {
       setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
-  }, [files, addScan, router]);
+  }, [files, submitScan]);
 
   const config = result ? (RESULT_CONFIG[result.result] ?? RESULT_CONFIG.inconclusive) : null;
   const Icon = config?.icon ?? Zap;
 
   return (
     <div className="space-y-8 pb-12">
+      {historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-azure/20 to-air-sup-blue/20 border border-cyan-azure/30 flex items-center justify-center">
@@ -197,7 +191,7 @@ export default function ImageDetectorPage() {
                 </p>
                 <div className="flex items-center gap-2 text-xs text-cyan-azure font-medium">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Live Sightengine Detection Enabled</span>
+                  <span>Powered by Sightengine</span>
                 </div>
               </div>
             </>
@@ -240,8 +234,8 @@ export default function ImageDetectorPage() {
                   {result.breakdown.isEnhanced && (
                     <p className="text-amber-400 font-semibold text-xs">⚡ Enhancement / Edit Detected</p>
                   )}
-                  <p><span className="text-foreground font-medium">Deepfake:</span> {result.breakdown.deepfakeScore}%</p>
-                    <p><span className="text-foreground font-medium">Faces:</span> {result.breakdown.facesDetected}</p>
+                  <p><span className="text-foreground font-medium">Deepfake:</span> {result.deepfakeAnalyzed === false ? 'Not checked' : result.breakdown.deepfakeScore + '%'}</p>
+                    <p><span className="text-foreground font-medium">Faces:</span> {result.deepfakeAnalyzed === false ? 'Not checked' : result.breakdown.facesDetected}</p>
                   </div>
                 </div>
 

@@ -40,8 +40,8 @@ const RESULT_CONFIG = {
 
 type InputMode = 'upload' | 'url';
 
-import { useRecentScans } from '@/lib/use-recent-scans';
-import { useRouter } from 'next/navigation';
+import { useScanSubmission } from '@/lib/use-scan-submission';
+
 
 export default function VideoDetectorPage() {
   const [mode,    setMode]    = useState<InputMode>('upload');
@@ -51,8 +51,7 @@ export default function VideoDetectorPage() {
   const [result,  setResult]  = useState<VideoScanResult | null>(null);
   const [error,   setError]   = useState<string | null>(null);
   const [hint,    setHint]    = useState<string | null>(null);
-  const { addScan } = useRecentScans();
-  const router = useRouter();
+  const { submitScan, historyNotice } = useScanSubmission();
 
   const reset = () => { setResult(null); setError(null); setHint(null); };
 
@@ -126,9 +125,9 @@ export default function VideoDetectorPage() {
         const formData = new FormData();
         extractedFrames.forEach((f, i) => formData.append(`frame_${i}`, f));
         formData.append('isFrames', 'true');
-        res = await fetch('/api/scan/video', { method: 'POST', body: formData });
+        res = await submitScan('/api/scan/video', { method: 'POST', body: formData });
       } else {
-        res = await fetch('/api/scan/video', {
+        res = await submitScan('/api/scan/video', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ url: url.trim() }),
@@ -141,19 +140,13 @@ export default function VideoDetectorPage() {
         if (data.hint) setHint(data.hint);
         return;
       }
-      addScan({
-        name: isUpload ? files[0].name : url.trim().substring(0, 30) + '...',
-        type: 'video',
-        result: data.label,
-        confidence: data.confidence,
-      });
       setResult(data);
     } catch {
       setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
-  }, [mode, files, url, addScan, router]);
+  }, [mode, files, url, submitScan]);
 
   const canRun   = mode === 'upload' ? files.length > 0 : url.trim().length > 0;
   const config   = result ? (RESULT_CONFIG[result.result] ?? RESULT_CONFIG.inconclusive) : null;
@@ -161,6 +154,7 @@ export default function VideoDetectorPage() {
 
   return (
     <div className="space-y-8 pb-12">
+      {historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-azure/20 to-air-sup-blue/20 border border-cyan-azure/30 flex items-center justify-center">

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import test from 'node:test';
+import * as historyCore from '../src/lib/history-core.ts';
 import vm from 'node:vm';
 import * as settings from '../src/lib/auth-settings.ts';
 import * as guestMode from '../src/lib/guest-mode.ts';
@@ -99,6 +100,7 @@ test('proxy errors never open dashboard or scan access, while sign-in can still 
   const { proxy } = load('src/proxy.ts', {
     'next/server': { NextResponse }, '@/lib/auth': { auth: async () => { throw new Error('Auth unavailable'); } },
     '@/lib/guest-mode': guestMode,
+    '@/lib/history-core': historyCore,
   });
   const request = path => ({ nextUrl: new URL(path, 'https://shield.test'), url: `https://shield.test${path}`, cookies: { get: () => undefined } });
   const dashboard = await proxy(request('/dashboard/image'));
@@ -140,6 +142,7 @@ test('guest scan access works even when Google configuration is unavailable', as
 
 function guestEndpoint() {
   return load('src/app/api/guest/route.ts', {
+    '@/lib/history-core': historyCore,
     'next/server': { NextResponse: { json(data, init) {
       const response = Response.json(data, init);
       response.cookieChanges = [];
@@ -151,12 +154,17 @@ function guestEndpoint() {
   });
 }
 
-test('guest entry creates only a guest selection and Google entry can clear it', async () => {
+test('guest entry creates a private session and Google entry clears only mode selection', async () => {
   const endpoint = guestEndpoint();
-  const request = { url: 'https://shield.test/api/guest', headers: new Headers({ origin: 'https://shield.test' }) };
+  const request = { url: 'https://shield.test/api/guest', headers: new Headers({ origin: 'https://shield.test' }), cookies:{get:()=>undefined} };
   const start = endpoint.POST(request);
   assert.deepEqual(await start.json(), { guest: true });
-  assert.equal(start.cookieChanges.length, 1);
+  assert.equal(start.cookieChanges.length, 2);
+  const privateCookie=start.cookieChanges.shift();
+  assert.equal(privateCookie[0],'aishield_guest_session');
+  assert.equal(privateCookie[2].httpOnly,true);
+  assert.equal(privateCookie[2].maxAge,31536000);
+  assert.ok(historyCore.guestTokenHash(privateCookie[1]));
   assert.equal(start.cookieChanges[0][0], 'aishield_guest_mode');
   assert.equal(start.cookieChanges[0][1], '1');
   assert.equal(start.cookieChanges[0][2].sameSite, 'lax');

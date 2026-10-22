@@ -1,5 +1,8 @@
+import { ProviderError } from '@/lib/provider-error';
+import { providerFailure } from '@/lib/provider-response';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSessionResponse } from '@/lib/require-session';
+import { withScanHistory } from '@/lib/with-scan-history';
 import {
   checkImageFile,
   checkImageUrl,
@@ -11,7 +14,12 @@ import {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: NextRequest) {
+function requireAiResult(response:Awaited<ReturnType<typeof checkImageUrl>>) {
+  const score=response.type?.ai_generated;
+  if(response.status!=='success'||response.error||typeof score!=='number'||!Number.isFinite(score)||score<0||score>1)throw new ProviderError('Image provider returned no usable result.',502,'INVALID_PROVIDER_RESPONSE');
+}
+
+async function analyze(req: NextRequest) {
   const unauthorized = await requireSessionResponse();
   if (unauthorized) return unauthorized;
   try {
@@ -28,6 +36,7 @@ export async function POST(req: NextRequest) {
 
     let aiResponse;
     let deepfakeResponse;
+    let providerWarning: string | undefined;
 
     // ── Handle multipart file upload ──────────────────────────────────────────
     if (contentType.includes('multipart/form-data')) {
@@ -51,55 +60,30 @@ export async function POST(req: NextRequest) {
 
       // Step 1: Always run genai — works on every image type
       aiResponse = await checkImageFile(file, 'genai');
+      requireAiResult(aiResponse);
 
       // Step 2: Try deepfake separately — only succeeds when faces are detected
       // Gracefully swallow errors (e.g. no faces found)
       try {
         deepfakeResponse = await checkImageFile(file, 'deepfake');
       } catch {
-        // No faces — deepfake model not applicable; we still have the genai result
+        providerWarning = 'The deepfake check was unavailable. This verdict covers AI image generation only.';
         deepfakeResponse = null;
       }
 
     // ── Handle JSON with image URL ────────────────────────────────────────────
     } else {
-      let body: { url?: string };
-      try {
-        body = await req.json() as { url?: string };
-      } catch {
-        return NextResponse.json(
-          { error: 'Send a multipart/form-data file upload or JSON body with { "url": "..." }.' },
-          { status: 400 },
-        );
-      }
-
-      if (!body.url) {
-        return NextResponse.json(
-          { error: 'Provide a JSON body with { "url": "..." } pointing to a public image URL.' },
-          { status: 400 },
-        );
-      }
-
-      aiResponse = await checkImageUrl(body.url, 'genai');
-
-      try {
-        deepfakeResponse = await checkImageUrl(body.url, 'deepfake');
-      } catch {
-        deepfakeResponse = null;
-      }
+      let body: {url?:string};
+      try {body=await req.json();}
+      catch {return NextResponse.json({error:'Provide a JSON body with an image URL.'},{status:400});}
+      if(!body.url)return NextResponse.json({error:'Provide an image URL.'},{status:400});
+      aiResponse=await checkImageUrl(body.url,'genai');
+      requireAiResult(aiResponse);
+      try {deepfakeResponse=await checkImageUrl(body.url,'deepfake');}
+      catch {deepfakeResponse=null;providerWarning='The deepfake check was unavailable. This verdict covers AI image generation only.';}
     }
 
     // ── Check for Sightengine-level failure on the primary (ai-generated) call ─
-    if (aiResponse.status === 'failure' || aiResponse.error) {
-      const detail = aiResponse.error?.message ?? 'Unknown Sightengine error';
-      console.error('[image-scan] Sightengine ai-generated error:', detail);
-      return NextResponse.json(
-        { error: `Detection service error: ${detail}` },
-        { status: 502 },
-      );
-    }
-
-    // ── AI generation & enhancement scores ───────────────────────────────────
     const aiRaw          = aiResponse.type?.ai_generated  ?? 0;
     const photoRaw       = aiResponse.type?.photo         ?? 0;
     const illustrationRaw = aiResponse.type?.illustration ?? 0;
@@ -171,8 +155,10 @@ export async function POST(req: NextRequest) {
         description: `${faces.length} face(s) scanned — highest deepfake manipulation probability`,
       });
     }
-
     return NextResponse.json({
+      isReal: true,
+      providerWarning,
+      deepfakeAnalyzed: deepfakeResponse?.status === 'success',
       scanId: `img_${Date.now()}`,
       status: 'completed',
       provider: 'Sightengine',
@@ -210,11 +196,8 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('[image-scan] Unexpected error:', message);
-    return NextResponse.json(
-      { error: `Image analysis failed: ${message}` },
-      { status: 500 },
-    );
+    return providerFailure(err, 'Image detection is temporarily unavailable. Please try later.');
   }
 }
+
+export const POST = withScanHistory('image', analyze);

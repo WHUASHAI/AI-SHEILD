@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
-import { useRecentScans } from '@/lib/use-recent-scans';
+
+import { useScanSubmission } from '@/lib/use-scan-submission';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -227,8 +227,7 @@ export default function PlagiarismDetectorPage() {
   const [fileName, setFileName]   = useState<string | null>(null);
   const fileRef                   = useRef<HTMLInputElement>(null);
   const resultRef                 = useRef<HTMLDivElement>(null);
-  const { addScan }               = useRecentScans();
-  const router                    = useRouter();
+  const { submitScan, historyNotice } = useScanSubmission();
 
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
   const charCount = text.length;
@@ -253,7 +252,7 @@ export default function PlagiarismDetectorPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/scan/plagiarism', {
+      const res = await submitScan('/api/scan/plagiarism', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -267,12 +266,6 @@ export default function PlagiarismDetectorPage() {
         throw new Error(data.error ?? 'Scan failed');
       }
       const data: ScanResult = await res.json();
-      addScan({
-        name: content.substring(0, 30) + '...',
-        type: 'text',
-        result: data.verdict,
-        confidence: data.overallSimilarity,
-      });
       setResult(data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
@@ -296,9 +289,9 @@ export default function PlagiarismDetectorPage() {
   };
 
   const scanModes: { value: ScanMode; label: string; desc: string; icon: React.ElementType }[] = [
-    { value: 'standard', label: 'Standard',  desc: '5M sources, fast',       icon: Zap },
-    { value: 'deep',     label: 'Deep Scan', desc: '12.5M sources, thorough', icon: Layers },
-    { value: 'academic', label: 'Academic',  desc: '8M papers & journals',    icon: BookCopy },
+    { value: 'standard', label: 'Standard',  desc: 'Up to 3 sampled sentences',       icon: Zap },
+    { value: 'deep',     label: 'Deep Scan', desc: 'Up to 5 sampled sentences', icon: Layers },
+    { value: 'academic', label: 'Academic text',  desc: 'Up to 3 sampled sentences',    icon: BookCopy },
   ];
 
   const verdictIcon = result
@@ -323,6 +316,7 @@ export default function PlagiarismDetectorPage() {
 
   return (
     <div className="space-y-8 pb-12">
+      {historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
 
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -513,7 +507,7 @@ export default function PlagiarismDetectorPage() {
                 <div className="text-center">
                   <p className="font-semibold text-foreground">Scanning Sources…</p>
                   <p className="text-sm text-air-sup-blue mt-1">
-                    Checking against {scanMode === 'deep' ? '12.5M' : scanMode === 'academic' ? '8M' : '5M'} sources
+                    Searching for web matches for up to {scanMode === 'deep' ? '5' : '3'} sampled sentences
                   </p>
                 </div>
                 {[
@@ -560,7 +554,7 @@ export default function PlagiarismDetectorPage() {
               ))}
               <div className="pt-4 border-t border-cyan-azure/10">
                 <p className="text-xs text-ucla-blue leading-relaxed">
-                  Supports academic papers, blog posts, web articles, essays, and more. Detects exact matches, paraphrasing, and structural similarities.
+                  Searches sampled sentences for exact web matches. It does not assess paraphrasing, structural similarity, or private academic databases.
                 </p>
               </div>
             </div>
@@ -584,7 +578,7 @@ export default function PlagiarismDetectorPage() {
                     })}
                     <p className="font-bold text-foreground">{result.verdict}</p>
                     <p className="text-xs text-air-sup-blue mt-1">
-                      {result.totalSourcesChecked.toLocaleString()} sources checked
+                      {result.totalSourcesChecked.toLocaleString()} sampled searches
                     </p>
                   </div>
                 </div>
@@ -617,8 +611,6 @@ export default function PlagiarismDetectorPage() {
                 </h3>
                 {[
                   { label: 'Exact Matches',    value: result.matchTypeBreakdown.exact,      color: '#ef4444' },
-                  { label: 'Paraphrasing',     value: result.matchTypeBreakdown.paraphrase, color: '#CEB5D4' },
-                  { label: 'Structural',       value: result.matchTypeBreakdown.structural,  color: '#7D9FC0' },
                 ].map((item) => (
                   <div key={item.label}>
                     <div className="flex justify-between text-xs mb-1">
@@ -729,7 +721,7 @@ export default function PlagiarismDetectorPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {[
                           { label: 'Overall Similarity', value: `${result.overallSimilarity}%`, sub: result.verdict,         color: result.overallSimilarity >= 60 ? 'text-red-400' : result.overallSimilarity >= 30 ? 'text-amber-400' : 'text-emerald-400' },
-                          { label: 'Scan Mode',          value: result.mode.charAt(0).toUpperCase() + result.mode.slice(1), sub: `${result.totalSourcesChecked.toLocaleString()} sources`, color: 'text-cyan-azure' },
+                          { label: 'Scan Mode',          value: result.mode.charAt(0).toUpperCase() + result.mode.slice(1), sub: `${result.totalSourcesChecked.toLocaleString()} sampled searches`, color: 'text-cyan-azure' },
                           { label: 'Sources Found',      value: result.sources.length,           sub: 'matched sources',     color: 'text-pink-lavender' },
                         ].map((stat) => (
                           <div key={stat.label} className="bg-space-cadet-dark/60 border border-cyan-azure/10 rounded-xl p-5 text-center">

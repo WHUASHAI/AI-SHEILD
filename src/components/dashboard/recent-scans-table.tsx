@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Image as ImageIcon, Video, ExternalLink, RefreshCw, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import Link from 'next/link';
+import { FileText, Image as ImageIcon, Video, ExternalLink, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -26,7 +27,7 @@ export interface Scan {
   status: 'completed' | 'processing' | 'failed';
 }
 
-interface Props { scans: Scan[] }
+interface Props { scans: Scan[]; onDelete?: (id:string)=>Promise<void> }
 
 function ResultBadge({ result }: { result: ScanResultStatus }) {
   const map: Record<ScanResultStatus, { color: string; bg: string; border: string }> = {
@@ -83,7 +84,11 @@ function ConfidenceBar({ value }: { value: number }) {
   );
 }
 
-export function RecentScansTable({ scans }: Props) {
+export function RecentScansTable({ scans, onDelete }: Props) {
+  const [deleting,setDeleting] = useState<string|null>(null);
+  const [deleteError,setDeleteError] = useState<string|null>(null);
+  const [confirmId,setConfirmId] = useState<string|null>(null);
+  async function remove(id:string) {setDeleting(id);setDeleteError(null);try {await onDelete?.(id);setConfirmId(null);}catch {setDeleteError('Could not delete this result. Please try again.');}finally {setDeleting(null);}}
   const [sortKey, setSortKey] = useState<'name' | 'confidence' | 'date'>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -95,7 +100,7 @@ export function RecentScansTable({ scans }: Props) {
   const sorted = [...scans].sort((a, b) => {
     if (sortKey === 'confidence') return sortDir === 'asc' ? a.confidence - b.confidence : b.confidence - a.confidence;
     if (sortKey === 'name') return sortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-    return 0;
+    return sortDir==='asc'?Date.parse(a.date)-Date.parse(b.date):Date.parse(b.date)-Date.parse(a.date);
   });
 
   const SortIcon = ({ k }: { k: typeof sortKey }) =>
@@ -107,6 +112,7 @@ export function RecentScansTable({ scans }: Props) {
 
   return (
     <div className="w-full overflow-x-auto">
+      {deleteError && <p role="alert" className="p-3 text-amber-300">{deleteError}</p>}
       <table className="w-full text-sm">
         <thead>
           <tr style={{ borderBottom: '1px solid rgba(78,122,177,0.1)' }}>
@@ -150,20 +156,12 @@ export function RecentScansTable({ scans }: Props) {
               <td className="px-5 py-3.5"><ResultBadge result={scan.result} /></td>
               <td className="px-5 py-3.5 hidden md:table-cell"><ConfidenceBar value={scan.confidence} /></td>
               <td className="px-5 py-3.5 hidden sm:table-cell">
-                <span className="text-xs text-air-sup-blue/50">{scan.date}</span>
+                <span className="text-xs text-air-sup-blue/50">{new Date(scan.date).toLocaleString()}</span>
               </td>
               <td className="px-5 py-3.5">
                 <div className="flex items-center justify-end gap-1">
-                  {[
-                    { icon: ExternalLink, title: 'View report', hoverColor: 'text-cyan-azure' },
-                    { icon: RefreshCw,    title: 'Rescan',      hoverColor: 'text-air-sup-blue' },
-                    { icon: Trash2,       title: 'Delete',      hoverColor: 'text-rose-400' },
-                  ].map((btn) => (
-                    <button key={btn.title} title={btn.title}
-                      className={cn('p-1.5 rounded-lg text-air-sup-blue/40 transition-all hover:bg-white/5', btn.hoverColor)}>
-                      <btn.icon className="w-3.5 h-3.5" />
-                    </button>
-                  ))}
+                  <Link href={'/dashboard/scans/'+encodeURIComponent(scan.id)} title="View report" className="p-2 hover:text-cyan-azure"><ExternalLink size={16}/></Link>
+                  {onDelete && (confirmId===scan.id?<><button disabled={deleting===scan.id} onClick={()=>void remove(scan.id)} className="p-2 text-red-400">{deleting===scan.id?'Deleting...':'Confirm'}</button><button disabled={deleting===scan.id} onClick={()=>setConfirmId(null)} className="p-2">Cancel</button></>:<button title="Delete" onClick={()=>setConfirmId(scan.id)} className="p-2 hover:text-red-400"><Trash2 size={16}/></button>)}
                 </div>
               </td>
             </motion.tr>

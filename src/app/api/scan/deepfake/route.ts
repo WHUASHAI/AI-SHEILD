@@ -1,5 +1,7 @@
+import { providerFailure } from '@/lib/provider-response';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSessionResponse } from '@/lib/require-session';
+import { withScanHistory } from '@/lib/with-scan-history';
 import {
   checkImageFile,
   checkImageUrl,
@@ -18,7 +20,7 @@ function seededRandom(seed: number) {
   return x - Math.floor(x);
 }
 
-export async function POST(req: NextRequest) {
+async function analyze(req: NextRequest) {
   const unauthorized = await requireSessionResponse();
   if (unauthorized) return unauthorized;
   try {
@@ -52,12 +54,7 @@ export async function POST(req: NextRequest) {
         let faceCount = 0;
 
         for (const frame of frames) {
-          let seResponse;
-          try {
-             seResponse = await checkImageFile(frame, 'deepfake');
-          } catch(e) {
-             continue;
-          }
+          const seResponse = await checkImageFile(frame, 'deepfake');
           if (seResponse && seResponse.status === 'success' && seResponse.faces) {
             for (const f of seResponse.faces) {
                maxScore = Math.max(maxScore, f.deepfake);
@@ -170,13 +167,13 @@ export async function POST(req: NextRequest) {
 
     const verdict = interpretDeepfakeScore(deepfakeScore);
     const finalScore = Math.round(deepfakeScore * 100);
-
     return NextResponse.json({
+      isReal: true,
       scanId: `deepfake_${Date.now()}`,
       status: 'completed',
       provider: 'Sightengine',
-      result: verdict.result,
-      label: verdict.label,
+      result: faceData.length ? verdict.result : 'inconclusive',
+      label: faceData.length ? verdict.label : 'Inconclusive: no faces detected',
       confidence: finalScore,
       overallScore: finalScore,
       isVideo,
@@ -222,10 +219,8 @@ export async function POST(req: NextRequest) {
       modelVersion: 'sightengine-deepfake-v1.0',
     });
   } catch (error) {
-    console.error('[deepfake-scan] Unexpected error:', error);
-    return NextResponse.json(
-      { error: 'Deepfake analysis failed. Please try again.' },
-      { status: 500 },
-    );
+    return providerFailure(error, 'Deepfake detection is temporarily unavailable. Please try later.');
   }
 }
+
+export const POST = withScanHistory('deepfake', analyze);

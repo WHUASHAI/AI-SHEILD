@@ -6,58 +6,7 @@ import {
   Plus, ArrowRight, ShieldCheck, AlertTriangle, Activity,
   FileText, Image as ImageIcon, Video, Clock, TrendingUp, Zap,
 } from 'lucide-react';
-import { RecentScansTable, Scan } from '@/components/dashboard/recent-scans-table';
-
-const MOCK_SCANS: Scan[] = [
-  { id: '1', name: 'essay_final_v2.pdf',   type: 'text',  result: 'Likely AI-generated',       confidence: 92, date: '2 hrs ago',  status: 'completed' },
-  { id: '2', name: 'profile_pic.jpg',       type: 'image', result: 'Likely human-created',       confidence: 15, date: '4 hrs ago',  status: 'completed' },
-  { id: '3', name: 'interview_clip.mp4',    type: 'video', result: 'Mixed or partially synthetic', confidence: 65, date: '1 day ago', status: 'completed' },
-  { id: '4', name: 'article_draft.docx',    type: 'text',  result: 'Likely AI-edited',           confidence: 45, date: '2 days ago', status: 'completed' },
-  { id: '5', name: 'unknown_source.png',    type: 'image', result: 'Inconclusive',               confidence: 50, date: '2 days ago', status: 'completed' },
-];
-
-const stats = [
-  {
-    label: 'Total Scans',
-    value: '247',
-    change: '+12 this week',
-    positive: true,
-    icon: Activity,
-    accent: '#4E7AB1',
-    bg: 'rgba(78,122,177,0.12)',
-    border: 'rgba(78,122,177,0.25)',
-  },
-  {
-    label: 'AI Detected',
-    value: '83',
-    change: '34% of all scans',
-    positive: null,
-    icon: AlertTriangle,
-    accent: '#f87171',
-    bg: 'rgba(248,113,113,0.1)',
-    border: 'rgba(248,113,113,0.2)',
-  },
-  {
-    label: 'Human Verified',
-    value: '138',
-    change: '56% of all scans',
-    positive: true,
-    icon: ShieldCheck,
-    accent: '#34d399',
-    bg: 'rgba(52,211,153,0.1)',
-    border: 'rgba(52,211,153,0.2)',
-  },
-  {
-    label: 'Scans This Month',
-    value: '45',
-    change: '55 remaining',
-    positive: null,
-    icon: TrendingUp,
-    accent: '#CEB5D4',
-    bg: 'rgba(206,181,212,0.12)',
-    border: 'rgba(206,181,212,0.25)',
-  },
-];
+import { RecentScansTable } from '@/components/dashboard/recent-scans-table';
 
 const quickTools = [
   { label: 'Scan Text',      href: '/dashboard/text',       icon: FileText,  accent: '#4E7AB1' },
@@ -76,9 +25,29 @@ const item = {
 };
 
 import { useRecentScans } from '@/lib/use-recent-scans';
+import { usePlatformStatistics } from '@/lib/use-platform-statistics';
 
 export default function DashboardPage() {
-  const { scans, isGuest, isClient, maxScans } = useRecentScans();
+  const { scans, isGuest, isClient, loading: historyLoading, error: historyError } = useRecentScans();
+  const { statistics, loading, error, retry } = usePlatformStatistics();
+  const format = (value: number | undefined) => value === undefined ? '—' : value.toLocaleString();
+  const percentage = (value: number) => statistics?.totalScans ? Math.round(value / statistics.totalScans * 100) : 0;
+  const unavailable = loading ? 'Loading website totals…' : 'Unavailable';
+  const stats = [
+    { label: 'Total Scans', value: format(statistics?.totalScans),
+      change: statistics ? `${statistics.scansThisWeek.toLocaleString()} in the last 7 days` : unavailable,
+      icon: Activity, accent: '#4E7AB1', bg: 'rgba(78,122,177,0.12)', border: 'rgba(78,122,177,0.25)' },
+    { label: 'AI Detected', value: format(statistics?.aiDetected),
+      change: statistics ? `Likely AI · ${percentage(statistics.aiDetected)}% of scans` : unavailable,
+      icon: AlertTriangle, accent: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.2)' },
+    { label: 'Human Verified', value: format(statistics?.humanVerified),
+      change: statistics ? `Likely human · ${percentage(statistics.humanVerified)}% of scans` : unavailable,
+      icon: ShieldCheck, accent: '#34d399', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.2)' },
+    { label: 'Scans This Month', value: format(statistics?.scansThisMonth),
+      change: statistics ? 'Calendar month (UTC)' : unavailable,
+      icon: TrendingUp, accent: '#CEB5D4', bg: 'rgba(206,181,212,0.12)', border: 'rgba(206,181,212,0.25)' },
+  ];
+  const largestDay = Math.max(1, ...(statistics?.activity.map(day => day.scans) ?? []));
 
   return (
     <motion.div className="space-y-8" variants={container} initial="hidden" animate="show">
@@ -86,7 +55,7 @@ export default function DashboardPage() {
       <motion.div variants={item} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Overview</h1>
-          <p className="text-sm text-air-sup-blue/70 mt-1">Your AI detection dashboard at a glance.</p>
+          <p className="text-sm text-air-sup-blue/70 mt-1">Website-wide scan activity across all users.</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -99,7 +68,7 @@ export default function DashboardPage() {
               }`}
             >
               <span className={`h-2 w-2 rounded-full ${isGuest ? 'bg-amber-400 animate-pulse' : 'bg-cyan-azure'}`} />
-              {isGuest ? `Guest history: ${scans.length}/${maxScans}` : `Saved history: ${scans.length}/${maxScans}`}
+              {isGuest ? `Guest history: ${scans.length} recent` : `Saved history: ${scans.length} recent`}
             </div>
           )}
 
@@ -108,12 +77,18 @@ export default function DashboardPage() {
               href="/sign-in"
               className="text-xs font-medium text-pink-lavender hover:text-white underline underline-offset-2"
             >
-              Sign In to Save
+              Sign In for Account History
             </Link>
           )}
         </div>
       </motion.div>
 
+      {error && (
+        <div role="status" className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-200">
+          {error}{' '}
+          <button type="button" onClick={retry} className="underline underline-offset-2">Retry</button>
+        </div>
+      )}
       {/* Stats grid */}
       <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {stats.map((s) => (
@@ -166,27 +141,26 @@ export default function DashboardPage() {
             <h3 className="text-sm font-semibold text-foreground">Scan Activity</h3>
             <span className="text-xs text-air-sup-blue/50 px-2 py-1 rounded-full" style={{ background: 'rgba(78,122,177,0.1)' }}>Last 7 days</span>
           </div>
-          {/* Simple bar chart mockup */}
-          <div className="flex items-end gap-2 h-28">
-            {[18, 32, 22, 45, 38, 25, 41].map((v, i) => {
-              const days = ['M','T','W','T','F','S','S'];
-              const isLast = i === 6;
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                  <div className="relative w-full rounded-t-md overflow-hidden group cursor-pointer" style={{ height: `${(v / 50) * 100}%` }}>
-                    <div className="absolute inset-0 rounded-t-md transition-all duration-300 group-hover:brightness-125"
-                      style={{
-                        background: isLast
-                          ? 'linear-gradient(180deg, #4E7AB1 0%, #7D9FC0 100%)'
-                          : 'rgba(78,122,177,0.25)',
-                        border: '1px solid rgba(78,122,177,0.3)',
-                      }} />
-                  </div>
-                  <span className="text-[10px] text-air-sup-blue/50">{days[i]}</span>
+          {statistics ? (
+            <div className="flex items-end gap-2 h-28" aria-label="Website-wide scan activity over the last seven days">
+              {statistics.activity.map((day, index) => (
+                <div key={day.date} className="h-full flex-1 flex flex-col items-center justify-end gap-1.5" title={`${day.date}: ${day.scans} scans`}>
+                  <span className="text-[10px] text-air-sup-blue/70">{day.scans.toLocaleString()}</span>
+                  <div className="w-full rounded-t-md shrink-0" style={{
+                    height: `${day.scans / largestDay * 65}%`,
+                    background: index === 6 ? 'linear-gradient(180deg, #4E7AB1 0%, #7D9FC0 100%)' : 'rgba(78,122,177,0.25)',
+                  }} />
+                  <span className="text-[10px] text-air-sup-blue/50">
+                    {new Date(`${day.date}T00:00:00Z`).toLocaleDateString('en', { weekday: 'short', timeZone: 'UTC' })}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-28 flex items-center justify-center text-sm text-air-sup-blue/60">
+              {loading ? 'Loading scan activity…' : 'Scan activity is unavailable.'}
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -199,7 +173,7 @@ export default function DashboardPage() {
               <h3 className="text-sm font-semibold text-foreground">Recent Scans</h3>
               {isClient && (
                 <span className="text-[11px] text-air-sup-blue/60 ml-2">
-                  ({scans.length} {scans.length === 1 ? 'scan' : 'scans'} {isGuest ? 'in session' : 'saved'})
+                  ({scans.length} {scans.length === 1 ? 'scan' : 'scans'} {isGuest ? 'guest results' : 'saved'})
                 </span>
               )}
             </div>
@@ -212,7 +186,7 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          {isClient && scans.length > 0 ? (
+          {historyLoading ? <p role="status" className="p-6">Loading history?</p> : historyError ? <p role="alert" className="p-6 text-amber-300">{historyError}</p> : isClient && scans.length > 0 ? (
             <RecentScansTable scans={scans} />
           ) : (
             <div className="p-8 text-center space-y-3">

@@ -23,16 +23,15 @@ interface TextScanResult {
   wordCount: number;
 }
 
-import { useRecentScans } from '@/lib/use-recent-scans';
-import { useRouter } from 'next/navigation';
+import { useScanSubmission } from '@/lib/use-scan-submission';
+
 
 export default function TextDetectorPage() {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TextScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { addScan } = useRecentScans();
-  const router = useRouter();
+  const { submitScan, historyNotice } = useScanSubmission();
 
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
   const charCount = text.length;
@@ -44,7 +43,7 @@ export default function TextDetectorPage() {
     setResult(null);
 
     try {
-      const res = await fetch('/api/scan/text', {
+      const res = await submitScan('/api/scan/text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
@@ -53,12 +52,6 @@ export default function TextDetectorPage() {
       if (!res.ok) {
         setError(data.error ?? 'Failed to analyze text.');
       } else {
-        addScan({
-          name: text.substring(0, 20) + '...',
-          type: 'text',
-          result: data.result,
-          confidence: data.confidence,
-        });
         setResult(data);
       }
     } catch (err) {
@@ -72,6 +65,7 @@ export default function TextDetectorPage() {
 
   return (
     <div className="space-y-8 pb-12">
+      {historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-azure/20 to-air-sup-blue/20 border border-cyan-azure/30 flex items-center justify-center">
           <FileText className="w-6 h-6 text-cyan-azure" />

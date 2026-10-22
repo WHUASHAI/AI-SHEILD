@@ -5,8 +5,8 @@ import { UserX, ShieldCheck, Zap, Info, AlertTriangle, CheckCircle2, XCircle } f
 import { Button } from '@/components/ui/button';
 import { FileDropzone } from '@/components/detection/file-dropzone';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
-import { useRecentScans } from '@/lib/use-recent-scans';
+
+import { useScanSubmission } from '@/lib/use-scan-submission';
 
 interface DeepfakeScanResult {
   scanId: string;
@@ -38,8 +38,7 @@ export default function DeepfakeDetectorPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [result, setResult] = useState<DeepfakeScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { addScan } = useRecentScans();
-  const router = useRouter();
+  const { submitScan, historyNotice } = useScanSubmission();
 
   const extractFrames = async (file: File, frameCount: number): Promise<File[]> => {
     return new Promise((resolve, reject) => {
@@ -111,7 +110,7 @@ export default function DeepfakeDetectorPage() {
         formData.append('file', files[0]);
       }
 
-      const res = await fetch('/api/scan/deepfake', {
+      const res = await submitScan('/api/scan/deepfake', {
         method: 'POST',
         body: formData,
       });
@@ -124,25 +123,20 @@ export default function DeepfakeDetectorPage() {
       }
 
       setResult(data as DeepfakeScanResult);
-      addScan({
-        name: files[0].name,
-        type: data.isVideo ? 'video' : 'image',
-        result: data.label,
-        confidence: data.confidence,
-      });
       setResult(data);
     } catch {
       setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
-  }, [files, router]);
+  }, [files, submitScan]);
 
   const config = result ? (RESULT_CONFIG[result.result] ?? RESULT_CONFIG.human) : null;
   const Icon = config?.icon ?? Zap;
 
   return (
     <div className="space-y-8 pb-12">
+      {historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-azure/20 to-air-sup-blue/20 border border-cyan-azure/30 flex items-center justify-center">

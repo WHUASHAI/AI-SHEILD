@@ -5,7 +5,7 @@ import { getPasswordDatabaseUrl } from './auth-settings';
 const authGlobal = globalThis as unknown as { authDatabase?: PrismaClient };
 let productionDatabase: PrismaClient | undefined;
 
-function getAuthDatabase() {
+export function getAuthDatabase() {
   const connectionString = getPasswordDatabaseUrl();
   if (!connectionString) throw new Error('Account database is not configured.');
   const existing = process.env.NODE_ENV === 'production' ? productionDatabase : authGlobal.authDatabase;

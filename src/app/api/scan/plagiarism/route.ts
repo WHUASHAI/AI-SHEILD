@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSessionResponse } from '@/lib/require-session';
 import { z } from 'zod';
+import { ProviderError, readProviderJson } from '@/lib/provider-error';
+import { providerFailure } from '@/lib/provider-response';
+import { withScanHistory } from '@/lib/with-scan-history';
 
 export const runtime    = 'nodejs';
 export const maxDuration = 60;
@@ -37,40 +40,17 @@ function pickSentencesToCheck(text: string, maxSentences: number): string[] {
   return allSentences.slice(0, maxSentences);
 }
 
-async function searchSerpApi(sentence: string): Promise<{ url: string; title: string; snippet: string } | null> {
-  const apiKey = process.env.SERP_API_KEY;
-  
-  if (!apiKey) {
-    throw new Error('Missing SerpApi credentials. Set SERP_API_KEY in .env.local');
-  }
-
-  // Wrapping the sentence in quotes for exact match plagiarism search
-  const query = `"${sentence}"`;
-  const endpoint = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&api_key=${apiKey}`;
-  
-  try {
-    const res = await fetch(endpoint, {
-      headers: { 'Accept': 'application/json' }
-    });
-    
-    if (!res.ok) return null;
-    
-    const data = await res.json();
-    if (data.organic_results && data.organic_results.length > 0) {
-      const topResult = data.organic_results[0];
-      return {
-        url: topResult.link,
-        title: topResult.title,
-        snippet: topResult.snippet,
-      };
-    }
-  } catch (error) {
-    console.error("SerpApi search error:", error);
-  }
-  return null;
+async function searchSerpApi(sentence:string):Promise<{url:string;title:string;snippet:string}|null> {
+  const key=process.env.SERP_API_KEY;
+  if(!key)throw new ProviderError('Plagiarism search is not configured. Contact the website owner.',503,'PROVIDER_CONFIGURATION_ERROR');
+  const params=new URLSearchParams({q:'"'+sentence+'"',api_key:key});
+  const response=await fetch('https://serpapi.com/search.json?'+params.toString(),{headers:{Accept:'application/json'}});
+  const data=await readProviderJson<{organic_results?:Array<{link:string;title:string;snippet:string}>}>(response,'SerpApi');
+  const match=data.organic_results?.[0];
+  return match?{url:match.link,title:match.title,snippet:match.snippet}:null;
 }
 
-export async function POST(req: NextRequest) {
+async function analyze(req: NextRequest) {
   const unauthorized = await requireSessionResponse();
   if (unauthorized) return unauthorized;
   try {
@@ -82,7 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!process.env.SERP_API_KEY) {
-      return NextResponse.json({ error: 'SerpApi credentials missing. Please set SERP_API_KEY in .env.local' }, { status: 503 });
+      return NextResponse.json({ error: 'Plagiarism search is not configured. Contact the website owner.', code:'PROVIDER_CONFIGURATION_ERROR' }, { status: 503 });
     }
 
     const { text, mode = 'standard' } = validated.data;
@@ -97,8 +77,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Text does not contain enough substantial sentences to scan.' }, { status: 400 });
     }
 
-    const sources: any[] = [];
-    const sentenceBreakdown: any[] = [];
+    const sources: Array<{id:string;title:string;url:string;domain:string;similarity:number;matchedWords:number;matchType:'exact';snippet:string;publishedDate:string}> = [];
+    const sentenceBreakdown: Array<{sentence:string;similarityScore:number;flag:'high'|'low';matchedSource:string|null}> = [];
     let matchesFound = 0;
 
     // We check the sampled sentences against SerpApi (Google Search)
@@ -112,7 +92,7 @@ export async function POST(req: NextRequest) {
         let domain = '';
         try {
           domain = new URL(match.url).hostname;
-        } catch(e) {
+        } catch {
           domain = match.url;
         }
 
@@ -167,8 +147,8 @@ export async function POST(req: NextRequest) {
         : totalSimilarity >= 10
         ? 'blue'
         : 'green';
-
     return NextResponse.json({
+      isReal: true,
       scanId: `plag_${Date.now()}`,
       status: 'completed',
       mode,
@@ -183,17 +163,19 @@ export async function POST(req: NextRequest) {
         uniqueWords: new Set(text.toLowerCase().split(/\s+/)).size,
       },
       sources,
-      totalSourcesChecked: 130000000000, // Google Index roughly
+      totalSourcesChecked: sentencesToCheck.length, // Actual sampled search requests, not a claimed index size
       sentenceBreakdown,
       matchTypeBreakdown: {
         exact: sources.length > 0 ? totalSimilarity : 0,
         paraphrase: 0,
         structural: 0,
       },
-      _apiNote: 'Using Google Programmable Search for exact-match plagiarism detection.',
+      limitations:['This checks sampled sentences for web matches; the percentage is a sample match rate, not full-document plagiarism coverage.','Paraphrasing, structural similarity, and private academic databases are not assessed.'],
+      _apiNote: 'Sampled exact-match web searches through SerpApi.',
     });
   } catch (error) {
-    console.error('[plagiarism-scan] error:', error);
-    return NextResponse.json({ error: 'Plagiarism analysis failed. Please try again.' }, { status: 500 });
+    return providerFailure(error, 'Plagiarism search is temporarily unavailable. No originality verdict was generated.');
   }
 }
+
+export const POST = withScanHistory('plagiarism', analyze);

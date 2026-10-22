@@ -1,12 +1,14 @@
+import { providerFailure } from '@/lib/provider-response';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSessionResponse } from '@/lib/require-session';
+import { withScanHistory } from '@/lib/with-scan-history';
 import { checkImageFile, checkVideoUrl, avgVideoAiScore, avgVideoDeepfakeScore } from '@/lib/sightengine';
 
 export const runtime    = 'nodejs';
 export const maxDuration = 60;
 export const dynamic    = 'force-dynamic';
 
-export async function POST(req: NextRequest) {
+async function analyze(req: NextRequest) {
   const unauthorized = await requireSessionResponse();
   if (unauthorized) return unauthorized;
   try {
@@ -25,6 +27,11 @@ export async function POST(req: NextRequest) {
         const avgAi = avgVideoAiScore(response);
         const avgDf = avgVideoDeepfakeScore(response);
         const frames = response.data?.frames ?? [];
+        if (response.status !== 'success' || frames.length === 0 || frames.some(frame =>
+          typeof frame.type?.ai_generated !== 'number' || !Number.isFinite(frame.type.ai_generated)
+          || frame.type.ai_generated < 0 || frame.type.ai_generated > 1)) {
+          return NextResponse.json({ error: 'Video analysis returned no usable frames.' }, { status: 502 });
+        }
 
         let result = 'human';
         let label = 'Likely Authentic';
@@ -39,8 +46,8 @@ export async function POST(req: NextRequest) {
           label = 'Suspicious / Edited';
           confidence = Math.round(avgAi * 100);
         }
-
         return NextResponse.json({
+          isReal: true,
           scanId: `vid_${Date.now()}`,
           status: 'completed',
           provider: 'Sightengine (URL Mode)',
@@ -98,6 +105,10 @@ export async function POST(req: NextRequest) {
         for (let i = 0; i < frames.length; i++) {
           const frame = frames[i];
           const res = await checkImageFile(frame, 'genai,deepfake');
+          if (res.status !== 'success' || typeof res.type?.ai_generated !== 'number' || !Number.isFinite(res.type.ai_generated)
+            || res.type.ai_generated < 0 || res.type.ai_generated > 1) {
+            return NextResponse.json({ error: 'A video frame could not be analyzed.' }, { status: 502 });
+          }
           
           const aiRaw = res.type?.ai_generated ?? 0;
           const faces = res.faces ?? [];
@@ -132,8 +143,8 @@ export async function POST(req: NextRequest) {
           label = 'Suspicious / Edited';
           confidence = Math.round(avgAi * 100);
         }
-
         return NextResponse.json({
+          isReal: true,
           scanId: `vid_${Date.now()}`,
           status: 'completed',
           provider: 'Sightengine (Bypass Mode)',
@@ -165,8 +176,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'URL mode is not supported with the bypass. Please upload a file.' }, { status: 400 });
 
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('[video-scan] Unexpected error:', message);
-    return NextResponse.json({ error: `Video analysis failed: ${message}` }, { status: 500 });
+    return providerFailure(err, 'Video detection is temporarily unavailable. Please try later.');
   }
 }
+
+export const POST = withScanHistory('video', analyze);

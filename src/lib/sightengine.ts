@@ -1,3 +1,4 @@
+import { ProviderError, readProviderJson } from './provider-error';
 /**
  * src/lib/sightengine.ts
  * Sightengine API client for AI-generated image, video, and deepfake detection.
@@ -7,6 +8,9 @@
 const SE_API_USER   = process.env.SIGHTENGINE_API_USER!;
 const SE_API_SECRET = process.env.SIGHTENGINE_API_SECRET!;
 const SE_BASE       = 'https://api.sightengine.com/1.0';
+function requireCredentials() {
+  if(!SE_API_USER||!SE_API_SECRET)throw new ProviderError('Sightengine is not configured. Contact the website owner.',503,'PROVIDER_CONFIGURATION_ERROR');
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -70,7 +74,8 @@ async function fileToBlob(file: File | Blob): Promise<Blob> {
 export async function checkImageUrl(
   imageUrl: string,
   models:   string = 'genai',
-): Promise<SightengineImageResponse> {
+) : Promise<SightengineImageResponse> {
+  requireCredentials();
   const params = new URLSearchParams({
     url:        imageUrl,
     models,
@@ -83,11 +88,7 @@ export async function checkImageUrl(
     next:   { revalidate: 0 },
   });
 
-  if (!res.ok) {
-    throw new Error(`Sightengine HTTP ${res.status}: ${await res.text()}`);
-  }
-
-  return res.json() as Promise<SightengineImageResponse>;
+  return readProviderJson<SightengineImageResponse>(res, 'Sightengine');
 }
 
 // ─── Image check (file upload) ────────────────────────────────────────────────
@@ -102,7 +103,8 @@ export async function checkImageUrl(
 export async function checkImageFile(
   file:   File | Blob,
   models: string = 'genai',
-): Promise<SightengineImageResponse> {
+) : Promise<SightengineImageResponse> {
+  requireCredentials();
   // ⚠️ Critical: buffer file content before re-uploading from a server route
   const blob = await fileToBlob(file);
 
@@ -117,11 +119,7 @@ export async function checkImageFile(
     body:   form,
   });
 
-  if (!res.ok) {
-    throw new Error(`Sightengine HTTP ${res.status}: ${await res.text()}`);
-  }
-
-  return res.json() as Promise<SightengineImageResponse>;
+  return readProviderJson<SightengineImageResponse>(res, 'Sightengine');
 }
 
 // ─── Video check (file upload — synchronous) ──────────────────────────────────
@@ -135,7 +133,8 @@ export async function checkImageFile(
 export async function checkVideoFile(
   file:   File | Blob,
   models: string = 'genai,deepfake',
-): Promise<SightengineVideoResponse> {
+) : Promise<SightengineVideoResponse> {
+  requireCredentials();
   // ⚠️ Critical: buffer file content before re-uploading from a server route
   const blob = await fileToBlob(file);
 
@@ -150,11 +149,7 @@ export async function checkVideoFile(
     body:   form,
   });
 
-  if (!res.ok) {
-    throw new Error(`Sightengine HTTP ${res.status}: ${await res.text()}`);
-  }
-
-  return res.json() as Promise<SightengineVideoResponse>;
+  return readProviderJson<SightengineVideoResponse>(res, 'Sightengine');
 }
 
 // ─── Video check (stream URL) ─────────────────────────────────────────────────
@@ -168,7 +163,8 @@ export async function checkVideoFile(
 export async function checkVideoUrl(
   videoUrl: string,
   models:   string = 'genai,deepfake',
-): Promise<SightengineVideoResponse> {
+) : Promise<SightengineVideoResponse> {
+  requireCredentials();
   const form = new URLSearchParams({
     stream_url: videoUrl,
     models,
@@ -182,11 +178,7 @@ export async function checkVideoUrl(
     body:    form.toString(),
   });
 
-  if (!res.ok) {
-    throw new Error(`Sightengine HTTP ${res.status}: ${await res.text()}`);
-  }
-
-  return res.json() as Promise<SightengineVideoResponse>;
+  return readProviderJson<SightengineVideoResponse>(res, 'Sightengine');
 }
 
 // ─── Score interpreters ───────────────────────────────────────────────────────

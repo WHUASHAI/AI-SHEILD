@@ -8,7 +8,7 @@ Repository layout corrected on 22 October 2026: the active project is at the wor
 
 AI SHIELD is a web application for screening text, images, videos, and faces for possible AI generation or manipulation, plus checking text for online plagiarism matches. It combines a public site, dashboard, account screens, and server API routes. It calls external detection services rather than hosting a trained detection model.
 
-The checkout contains 25 page components, 15 API route handlers, and 63 component files. It is a partially implemented application: real provider integrations coexist with synthetic results, browser-only history, and unfinished account/report services. Detection scores do not prove content origin.
+The checkout contains 25 page components, 16 API route handlers, and 63 component files. It is a partially implemented application: real provider integrations coexist with synthetic results, browser-only personal history, database-backed aggregate counters, and unfinished account/report services. Detection scores do not prove content origin.
 
 ## Technology
 
@@ -31,9 +31,11 @@ Next.js 16.2.12 App Router, React 19.2.4, TypeScript, Tailwind CSS 4, Radix/shad
 | `src/lib/auth-db.ts`, `password-auth.ts` | Existing stored password-account lookup, verification, attempt limits |
 | `src/lib/email-verification.ts` | Signed email tokens, confirmation cookies, Resend integration |
 | `src/lib/require-session.ts`, `src/proxy.ts` | Conditional private-route checks and request proxy |
-| `src/lib/use-recent-scans.ts`, `scan-history-store.ts` | Shared history across views: up to 20 document-only guest scans or 20 persisted scans per Google account |
+| `src/lib/use-recent-scans.ts`, `history-client.ts`, `scan-history-repository.ts` | Private database history for accounts and guests; 20 results per page, no storage cap |
 | `src/lib/guest-mode.ts`, `guest-access.ts`, `src/app/api/guest/` | Explicit public guest-mode selection and scanning access; separate from authentication |
 | `src/lib/db.ts` | Disabled scan database client |
+| `src/lib/platform-statistics.ts`, `statistics-db.ts`, `scan-statistics.ts` | Shared anonymous UTC daily counters and server-side recording of real scan completions |
+| `src/lib/use-platform-statistics.ts`, `src/app/api/statistics/` | Website-wide overview totals and activity; refresh every 30 seconds and on focus |
 | `src/types/index.ts` | Shared scan/report types and configuration |
 | `prisma/schema.prisma` | User, account, session, verification, scan, signal, metadata, report, batch, API-key/activity, workspace/member, audit, notification models |
 | `tests/` | Seven Node test files focused on authentication and verification |
@@ -75,7 +77,7 @@ Scan persistence is disabled in `src/lib/db.ts`. Password-account lookup uses a 
 
 Guests keep at most 20 scans in one shared in-memory store for the loaded document. Client navigation preserves them; a full refresh or closing the page clears them. Old guest sessionStorage data is removed and never restored. Signed-in users keep at most 20 recent scans in `localStorage` under `aishield_user_scans_<userId>`, preserved on refresh and reopening in the same browser. Guest and account histories remain separate. This does not provide server-side or cross-device history.
 
-Dashboard statistics are hardcoded. API-key creation is local component state with generated sample keys, without a corresponding key-management backend. `GET /api/report/[id]` returns a database-setup placeholder. Public `/report/[token]` builds a demo result from the token rather than loading a saved report.
+Overview statistics and seven-day activity use shared PostgreSQL daily counters across Google and guest users, recorded only by successful server-side detector integrations. Demo/failed results are excluded; missing database setup shows unavailable, not demo totals. These counters do not save personal history or raw content. Setup is documented in `docs/platform-statistics-setup.md`; earlier browser-only scans cannot be reconstructed globally. The sidebar now links History immediately before Settings instead of Reports. API-key creation remains local component state without a matching backend. `GET /api/report/[id]` returns a database-setup placeholder, and public `/report/[token]` builds a demo result from the token.
 
 README claims about storage, Redis/BullMQ workers, batch/team tools, enhancement pages, and a hosted developer API should be treated as intended capabilities unless a matching implementation is established. No corresponding workers directory or batch/team/enhancement pages were found.
 
@@ -99,3 +101,5 @@ npm.cmd run build
 The development script binds to `127.0.0.1`. Installation runs `prisma generate`. Database and provider setup are separate from installing dependencies.
 
 This indexing pass inspected source and file counts only; it did not run tests, build, start the application, connect to the database, or submit content to external providers.
+
+Persistent history deployment: [setup guide](persistent-history-setup.md). Empty Neon bootstrap: `prisma/persistent-history.sql`.

@@ -49,17 +49,17 @@ export function ScanChoiceDialog({ children }: ScanChoiceDialogProps) {
             Start Scanning
           </DialogTitle>
           <DialogDescription className="text-sm text-air-sup-blue/80">
-            Choose Google to keep your history, or scan as a guest for this visit.
+            Choose Google for account history, or keep guest history in this browser.
           </DialogDescription>
         </DialogHeader>
         <div className="pt-2">
           <SocialLoginButtons disabled={isStartingGuest} onPendingChange={setIsStartingGoogle} redirectTo="/dashboard/new-scan" />
-          <p className="mt-2 text-xs text-muted-foreground">Your latest 20 scans stay saved in this browser when you return with the same Google account.</p>
+          <p className="mt-2 text-xs text-muted-foreground">Your scan history stays saved to your account across visits and devices.</p>
           <Button type="button" variant="outline" disabled={isStartingGuest || isStartingGoogle} onClick={() => void startGuest()} className="mt-5 h-12 w-full">
             {isStartingGuest && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
             Continue as Guest
           </Button>
-          <p className="mt-2 text-xs text-muted-foreground">Keep up to 20 recent scans during this visit. Refreshing or closing the page clears guest history.</p>
+          <p className="mt-2 text-xs text-muted-foreground">Your guest history stays saved for this browser while its guest cookie remains available.</p>
           {error && <p role="alert" className="mt-3 text-sm text-red-400">{error}</p>}
         </div>
       </DialogContent>
