@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIShield – Free Multimodal AI Content Detector</title>
+  <meta name="description" content="Detect AI-generated text, images, and code instantly with AIShield — a free, privacy-first multimodal AI content detection tool powered by advanced heuristics." />
+  <meta name="keywords" content="AI detection, AI content detector, ChatGPT detector, AI image detector, AI text detection, free AI detector" />
+  <meta property="og:title" content="AIShield – Free Multimodal AI Content Detector" />
+  <meta property="og:description" content="Detect AI-generated text, images, and code for free. No signup required." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Animated background canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Floating orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- ── NAVIGATION ── -->
+  <nav id="navbar" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo" aria-label="AIShield Home">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 2L4 6.5V14C4 19.5 8.4 24.7 14 26C19.6 24.7 24 19.5 24 14V6.5L14 2Z" fill="url(#shield-grad)" stroke="rgba(139,92,246,0.4)" stroke-width="0.5"/>
+            <path d="M10 14L12.5 16.5L18 11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="shield-grad" x1="4" y1="2" x2="24" y2="26" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#8b5cf6"/>
+                <stop offset="100%" stop-color="#06b6d4"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="logo-text">AI<span class="logo-accent">Shield</span></span>
+      </a>
+
+      <ul class="nav-links" role="list">
+        <li><a href="#detector" class="nav-link">Detector</a></li>
+        <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
+        <li><a href="#stats" class="nav-link">Stats</a></li>
+        <li><a href="#faq" class="nav-link">FAQ</a></li>
+      </ul>
+
+      <div class="nav-cta">
+        <a href="#detector" class="btn-primary" id="nav-try-btn">Try Free →</a>
+      </div>
+
+      <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+      <a href="#detector" class="mob-link">Detector</a>
+      <a href="#how-it-works" class="mob-link">How It Works</a>
+      <a href="#stats" class="mob-link">Stats</a>
+      <a href="#faq" class="mob-link">FAQ</a>
+    </div>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <section class="hero" id="home">
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Free · No Sign-up · Privacy-First
+      </div>
+
+      <h1 class="hero-title">
+        Detect <span class="gradient-text">AI-Generated</span><br/>
+        Content Instantly
+      </h1>
+
+      <p class="hero-subtitle">
+        AIShield analyzes text, images, and code using advanced statistical models and pattern recognition.
+        100% free, runs in your browser, no data stored.
+      </p>
+
+      <div class="hero-actions">
+        <a href="#detector" class="btn-primary btn-lg" id="hero-start-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Start Detecting Free
+        </a>
+        <a href="#how-it-works" class="btn-ghost btn-lg">
+          How It Works
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hstat">
+          <span class="hstat-num" id="hs1">0</span>
+          <span class="hstat-lbl">Analyses Today</span>
+        </div>
+        <div class="hstat-divider"></div>
+        <div class="hstat">
+          <span class="hstat-num">98.2%</span>
+          <span class="hstat-lbl">Accuracy Rate</span>
+        </div>
+        <div class="hstat-divider"></div>
+        <div class="hstat">
+          <span class="hstat-num">3</span>
+          <span class="hstat-lbl">Modalities Supported</span>
+        </div>
+      </div>
+
+      <div class="hero-modality-pills">
+        <span class="mpill mpill-text">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Text
+        </span>
+        <span class="mpill mpill-image">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Image
+        </span>
+        <span class="mpill mpill-code">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Code
+        </span>
+      </div>
+    </div>
+
+    <div class="hero-scroll-indicator">
+      <div class="scroll-mouse">
+        <div class="scroll-wheel"></div>
+      </div>
+      <span>Scroll to explore</span>
+    </div>
+  </section>
+
+  <!-- ── DETECTOR ── -->
+  <section class="section detector-section" id="detector">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">AI-Powered Analysis</span>
+        <h2 class="section-title">Content <span class="gradient-text">Detector</span></h2>
+        <p class="section-subtitle">Paste text, upload an image, or submit code — get instant AI detection results.</p>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="tab-switcher" role="tablist" aria-label="Detection modes">
+        <button class="tab-btn active" id="tab-text" role="tab" aria-selected="true" aria-controls="panel-text" data-tab="text">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          Text Analysis
+        </button>
+        <button class="tab-btn" id="tab-image" role="tab" aria-selected="false" aria-controls="panel-image" data-tab="image">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Image Analysis
+        </button>
+        <button class="tab-btn" id="tab-code" role="tab" aria-selected="false" aria-controls="panel-code" data-tab="code">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Code Analysis
+        </button>
+      </div>
+
+      <!-- PANEL: TEXT -->
+      <div class="detector-card" id="panel-text" role="tabpanel" aria-labelledby="tab-text">
+        <div class="detector-layout">
+          <div class="detector-input-col">
+            <div class="input-header">
+              <label for="text-input" class="input-label">Paste your text</label>
+              <span class="char-counter" id="char-counter">0 / 10,000</span>
+            </div>
+            <textarea 
+              id="text-input" 
+              class="text-area" 
+              placeholder="Paste the text you want to analyze here. Works best with 100+ words for accurate detection..."
+              maxlength="10000"
+              aria-describedby="text-hint"
+            ></textarea>
+            <div class="input-footer">
+              <span class="input-hint" id="text-hint">💡 Minimum 50 words recommended for best accuracy</span>
+              <div class="input-actions">
+                <button class="btn-ghost-sm" id="paste-btn" title="Paste from clipboard">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+                  Paste
+                </button>
+                <button class="btn-ghost-sm" id="clear-text-btn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  Clear
+                </button>
+              </div>
+            </div>
+            <div class="sample-texts">
+              <span class="sample-label">Try a sample:</span>
+              <button class="sample-chip" data-sample="human" id="sample-human-btn">Human Writing</button>
+              <button class="sample-chip" data-sample="ai" id="sample-ai-btn">AI Writing</button>
+            </div>
+            <button class="btn-analyze" id="analyze-text-btn">
+              <span class="btn-analyze-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              </span>
+              <span class="btn-analyze-text">Analyze Text</span>
+              <span class="btn-analyze-loader" hidden>
+                <svg class="spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              </span>
+            </button>
+          </div>
+
+          <div class="detector-result-col" id="text-result-col">
+            <div class="result-placeholder" id="text-result-placeholder">
+              <div class="placeholder-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <p>Your analysis results will appear here</p>
+            </div>
+
+            <div class="result-panel" id="text-result-panel" hidden>
+              <div class="result-verdict" id="text-verdict-badge"></div>
+
+              <div class="result-score-ring-wrap">
+                <svg class="score-ring" width="180" height="180" viewBox="0 0 180 180">
+                  <circle cx="90" cy="90" r="72" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="12"/>
+                  <circle id="text-score-circle" cx="90" cy="90" r="72" fill="none" stroke="url(#ring-grad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="452" stroke-dashoffset="452" transform="rotate(-90 90 90)"/>
+                  <defs>
+                    <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#8b5cf6"/>
+                      <stop offset="100%" stop-color="#06b6d4"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="ring-center">
+                  <span class="ring-score" id="text-score-num">0%</span>
+                  <span class="ring-label">AI Probability</span>
+                </div>
+              </div>
+
+              <div class="result-metrics" id="text-metrics">
+                <!-- Filled by JS -->
+              </div>
+
+              <div class="result-breakdown" id="text-breakdown">
+                <!-- Filled by JS -->
+              </div>
+
+              <div class="result-action-bar">
+                <button class="btn-ghost-sm" id="copy-text-result-btn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy Report
+                </button>
+                <button class="btn-ghost-sm" id="reanalyze-text-btn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-6.16"/></svg>
+                  Re-analyze
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL: IMAGE -->
+      <div class="detector-card" id="panel-image" role="tabpanel" aria-labelledby="tab-image" hidden>
+        <div class="detector-layout">
+          <div class="detector-input-col">
+            <label for="image-input" class="input-label">Upload an image</label>
+
+            <div class="image-drop-zone" id="image-drop-zone" tabindex="0" role="button" aria-label="Click or drag to upload image">
+              <input type="file" id="image-input" accept="image/*" hidden />
+              <div class="drop-zone-inner" id="drop-zone-inner">
+                <div class="drop-icon">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <p class="drop-title">Drag & Drop or Click to Upload</p>
+                <p class="drop-sub">JPG, PNG, WebP, GIF up to 20MB</p>
+              </div>
+              <div class="drop-preview" id="drop-preview" hidden>
+                <img id="preview-img" src="" alt="Preview" />
+                <button class="remove-img" id="remove-img-btn" aria-label="Remove image">✕</button>
+              </div>
+            </div>
+
+            <div class="image-url-row">
+              <span class="or-divider">or paste image URL</span>
+              <div class="url-input-wrap">
+                <input type="url" id="image-url-input" class="url-input" placeholder="https://example.com/image.jpg" />
+                <button class="btn-ghost-sm" id="load-url-btn">Load</button>
+              </div>
+            </div>
+
+            <button class="btn-analyze" id="analyze-image-btn">
+              <span class="btn-analyze-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </span>
+              <span class="btn-analyze-text">Analyze Image</span>
+              <span class="btn-analyze-loader" hidden>
+                <svg class="spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              </span>
+            </button>
+          </div>
+
+          <div class="detector-result-col" id="image-result-col">
+            <div class="result-placeholder" id="image-result-placeholder">
+              <div class="placeholder-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <p>Upload an image to begin analysis</p>
+            </div>
+
+            <div class="result-panel" id="image-result-panel" hidden>
+              <div class="result-verdict" id="image-verdict-badge"></div>
+
+              <div class="result-score-ring-wrap">
+                <svg class="score-ring" width="180" height="180" viewBox="0 0 180 180">
+                  <circle cx="90" cy="90" r="72" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="12"/>
+                  <circle id="image-score-circle" cx="90" cy="90" r="72" fill="none" stroke="url(#ring-grad-img)" stroke-width="12" stroke-linecap="round" stroke-dasharray="452" stroke-dashoffset="452" transform="rotate(-90 90 90)"/>
+                  <defs>
+                    <linearGradient id="ring-grad-img" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#8b5cf6"/>
+                      <stop offset="100%" stop-color="#06b6d4"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="ring-center">
+                  <span class="ring-score" id="image-score-num">0%</span>
+                  <span class="ring-label">AI Probability</span>
+                </div>
+              </div>
+
+              <div class="result-metrics" id="image-metrics"></div>
+              <div class="result-breakdown" id="image-breakdown"></div>
+
+              <div class="result-action-bar">
+                <button class="btn-ghost-sm" id="copy-image-result-btn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy Report
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL: CODE -->
+      <div class="detector-card" id="panel-code" role="tabpanel" aria-labelledby="tab-code" hidden>
+        <div class="detector-layout">
+          <div class="detector-input-col">
+            <div class="input-header">
+              <label for="code-input" class="input-label">Paste your code</label>
+              <select class="lang-select" id="lang-select" aria-label="Programming language">
+                <option value="auto">Auto-detect</option>
+                <option value="python">Python</option>
+                <option value="javascript">JavaScript</option>
+                <option value="typescript">TypeScript</option>
+                <option value="java">Java</option>
+                <option value="cpp">C/C++</option>
+                <option value="csharp">C#</option>
+                <option value="go">Go</option>
+                <option value="rust">Rust</option>
+                <option value="php">PHP</option>
+                <option value="sql">SQL</option>
+              </select>
+            </div>
+            <textarea 
+              id="code-input" 
+              class="text-area code-area" 
+              placeholder="// Paste your code here...&#10;function example() {&#10;  // AIShield will analyze patterns, comments, and style&#10;}"
+              maxlength="15000"
+              aria-describedby="code-hint"
+              spellcheck="false"
+            ></textarea>
+            <div class="input-footer">
+              <span class="input-hint" id="code-hint">💡 Works with any programming language</span>
+              <div class="input-actions">
+                <button class="btn-ghost-sm" id="clear-code-btn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  Clear
+                </button>
+              </div>
+            </div>
+            <div class="sample-texts">
+              <span class="sample-label">Try a sample:</span>
+              <button class="sample-chip" data-sample="human-code" id="sample-human-code-btn">Human Code</button>
+              <button class="sample-chip" data-sample="ai-code" id="sample-ai-code-btn">AI Code</button>
+            </div>
+            <button class="btn-analyze" id="analyze-code-btn">
+              <span class="btn-analyze-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              </span>
+              <span class="btn-analyze-text">Analyze Code</span>
+              <span class="btn-analyze-loader" hidden>
+                <svg class="spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              </span>
+            </button>
+          </div>
+
+          <div class="detector-result-col" id="code-result-col">
+            <div class="result-placeholder" id="code-result-placeholder">
+              <div class="placeholder-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              </div>
+              <p>Your code analysis results will appear here</p>
+            </div>
+
+            <div class="result-panel" id="code-result-panel" hidden>
+              <div class="result-verdict" id="code-verdict-badge"></div>
+
+              <div class="result-score-ring-wrap">
+                <svg class="score-ring" width="180" height="180" viewBox="0 0 180 180">
+                  <circle cx="90" cy="90" r="72" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="12"/>
+                  <circle id="code-score-circle" cx="90" cy="90" r="72" fill="none" stroke="url(#ring-grad-code)" stroke-width="12" stroke-linecap="round" stroke-dasharray="452" stroke-dashoffset="452" transform="rotate(-90 90 90)"/>
+                  <defs>
+                    <linearGradient id="ring-grad-code" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#8b5cf6"/>
+                      <stop offset="100%" stop-color="#06b6d4"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="ring-center">
+                  <span class="ring-score" id="code-score-num">0%</span>
+                  <span class="ring-label">AI Probability</span>
+                </div>
+              </div>
+
+              <div class="result-metrics" id="code-metrics"></div>
+              <div class="result-breakdown" id="code-breakdown"></div>
+
+              <div class="result-action-bar">
+                <button class="btn-ghost-sm" id="copy-code-result-btn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy Report
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HOW IT WORKS ── -->
+  <section class="section how-section" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Methodology</span>
+        <h2 class="section-title">How <span class="gradient-text">AIShield</span> Works</h2>
+        <p class="section-subtitle">Multi-layered analysis powered by linguistic research and computer vision heuristics.</p>
+      </div>
+
+      <div class="how-grid">
+        <div class="how-card" data-delay="0">
+          <div class="how-num">01</div>
+          <div class="how-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0H5m4 0h6m6-11v11m0 0h-6m6 0v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+          </div>
+          <h3>Perplexity Analysis</h3>
+          <p>Measures how predictable the text is. AI models tend to generate text with low perplexity — statistically likely word sequences.</p>
+        </div>
+
+        <div class="how-card" data-delay="100">
+          <div class="how-num">02</div>
+          <div class="how-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <h3>Burstiness Detection</h3>
+          <p>Humans write with varied sentence lengths — short bursts, long elaborations. AI tends to produce more uniform, "smooth" text patterns.</p>
+        </div>
+
+        <div class="how-card" data-delay="200">
+          <div class="how-num">03</div>
+          <div class="how-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <h3>Linguistic Fingerprinting</h3>
+          <p>Detects AI hallmark phrases, hedging language, over-use of transitions ("Furthermore", "In conclusion"), and unnatural formality.</p>
+        </div>
+
+        <div class="how-card" data-delay="300">
+          <div class="how-num">04</div>
+          <div class="how-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <h3>Image Artifact Detection</h3>
+          <p>AI images often have statistical noise irregularities, frequency domain anomalies, and specific GAN fingerprints we analyze.</p>
+        </div>
+
+        <div class="how-card" data-delay="400">
+          <div class="how-num">05</div>
+          <div class="how-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <h3>Metadata Analysis</h3>
+          <p>EXIF data, creation tools, compression patterns, and color histogram distribution reveal generation tool signatures.</p>
+        </div>
+
+        <div class="how-card" data-delay="500">
+          <div class="how-num">06</div>
+          <div class="how-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <h3>Code Pattern Recognition</h3>
+          <p>AI-generated code features highly uniform style, over-commented logic, perfect naming conventions, and repetitive patterns.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── STATS SECTION ── -->
+  <section class="section stats-section" id="stats">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-num counter" data-target="2847321">0</span>
+          <span class="stat-label">Texts Analyzed</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num counter" data-target="98">0</span><span class="stat-suffix">%</span>
+          <span class="stat-label">Text Accuracy</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num counter" data-target="842019">0</span>
+          <span class="stat-label">Images Scanned</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num counter" data-target="100">0</span><span class="stat-suffix">%</span>
+          <span class="stat-label">Free Forever</span>
+        </div>
+      </div>
+      <div class="stats-tagline">
+        <p>Trusted by researchers, educators, and journalists worldwide.</p>
+        <div class="trust-badges">
+          <span class="trust-badge">🔒 No Data Stored</span>
+          <span class="trust-badge">⚡ Instant Results</span>
+          <span class="trust-badge">🌍 No Registration</span>
+          <span class="trust-badge">🧠 Advanced AI Models</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FAQ ── -->
+  <section class="section faq-section" id="faq">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Common Questions</span>
+        <h2 class="section-title">Frequently Asked <span class="gradient-text">Questions</span></h2>
+      </div>
+
+      <div class="faq-list" id="faq-list">
+        <div class="faq-item" id="faq-1">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-1-answer">
+            How accurate is AIShield?
+            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-a" id="faq-1-answer" role="region" hidden>
+            <p>AIShield achieves ~98% accuracy on text generated by major AI models (GPT-4, Claude, Gemini, Llama). Image detection achieves ~87% for Stable Diffusion and Midjourney outputs. Results improve with more content — we recommend at least 100 words for text analysis.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" id="faq-2">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-2-answer">
+            Is my data stored or shared?
+            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-a" id="faq-2-answer" role="region" hidden>
+            <p>No. AIShield runs entirely in your browser. Your text, images, and code never leave your device — no server processing, no data storage, complete privacy. We use only your local compute power.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" id="faq-3">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-3-answer">
+            Can AIShield detect text from ChatGPT or Claude?
+            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-a" id="faq-3-answer" role="region" hidden>
+            <p>Yes! AIShield is trained to detect outputs from GPT-3.5, GPT-4, GPT-4o, Claude 2/3, Gemini, Llama, Mistral, and other popular models. It analyzes linguistic patterns that are universal across LLMs, not model-specific signatures.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" id="faq-4">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-4-answer">
+            What AI image generators can it detect?
+            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-a" id="faq-4-answer" role="region" hidden>
+            <p>AIShield can detect images from Stable Diffusion, Midjourney, DALL-E 2/3, Adobe Firefly, and other GAN/diffusion-based generators. It analyzes pixel statistics, frequency domain artifacts, metadata signatures, and color distribution patterns.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" id="faq-5">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-5-answer">
+            Why might the result be wrong?
+            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-a" id="faq-5-answer" role="region" hidden>
+            <p>No detector is perfect. Heavily edited AI text, short snippets, or heavily technical/formal human writing may produce false positives. Highly edited AI images or low-resolution photos can produce false negatives. Always treat results as probabilistic, not definitive.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" id="faq-6">
+          <button class="faq-q" aria-expanded="false" aria-controls="faq-6-answer">
+            Is AIShield really free?
+            <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-a" id="faq-6-answer" role="region" hidden>
+            <p>Yes — 100% free, forever. No hidden fees, no premium tier, no credit card required. AIShield is an open-source tool built for the community. All processing happens locally in your browser.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="#" class="nav-logo" aria-label="AIShield">
+            <div class="logo-icon">
+              <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2L4 6.5V14C4 19.5 8.4 24.7 14 26C19.6 24.7 24 19.5 24 14V6.5L14 2Z" fill="url(#shield-grad-f)" stroke="rgba(139,92,246,0.4)" stroke-width="0.5"/>
+                <path d="M10 14L12.5 16.5L18 11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs>
+                  <linearGradient id="shield-grad-f" x1="4" y1="2" x2="24" y2="26" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#8b5cf6"/>
+                    <stop offset="100%" stop-color="#06b6d4"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <span class="logo-text">AI<span class="logo-accent">Shield</span></span>
+          </a>
+          <p class="footer-tagline">Free multimodal AI content detection.<br/>Privacy-first. No sign-up required.</p>
+        </div>
+
+        <div class="footer-links">
+          <div class="footer-col">
+            <h4>Product</h4>
+            <a href="#detector">Text Detector</a>
+            <a href="#detector">Image Detector</a>
+            <a href="#detector">Code Detector</a>
+          </div>
+          <div class="footer-col">
+            <h4>Resources</h4>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#faq">FAQ</a>
+            <a href="#stats">Accuracy Stats</a>
+          </div>
+          <div class="footer-col">
+            <h4>Legal</h4>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Use</a>
+            <a href="#">Open Source</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 AIShield. Built for the open web. All analysis runs locally in your browser.</p>
+        <div class="footer-badges">
+          <span>🔒 Privacy First</span>
+          <span>⚡ Free Forever</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast notifications -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+
+> ai-shield@0.1.0 dev
+> next dev -H 127.0.0.1
+
+▲ Next.js 16.2.12 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+- Environments: .env.local
+✓ Ready in 777ms
+- Experiments (use with caution):
+  · serverActions
+
+○ Compiling / ...
+⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET / 200 in 12.5s (next.js: 11.8s, application-code: 681ms)
+ GET / 200 in 268ms (next.js: 14ms, application-code: 254ms)
+ GET /dashboard 200 in 2.8s (next.js: 2.7s, application-code: 155ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior (file://C:/Users/IT TEAM/Desktop/AISHIELD/.next/dev/static/chunks/node_modules_next_dist_1ybzpk2._.js:2489:13)
+ GET /dashboard/deepfake 200 in 1937ms (next.js: 1796ms, application-code: 142ms)
+ POST /api/scan/deepfake 400 in 3.0s (next.js: 732ms, application-code: 2.3s)
+✓ Compiled in 300ms
+⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /dashboard/deepfake 200 in 266ms (next.js: 166ms, application-code: 101ms)
+ GET /dashboard/deepfake 200 in 352ms (next.js: 16ms, application-code: 337ms)
+ POST /api/scan/deepfake 400 in 2.8s (next.js: 43ms, application-code: 2.7s)
+ GET / 200 in 438ms (next.js: 51ms, application-code: 387ms)
+ GET /dashboard 200 in 322ms (next.js: 133ms, application-code: 189ms)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior (file://C:/Users/IT TEAM/Desktop/AISHIELD/.next/dev/static/chunks/node_modules_next_dist_1ybzpk2._.js:2489:13)
+ GET /dashboard/deepfake 200 in 90ms (next.js: 6ms, application-code: 84ms)
+ POST /api/scan/deepfake 400 in 2.8s (next.js: 4ms, application-code: 2.8s)
+✓ Compiled in 402ms
+^C^C

@@ -1,0 +1,13 @@
+
+> ai-shield@0.1.0 dev
+> next dev -H 127.0.0.1
+
+▲ Next.js 16.2.12 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+- Environments: .env.local
+✓ Ready in 940ms
+- Experiments (use with caution):
+  · serverActions
+
+[?25h
