@@ -2,7 +2,7 @@ import type { JWT } from 'next-auth/jwt';
 import { z } from 'zod';
 
 const emailSchema = z.string().max(254).email();
-const enabledProviders = ['google', 'facebook', 'credentials'];
+const enabledProviders = ['google', 'credentials'];
 
 function record(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
@@ -21,9 +21,6 @@ export function isTrustedProviderSignIn(input: { account?: unknown; user: unknow
     case 'google':
       return account.type === 'oidc' && profile?.sub === providerId && profile.email_verified === true
         && emailSchema.safeParse(profileEmail).success && profileEmail === userEmail;
-    case 'facebook':
-      // Facebook proves provider-account control, but does not expose email_verified.
-      return account.type === 'oauth' && /^[0-9]+$/.test(providerId) && profile?.id === providerId;
     case 'credentials':
       return account.type === 'credentials' && providerId === user.id && user.emailVerified === true && emailSchema.safeParse(user.email).success;
     default:

@@ -1,113 +1,94 @@
-# Activate provider sign-in
+﻿# Google sign-in on Vercel
 
-The application now has real Auth.js integration for Google and Facebook, a WhatsApp verification flow backed by Twilio Verify, and email/password sign-in for existing verified PostgreSQL accounts. Successful authentication creates an encrypted HTTP-only cookie session lasting up to seven days. The dashboard, scanning APIs, and private report API require that session. Sign-out clears it.
+Google is the only social sign-in provider. Facebook has been removed from the UI, provider registration, and accepted sessions. Existing verified password accounts remain supported separately.
 
-**Each provider needs its own credentials.** Working Google sign-in does not configure Facebook. Run `npm.cmd run auth:check` to check this workspace without printing secrets. Keep secrets in `.env.local`; do not paste them into chat or commit them.
+## Required Vercel environment variables
 
-The current PostgreSQL address is also a placeholder and its hostname does not resolve. Password sign-in cannot authenticate real users until the account database and verified records exist. No demo users or passwords are created.
+Set these for the **Production** environment of the Vercel project that builds this repository's root directory (the directory containing `package.json` and `src/`):
 
-The selected authentication library is **NextAuth/Auth.js**, which is already installed and wired to the provider buttons. A different authentication library would still require registered Google/Meta applications and a WhatsApp verification service. For live provider login, complete the Google/Facebook app registration below and fill the matching `AUTH_*` values in `.env.local`; then configure Twilio Verify for WhatsApp. Provider login does not require the password database.
+| Variable | Value |
+| --- | --- |
+| `AUTH_SECRET` | An independently generated random secret, at least 32 characters. This is not the Google client secret. |
+| `AUTH_GOOGLE_ID` | Google OAuth Web application client ID, usually ending in `.apps.googleusercontent.com` |
+| `AUTH_GOOGLE_SECRET` | The matching Google OAuth client secret |
+| `AUTH_URL` | The exact public origin users open, such as `https://your-app.vercel.app` or your custom domain |
 
-## 1. Use one app address
+The app also accepts the pair `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`. If either `AUTH_GOOGLE_*` value is present, that family takes priority; configure the complete matching pair and remove stale values. Surrounding whitespace in Google credentials is trimmed. Do not expose secrets through `NEXT_PUBLIC_*` variables.
 
-The current local setting is `AUTH_URL="http://localhost:3000"`. Open the app using **http://localhost:3000** and use that exact origin in each provider console. `localhost` and `127.0.0.1` are different cookie hosts; mixing them breaks OAuth callback checks.
-
-When deploying, change `AUTH_URL` to the site's HTTPS address, set a strong production `AUTH_SECRET`, and register the corresponding HTTPS callback URLs. WhatsApp validates browser requests against this configured public origin, including behind a reverse proxy, and requires HTTPS in production. Without a configured URL, its fallback is limited to local development loopback addresses. To generate a new secret in another checkout, follow [Auth.js installation guidance](https://authjs.dev/getting-started/installation), including `npx auth secret`.
-
-## 2. Register the OAuth apps
-
-| Provider | Environment variables | Local callback URL |
-| --- | --- | --- |
-| Google | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | `http://localhost:3000/api/auth/callback/google` |
-| Facebook | `AUTH_FACEBOOK_ID`, `AUTH_FACEBOOK_SECRET`, `AUTH_FACEBOOK_API_VERSION` | `http://localhost:3000/api/auth/callback/facebook` |
-
-### Google
-
-1. Open [Google Cloud credentials](https://console.cloud.google.com/apis/credentials), select or create a project, and configure its OAuth consent/branding and audience.
-2. Create an OAuth client for a **Web application**.
-3. Add `http://localhost:3000` as the authorized JavaScript origin and the Google callback URL above as the authorized redirect URI.
-4. Put its client ID and secret into `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`.
-5. If the app is in testing mode, add the Google accounts that will test it to its allowed test users.
-
-See [the Auth.js Google setup](https://authjs.dev/getting-started/providers/google).
-
-### Facebook
-
-1. Create or select an application in [Meta for Developers](https://developers.facebook.com/apps/) with Facebook Login enabled.
-2. Add the Facebook callback URL above to its valid OAuth redirect URIs. Use the app's development configuration for localhost; public access depends on Meta's applicable app/publication requirements.
-3. Put the app ID and app secret into `AUTH_FACEBOOK_ID` and `AUTH_FACEBOOK_SECRET`.
-4. Set `AUTH_FACEBOOK_API_VERSION` to a **supported Graph API version shown for your app**, using the `vNN.N` format. This deliberately avoids the older version hardcoded in the installed Auth.js provider.
-5. In development mode, test with an app administrator/developer/tester account that Meta permits for that application.
-
-All three Facebook settings must be present before Auth.js enables the Facebook button's login flow. Use the **App ID and App Secret from your Meta developer application**, not your personal Facebook email/password. Add the values to `.env.local` for local development and to your hosting project's environment settings for deployment. Restart the development server or redeploy after changing them.
-
-The intended flow is **Continue with Facebook → Facebook's own login/credential confirmation page → consent if needed → AI SHIELD dashboard**. The app requests `auth_type=reauthenticate` so Facebook can ask for credential confirmation even when the browser already has a Facebook session. Facebook controls the exact screen and may remember the account identifier or require additional checks. AI SHIELD never receives or stores Facebook passwords.
-
-If the button says Facebook sign-in is unavailable, check the three `AUTH_FACEBOOK_*` settings first. If Facebook opens but rejects login, check the exact callback URL, Facebook Login configuration, allowed testers/app roles, and the app's publication/access status. Use a dedicated development application for localhost; production callbacks must use your deployed HTTPS address.
-
-See [the Auth.js Facebook setup](https://authjs.dev/getting-started/providers/facebook).
-
-## 3. Configure WhatsApp verification
-
-WhatsApp sign-in proves control of a phone number using a six-digit code; it does not use a Google-style OAuth account picker. This implementation uses [Twilio Verify WhatsApp](https://www.twilio.com/docs/verify/whatsapp).
-
-The phone screen now has a searchable country-code dropdown on the **left** of the number field. It contains **245 countries and territories** from `libphonenumber-js`, including separate entries for countries sharing a calling code. The default is Philippines (+63). Search by country name, two-letter region, or dialing code; keyboard selection is supported. The list is [maintained by the phone-number library](https://github.com/catamphetamine/libphonenumber-js#getcountries-string).
-
-Enter a national number such as `09171234567`, or paste `+639171234567`. The app handles regional trunk prefixes, preserves Italy's significant leading zero, and automatically selects the country for a recognized full international number. Both client and request endpoint validate number metadata, including short-number territories such as Tokelau. Valid number formatting does not prove that a WhatsApp account exists: successful Twilio code verification is still required. Actual delivery depends on Twilio/WhatsApp channel availability for the destination.
-
-1. Create/select your Twilio account and a Verify service.
-2. Complete Twilio's required WhatsApp sender onboarding and connect your own WhatsApp sender to the Verify service. A Verify service alone is insufficient for WhatsApp delivery.
-3. Configure the Verify service to use **six-digit codes** and the WhatsApp channel. This app sends only via WhatsApp and does not silently switch to SMS.
-4. Set these values in `.env.local`:
-
-```dotenv
-TWILIO_ACCOUNT_SID=""
-TWILIO_AUTH_TOKEN=""
-TWILIO_VERIFY_SERVICE_SID=""
-```
-
-5. For a trial account, follow Twilio's restrictions for permitted destination numbers. Test with a WhatsApp number you control, entered in international form such as `+639171234567`.
-
-WhatsApp verification requests use your Twilio account and may incur its normal fees. No real messages were sent during implementation tests.
-
-The flow validates an international number, requests a code, binds a signed five-minute HTTP-only challenge cookie to that number and the exact Twilio verification SID, and checks the code with Twilio. The UI opens the code screen only after a successful `sent: true` response. Auth.js creates a session only after Twilio returns an approved result for the matching phone, SID, and WhatsApp channel, and the client confirms that session before opening the dashboard. Incorrect/expired codes and successful-looking responses without a session never authenticate.
-
-## 4. Password sign-in with verified accounts
-
-The Sign In button on `/sign-in/password` now uses Auth.js credentials authentication and confirms that a real session exists before opening the dashboard. It accepts only an existing database record with a matching salted scrypt password hash and a valid `emailVerified` timestamp. Unknown accounts, incorrect passwords, missing hashes, and unverified records are denied. Verification flags sent by the browser are ignored.
-
-1. Replace the placeholder `DATABASE_URL` with a working PostgreSQL connection for your account database. The connection is scoped to `src/lib/auth-db.ts`; existing scan persistence in `src/lib/db.ts` stays disabled.
-2. Initialize the `User` table using the repository's Prisma schema if this is a new account database. For an existing database already matching the old schema, review and apply `prisma/verified-password-column.sql` to add the optional `passwordHash` column. No database/schema mutation was performed during implementation because the configured host cannot be reached.
-3. Use `hashPassword()` in `src/lib/password-auth.ts` inside a trusted account-enrollment/password-management backend to store hashes, never plaintext. Its fixed `scrypt-v1` format uses a random 16-byte salt and scrypt with N=32768, r=8, p=1, and a 64-byte output.
-4. Store account emails normalized to lowercase. Set `emailVerified` only after a trusted process actually proves email ownership. This sign-in implementation never sets that timestamp from login input or auto-creates users.
-
-**New password-account registration, email delivery, and password recovery still need a real enrollment/verification service.** The existing sign-up API does not create accounts, and the verification screen no longer pretends to send verification emails. Existing verified accounts can sign in once the database/schema/hash requirements are satisfied; new users can use configured provider sign-in meanwhile.
-
-The password verifier permits up to five attempts per account and twenty per client in ten minutes, with bounded process-local counters. Missing/invalid hashes still perform scrypt work before rejection, and responses avoid distinguishing nonexistent from unverified or incorrect-password accounts.
-
-## 5. Check configuration and test live
-
-After entering credentials, restart the development server and run:
+Generate the app session secret locally:
 
 ```powershell
-npm.cmd run auth:check
-npm.cmd run dev
+node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
 ```
 
-`auth:check` prints readiness and callback URLs without printing credentials. The test/check scripts use Node's native TypeScript support and require Node 22.18+ or Node 24; this workspace uses Node 24.
+`AUTH_SECRET` is required for authentication. There is no built-in fallback session signing key. Google sign-in uses encrypted HTTP-only JWT cookies and does not require a PostgreSQL database, Resend, Twilio, or a pre-created local user.
 
-At `http://localhost:3000/sign-in`, test each configured provider, its cancel/failure path, successful dashboard access, sign-out, and rejection of dashboard/API access after sign-out. For WhatsApp, test real delivery, correct and incorrect codes, expiry, and resending. For passwords, test a verified stored account with its correct password and rejection of wrong passwords, unverified accounts, and nonexistent accounts.
+`REQUIRE_AUTH=true` additionally requires a session for dashboard and scan/report APIs. Leave its current setting unchanged if guest scanning is intended.
 
-## Protection and deployment limits
+## Google Cloud configuration
 
-- Auth.js provides OAuth state/PKCE where appropriate, CSRF checks, encrypted sessions, and same-origin safe redirects.
-- Google requires `email_verified === true` in its validated OIDC profile. See [Google's OIDC claims](https://developers.google.com/identity/openid-connect/openid-connect).
-- Facebook requires matching IDs from its authenticated provider profile; it does not supply an equivalent email-verification claim. The Graph profile request checks HTTP status, times out after ten seconds, refuses redirects, and hides upstream error details. An email address or profile photo is optional and cannot prevent a valid provider account from signing in. WhatsApp accepts only Twilio approval for the browser-bound phone/SID. These prove account control, rather than a person's real-world identity or whether someone used an invented profile name.
-- Only successful trusted authentication marks newly issued sessions as verified. Legacy sessions without that marker are rejected; users must sign in again after this change. Client session-update data cannot set the marker.
-- Missing, short, and placeholder `AUTH_SECRET` values fail before Auth.js loads environment defaults. Legacy or rotation environment keys do not replace the explicitly validated primary session key.
-- The Next.js proxy checks protected routes. Dashboard rendering and individual scan/report handlers independently verify sessions before private work.
-- WhatsApp requests require a same-origin JSON POST; challenge cookies are HTTP-only, SameSite=Lax, and Secure on HTTPS. Provider/OTP error details are not exposed.
-- Supplemental per-process limits allow at most one send per minute and three sends per ten minutes per number, ten sends per ten minutes per client, and five verification attempts per ten minutes per number. Buckets expire and total in-memory storage is bounded.
-- **For distributed/serverless production, configure shared or provider-managed rate limits**: process-local counters do not coordinate across workers or restarts. Follow [Twilio's service rate-limit guidance](https://www.twilio.com/docs/verify/api/service-rate-limits).
-- Scan persistence remains disabled. The separate account-database connection reads existing verified password records; cross-provider linking and password-account enrollment/management are not enabled. Existing dashboard/admin data remains sample data, and none of it serves as login credentials.
-- Unit tests use controlled Twilio responses, and browser QA can verify session enforcement with local test fixtures. These do not establish live OAuth account approval or real WhatsApp delivery.
+Create/use an OAuth client with application type **Web application**. In Google Auth Platform / Credentials, register:
+
+- Authorized JavaScript origin: the public origin, without a path.
+- Authorized redirect URI: `https://YOUR-EXACT-DOMAIN/api/auth/callback/google`.
+
+Use the actual domain, not the literal example above. The redirect URI must match exactly, including protocol, hostname, and path. Register custom domains and any separate preview host that needs sign-in individually. A changing Vercel preview URL will not match a production-only callback.
+
+For public access with ordinary Google accounts, configure the consent audience as **External** and publish the app to **Production**. If it remains in **Testing**, add each permitted account as a test user. An **Internal** audience restricts sign-in to the configured Google Workspace organization. Follow any Google verification requirements shown for the app; do not add extra scopes beyond the default identity/profile/email scopes for this flow.
+
+After changing Vercel variables, **redeploy**. Updating variables does not change an already-built deployment. Remove a stale `NEXTAUTH_URL` pointing to localhost or an old domain, and set `AUTH_URL` to the origin used for the live test.
+
+References: [Auth.js Google provider](https://authjs.dev/reference/core/providers/google), [Auth.js deployment](https://authjs.dev/getting-started/deployment), [Google OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect), [Google production readiness](https://developers.google.com/identity/protocols/oauth2/production-readiness/policy-compliance).
+
+## What was fixed
+
+- Google configuration now resolves both supported variable naming families consistently for readiness checks and provider registration.
+- Google and verified-password sessions enter the dashboard directly. A second app email-confirmation gate previously redirected valid Google users to `/verify-email` and depended on another email service/database.
+- The legacy email-verification page now wraps `useSession()` in `SessionProvider`, preventing its missing-context crash.
+- Sign-in/sign-up and the landing-page scan-choice dialog share the same Google button and error handling.
+- Facebook UI, provider implementation, and session acceptance were removed. Old Facebook sessions are rejected.
+- Session setup fails on a missing/invalid `AUTH_SECRET` instead of using a hardcoded key.
+- The readiness command works with inherited Vercel variables even when `.env.local` does not exist, prints the callback without credentials, and exits unsuccessfully for missing Google setup or an invalid production origin.
+
+Google's validated OIDC profile must contain a matching subject and email with `email_verified === true`. No email typed into a form, query parameter, confirmation cookie, or client session update grants Google authentication.
+
+## Verify the deployed flow
+
+1. Open `https://YOUR-EXACT-DOMAIN/api/auth/providers`. It should list `google` and should not list Facebook. This endpoint returns public provider metadata, not secrets.
+2. Open `/sign-in`, then click **Continue with Google**. The browser should navigate to Google's account chooser.
+3. Choose a real account and complete consent. It should return through `/api/auth/callback/google` to `/dashboard`, without asking for another confirmation email.
+4. Reload and verify the session persists, then sign out and verify it clears.
+5. Repeat from the landing-page **Start Scanning** dialog and from a mobile viewport. Test cancellation too.
+
+Troubleshooting:
+
+| Symptom | Check |
+| --- | --- |
+| Providers endpoint omits Google | Missing/invalid `AUTH_SECRET`, missing credential pair, wrong Vercel environment/project, or deployment not rebuilt |
+| Google `redirect_uri_mismatch` | Register the exact callback for the domain currently in the browser; remove stale localhost app URLs |
+| Google access blocked / only selected accounts work | External audience, publishing status, test users, and any Workspace restrictions |
+| Google `invalid_client` | Web client ID and matching secret; ensure a different credential family is not overriding them |
+| App `Configuration` error | Vercel function logs and required environment variables; do not share secret values |
+| Still sees Facebook or extra email-confirmation redirect | The live deployment is running older source; redeploy this change |
+
+## Local checks
+
+```powershell
+npm.cmd ci
+npm.cmd run auth:check
+npm.cmd test
+npm.cmd run build
+```
+
+`auth:check` reads `.env.local` if present and otherwise uses inherited variables. It checks configuration shape; it cannot establish Google client validity, Google audience permissions, live callback registration, or actual account consent.
+
+Password-account lookup requires a real configured PostgreSQL database, existing verified account records, and salted scrypt hashes. Signup and password-reset enrollment remain placeholders and are separate from Google OAuth.
+
+## Verification of this change (21 October 2026)
+
+- Nineteen targeted checks passed: Google credential configuration, readiness diagnostics, redirects, session-cookie proof, email-token signatures, and dashboard access decisions.
+- The dashboard regression was reproduced against the original source: an authenticated Google session without a separate confirmation record was redirected to email verification. Updated source renders the dashboard, while missing sessions still redirect when authentication is required.
+- Syntax checks passed for all seven changed TypeScript/TSX files using an available TypeScript 5.9.3 compiler. This was not a full type check.
+- The full test command recorded 19 passing checks and three test-file failures: `auth-security.test.mjs`, `password-auth.test.mjs`, and `provider-verification.test.mjs` could not import the missing `@auth/core` dependency. The dashboard checks used an existing local TypeScript installation via `NODE_PATH`; no dependency versions were changed in this project.
+- `npm ci` could not download packages because outbound registry access was denied; an offline retry also lacked the required cached packages. The production build could not start because `next` is not installed.
+- Browser QA and real Google account consent were not performed. No deployment or Vercel environment changes were made, and no live site URL was provided during the change.

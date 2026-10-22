@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { getAuthProviderStatus, getSafeAuthRedirect, isUsableAuthSecret, getPasswordDatabaseUrl } from '../src/lib/auth-settings.ts';
+import * as settings from '../src/lib/auth-settings.ts';
 
 const validEnv = {
   AUTH_SECRET: 'test-secret-with-at-least-thirty-two-characters',
@@ -18,12 +19,31 @@ test('password authentication rejects missing and placeholder database addresses
 });
 
 test('configured providers are available only with a usable session secret and complete credentials', () => {
-  assert.deepEqual(getAuthProviderStatus(validEnv), { google: true, facebook: true });
-  assert.deepEqual(getAuthProviderStatus({}), { google: false, facebook: false });
-  assert.deepEqual(getAuthProviderStatus({ ...validEnv, AUTH_SECRET: 'your-secret-here-min-32-chars' }), { google: false, facebook: false });
+  assert.deepEqual(getAuthProviderStatus(validEnv), { google: true });
+  assert.deepEqual(getAuthProviderStatus({}), { google: false });
+  assert.deepEqual(getAuthProviderStatus({ ...validEnv, AUTH_SECRET: 'your-secret-here-min-32-chars' }), { google: false });
   assert.equal(getAuthProviderStatus({ ...validEnv, AUTH_GOOGLE_SECRET: '' }).google, false);
-  assert.equal(getAuthProviderStatus({ ...validEnv, AUTH_FACEBOOK_ID: 'your-facebook-id' }).facebook, false);
-  assert.equal(getAuthProviderStatus({ ...validEnv, AUTH_FACEBOOK_API_VERSION: '' }).facebook, false);
+});
+
+test('Google credentials configured with common Vercel variable names enable sign-in', () => {
+  const env = {
+    AUTH_SECRET: validEnv.AUTH_SECRET,
+    GOOGLE_CLIENT_ID: '  123456.apps.googleusercontent.com\n',
+    GOOGLE_CLIENT_SECRET: '  GOCSPX-synthetic-secret\n',
+  };
+  assert.equal(getAuthProviderStatus(env).google, true);
+  assert.equal(typeof settings.getGoogleCredentials, 'function');
+  assert.deepEqual(settings.getGoogleCredentials(env), {
+    clientId: '123456.apps.googleusercontent.com', clientSecret: 'GOCSPX-synthetic-secret',
+  });
+});
+
+test('Google credential families are not mixed and explicit Auth.js credentials take priority', () => {
+  assert.equal(typeof settings.getGoogleCredentials, 'function');
+  assert.deepEqual(settings.getGoogleCredentials({ ...validEnv, GOOGLE_CLIENT_ID: 'other-client', GOOGLE_CLIENT_SECRET: 'other-secret' }), {
+    clientId: 'google-client', clientSecret: 'google-secret',
+  });
+  assert.equal(getAuthProviderStatus({ AUTH_SECRET: validEnv.AUTH_SECRET, AUTH_GOOGLE_ID: 'client-one', GOOGLE_CLIENT_SECRET: 'secret-two' }).google, false);
 });
 
 test('session secrets reject missing, short, and example values', () => {

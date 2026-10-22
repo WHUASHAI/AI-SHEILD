@@ -1,128 +1,90 @@
-# AI SHIELD project index
+﻿# AI SHIELD project index
 
-Indexed from the local source on 15 October 2026. This describes the code that is present, rather than treating every feature mentioned in older documentation as implemented.
+Indexed from local source on 21 October 2026. This map describes implementation, not deployment readiness. External services and runtime behavior were not tested during indexing.
 
-## What this project does
+Repository layout corrected on 22 October 2026: the active project is at the workspace root. The duplicate nested checkout was archived under `.local-backups/`; its old Git link still needs removal from a normal terminal because this session cannot write the outer Git index. See `docs/repository-layout.md`.
 
-AI SHIELD is a web application for checking text, images, videos, faces, and plagiarism for signs of AI generation or manipulation. It has a public marketing site, a dashboard with scanning tools, account screens, and server API routes. Detection results are probabilistic.
+## Purpose and current state
 
-The repository contains 26 page components, 12 API route handlers, and 63 component files under `src/`. Route groups such as `(public)` and `(auth)` organize layouts without appearing in URLs.
+AI SHIELD is a web application for screening text, images, videos, and faces for possible AI generation or manipulation, plus checking text for online plagiarism matches. It combines a public site, dashboard, account screens, and server API routes. It calls external detection services rather than hosting a trained detection model.
+
+The checkout contains 25 page components, 14 API route handlers, and 63 component files. It is a partially implemented application: real provider integrations coexist with synthetic results, browser-only history, and unfinished account/report services. Detection scores do not prove content origin.
 
 ## Technology
 
-| Area | Current implementation |
+Next.js 16.2.12 App Router, React 19.2.4, TypeScript, Tailwind CSS 4, Radix/shadcn-style components, Framer Motion, Recharts, React Dropzone, React Hook Form, and Zod. Auth.js 5 handles sessions/providers. Prisma 7 defines a PostgreSQL schema.
+
+## Source map
+
+| Path | Responsibility |
 | --- | --- |
-| Framework | Next.js 16.2.12, App Router |
-| UI | React 19.2.4, TypeScript |
-| Styling | Tailwind CSS 4, custom navy/blue/lavender theme |
-| Components | Local shadcn-style primitives using Radix UI |
-| Forms | React Hook Form, Zod |
-| Animation/charts | Framer Motion, Recharts |
-| Upload UI | React Dropzone |
-| Database design | Prisma 7, PostgreSQL schema; scan persistence disabled, separate lazy account lookup for verified password sign-in |
-| Authentication | Auth.js 5 with verified encrypted JWT sessions, Google/Facebook OAuth, WhatsApp through Twilio Verify, verified existing password accounts; credentials/database still require setup |
+| `src/app/(public)/` | Landing page, about, how-it-works, limitations |
+| `src/app/(auth)/` | Sign-in, password step, sign-up, recovery, email verification |
+| `src/app/(dashboard)/` | Dashboard layout and scanning, history, reports, settings, API-key, admin, help screens |
+| `src/app/api/scan/` | Text, image, video, deepfake, plagiarism, URL handlers |
+| `src/app/api/auth/` | Auth.js, password sign-in, signup/recovery placeholders, email verification |
+| `src/app/api/report/[id]/` | Report persistence placeholder |
+| `src/app/report/[token]/` | Public shared report demonstration |
+| `src/components/` | UI primitives and landing, dashboard, detection, auth, history components |
+| `src/lib/sightengine.ts` | External image/video/deepfake API client and score interpretation |
+| `src/lib/auth.ts`, `auth-settings.ts` | Provider registration, JWT sessions, redirects, conditional access checks |
+| `src/lib/auth-db.ts`, `password-auth.ts` | Existing stored password-account lookup, verification, attempt limits |
+| `src/lib/email-verification.ts` | Signed email tokens, confirmation cookies, Resend integration |
+| `src/lib/require-session.ts`, `src/proxy.ts` | Conditional private-route checks and request proxy |
+| `src/lib/use-recent-scans.ts` | Browser scan history and guest-to-user history migration |
+| `src/lib/db.ts` | Disabled scan database client |
+| `src/types/index.ts` | Shared scan/report types and configuration |
+| `prisma/schema.prisma` | User, account, session, verification, scan, signal, metadata, report, batch, API-key/activity, workspace/member, audit, notification models |
+| `tests/` | Seven Node test files focused on authentication and verification |
+| `scripts/check-auth.mjs` | Authentication configuration readiness checker |
+| `docs/authentication-setup.md` | Setup reference; verify against source because older documentation can differ |
+| `client_discussion/project_overview.md` | Client-facing feature discussion |
+| `public/` | Static branding and assets |
+| `index.html`, `src/app/page.tsx.bak` | Standalone HTML and inactive source backup |
+| `BACKUP-INV/` | Separate inventory/document/photo backup, outside the application flow |
 
-Before changing Next.js behavior, follow `AGENTS.md` and read the relevant installed documentation in `node_modules/next/dist/docs/`.
+Route groups in parentheses organize layouts without appearing in URLs. Agent guidance is in `AGENTS.md`; it requires consulting installed Next.js documentation before code changes.
 
-## Folder and root-file map
+## Detection implementation
 
-| Path | Purpose |
+| Feature / endpoint | Actual behavior |
 | --- | --- |
-| `src/app/` | Pages, layouts, global styles, and API handlers |
-| `src/components/ui/` | Reusable buttons, fields, dialogs, tables, tabs, and other primitives |
-| `src/components/shared/` | Public navigation, logo, and disclaimer |
-| `src/components/landing/` | Home-page sections, including the hero, features, FAQ, and scanning calls to action |
-| `src/components/dashboard/` | Dashboard header, sidebar, statistics, recent scans, and notifications |
-| `src/components/auth/` | Three provider sign-in buttons, searchable calling-code selector, safe callback errors, and password-strength UI |
-| `src/components/detection/` | Upload dropzone, processing stages, verdict ring, signals, metadata, and evidence views |
-| `src/components/history/` | Scan filters and renaming dialog |
-| `src/components/api/` | API documentation code block |
-| `src/lib/` | Auth.js configuration, provider verification/readiness, password hashing/authentication, dedicated account lookup, session checks/cookie proof, WhatsApp verification, disabled scan database client, API helpers, sample data, local scan history, and utilities |
-| `src/proxy.ts` | Next.js 16 session checks on dashboard/private APIs and account routes |
-| `src/types/index.ts` | Shared scan/report types and platform configuration |
-| `prisma/schema.prisma` | Database model definitions |
-| `prisma.config.ts` | Prisma CLI configuration |
-| `public/` | Static logos, favicon, and SVG assets |
-| `client_discussion/project_overview.md` | Plain-language feature overview for client discussions |
-| `docs/project-index.md` | This source-based project map |
-| `docs/authentication-setup.md` | Provider registration, credentials, callback URLs, WhatsApp setup, and live-testing requirements |
-| `scripts/check-auth.mjs` | Reports auth readiness without exposing secrets |
-| `tests/` | Node tests for provider setup, safe redirects, Auth.js session-key enforcement, trusted public origins, WhatsApp verification/challenges, and throttling |
-| `README.md`, `GEMINI.md` | Earlier setup and architecture references; some claims differ from the current code |
-| `AGENTS.md`, `CLAUDE.md` | Agent guidance; `CLAUDE.md` points to `AGENTS.md` |
-| `package.json`, `package-lock.json` | npm scripts and dependency versions |
-| `next.config.ts`, `tsconfig.json`, `eslint.config.mjs` | Framework, TypeScript, and lint settings |
-| `postcss.config.mjs`, `tailwind.config.ts` | Styling configuration; CSS theme tokens are defined in `src/app/globals.css` |
-| `.env.example`, `.env.local` | Environment configuration; do not publish secrets |
-| `index.html` | Separate standalone HTML version; it is not the Next.js `/` route |
-| `src/app/page.tsx.bak` | Backup source file; not an active page |
-| `next_crash*.log` | Existing diagnostic logs |
-| `BACKUP-INV/` | Inventory document and photo backup, separate from application code |
-| `git` | Existing root file, not the `.git/` repository directory |
-| `.git/`, `node_modules/`, `.next/` | Git metadata, installed dependencies, and generated Next.js output |
+| Text: `POST /api/scan/text` | Detects language with franc. Attempts Hugging Face RoBERTa inference on the first 2,000 characters. Missing/failed inference falls back to scores derived from a text hash and a synthetic model attribution. Optional SerpAPI search has mock matches when its key is absent. Some search scores are randomized. |
+| Image: `POST /api/scan/image` | Calls Sightengine for generation and face-manipulation scores; requires provider credentials. Returns verdict, signals, and face data. |
+| Video: `POST /api/scan/video` | URL analysis through Sightengine, or uploaded sampled frames through its image API. The video page samples three frames in the browser. Uploaded-frame mode does not analyze audio. |
+| Deepfake: `POST /api/scan/deepfake` | Calls Sightengine for faces in images or sampled video frames. Video verdict uses the maximum detected face score. Some displayed signals are derived from that score rather than separate measurements. |
+| Plagiarism: `POST /api/scan/plagiarism` | Samples sentences and queries SerpAPI for quoted web matches; requires `SERP_API_KEY`. Coverage is limited to searched/indexed text. |
+| URL: `POST /api/scan/url` | Validates URL syntax and returns randomized demo scores; it does not analyze the destination content. |
 
-## Pages and URLs
+Provider environment names include `SIGHTENGINE_API_USER`, `SIGHTENGINE_API_SECRET`, `HUGGINGFACE_API_KEY`, and `SERP_API_KEY`; text also accepts `SERPAPI_API_KEY`. Integration code is not evidence that credentials, accounts, or remote endpoints currently work.
 
-| URLs | Source group / purpose |
-| --- | --- |
-| `/` | `(public)/page.tsx`, composed from the landing components |
-| `/about`, `/how-it-works`, `/limitations` | Public information pages |
-| `/sign-in`, `/sign-up` | Account entry screens |
-| `/sign-in/password` | Password step after a valid email is entered |
-| `/sign-in/whatsapp` | Phone number and WhatsApp verification-code sign-in |
-| `/forgot-password`, `/reset-password`, `/verify-email` | Account recovery and verification screens |
-| `/dashboard` | Overview with statistics, quick tools, and recent scans |
-| `/dashboard/new-scan` | Scan entry screen |
-| `/dashboard/text`, `/dashboard/image`, `/dashboard/video` | Content scanning tools |
-| `/dashboard/deepfake`, `/dashboard/plagiarism` | Specialized scanning tools |
-| `/dashboard/history`, `/dashboard/reports` | Scan history and reports |
-| `/dashboard/scans/[id]` | Individual scan details |
-| `/dashboard/api-keys`, `/dashboard/settings` | Developer and account interfaces |
-| `/dashboard/admin`, `/dashboard/help` | Administration and help interfaces |
-| `/report/[token]` | Shared public report screen |
+## Accounts and access
 
-Some existing links reference routes without page implementations: `/use-cases`, `/resources`, `/dashboard/enhancement`, `/terms`, and `/privacy`. Older documents also describe batch/team features that do not have matching pages in this checkout.
+Google OAuth and existing verified password-account sign-in are wired through Auth.js. Facebook has been removed from provider registration, UI, and accepted sessions. Google credentials accept either `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` or `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, with the Auth.js naming family taking priority. Provider availability depends on a valid `AUTH_SECRET` and complete matching credentials. No WhatsApp page/request API is present in this checkout, despite older documentation describing one.
 
-## Server APIs and integrations
+Dashboard and scan/report API authentication is required only when `REQUIRE_AUTH` is exactly `true`. Otherwise guest access is allowed. Authenticated users enter the dashboard directly: both accepted sign-in methods already require verified email. The proxy catches authentication errors and continues; handler/layout checks supply conditional enforcement.
 
-| API | Current behavior |
-| --- | --- |
-| `GET/POST /api/auth/[...nextauth]` | Auth.js provider discovery, OAuth callbacks, CSRF, sessions, sign-in, and sign-out |
-| `POST /api/auth/whatsapp/request` | Validates a same-origin request, throttles sends, starts Twilio Verify, and sets a signed short-lived challenge |
-| `POST /api/auth/sign-in` | Same-origin email/password authentication for verified stored accounts; requires a freshly issued session before reporting success, returns HTTP 503 when the account database is unconfigured |
-| `POST /api/auth/sign-up` | Account creation placeholder |
-| `POST /api/auth/forgot-password` | Password recovery placeholder |
-| `POST /api/scan/text` | Hugging Face integration, language detection, and optional search analysis; includes fallback/sample behavior |
-| `POST /api/scan/image` | Sightengine image analysis |
-| `POST /api/scan/video` | Sightengine video analysis |
-| `POST /api/scan/deepfake` | Sightengine face/deepfake analysis |
-| `POST /api/scan/plagiarism` | SerpAPI search integration |
-| `POST /api/scan/url` | Validates a URL and returns randomized sample results |
-| `GET /api/report/[id]` | Returns a database-not-configured placeholder |
+Signup and forgot-password APIs return HTTP 501 placeholders. Email-send/check/verify routes exist, including a Resend email integration (`RESEND_API_KEY`). A verification link can update an existing database user when configured and set a confirmation cookie; this is separate from account creation.
 
-`src/lib/sightengine.ts` centralizes Sightengine requests. Scan integrations need their environment variables: `SIGHTENGINE_API_USER`, `SIGHTENGINE_API_SECRET`, `HUGGINGFACE_API_KEY`, and `SERP_API_KEY` (text also checks `SERPAPI_API_KEY`). The existence of an integration does not prove that the external service is configured or reachable.
+Auth.js requires a configured signing secret and no longer uses a hardcoded fallback. The separate legacy email-verification helper still contains fallback behavior requiring review before relying on that enrollment flow. See `docs/authentication-setup.md` for Google/Vercel setup and deployment checks.
 
-## Storage and database
+## Persistence and demonstration data
 
-`src/lib/use-recent-scans.ts` stores up to 10 recent scans in the browser's `localStorage` under `aishield_recent_scans`. The overview uses sample scans when there is no local history, and its statistics/activity chart are sample data.
+Scan persistence is disabled in `src/lib/db.ts`. Password-account lookup uses a separate database path, so disabling scan persistence does not by itself disable password lookup.
 
-`src/lib/db.ts` explicitly disables the scan database client. `src/lib/auth-db.ts` separately reads existing password accounts when a real PostgreSQL connection is configured. The Prisma `User` model now includes an optional salted `passwordHash`; password sign-in requires it and a trusted `emailVerified` timestamp. The current placeholder database hostname does not resolve. No database tables or users were created. The schema also defines OAuth accounts, sessions, verification tokens, scans, signals, metadata, reports, batches, API keys/activity, workspaces/members, audit logs, and notifications. Schema definitions alone do not enable persistence.
+Guests keep scans in tab-scoped `sessionStorage` under `aishield_guest_scans`. Signed-in users keep at most 20 recent scans in `localStorage` under `aishield_user_scans_<userId>`. Guest scans merge into user browser history on sign-in. This does not provide server-side or cross-device account history.
 
-## Start Scanning and sign-in
+Dashboard statistics are hardcoded. API-key creation is local component state with generated sample keys, without a corresponding key-management backend. `GET /api/report/[id]` returns a database-setup placeholder. Public `/report/[token]` builds a demo result from the token rather than loading a saved report.
 
-The public desktop/mobile navigation and home-page scanning calls to action link to `/sign-in`. Once authenticated, the dashboard header starts a scan at `/dashboard/new-scan` and offers sign-out. The sign-in page has an always-visible email field and a Continue button, followed by Google (including Gmail accounts), WhatsApp, and Facebook as full-width provider buttons. A valid email advances to `/sign-in/password`, which has only a password input and displays “Choose an account to continue to your dashboard.” below it, followed by the provider buttons. A Change email link returns to the first step. The email is carried in tab-scoped session storage through `src/lib/use-sign-in-email.ts`; passwords are sent only in the sign-in POST request and are not stored in browser storage or URLs. Direct entry to the password route without a valid stored email returns to `/sign-in`.
+README claims about storage, Redis/BullMQ workers, batch/team tools, enhancement pages, and a hosted developer API should be treated as intended capabilities unless a matching implementation is established. No corresponding workers directory or batch/team/enhancement pages were found.
 
-Google and Facebook buttons initiate Auth.js OAuth when their credentials are configured. Facebook profile fetching verifies a provider-issued ID and handles missing email/photo safely. WhatsApp opens `/sign-in/whatsapp`, with a searchable dropdown to the left of the national-number input containing 245 country/territory calling-code entries and defaulting to Philippines (+63). The phone library normalizes local prefixes and detects countries when full international numbers are pasted. A confirmed code send opens the OTP step, and only a real approved Twilio verification followed by a confirmed Auth.js session can enter the dashboard. Missing credentials and provider failures show safe messages. The same social component is also used on `/sign-up`. No login is simulated.
+## Main user flow
 
-Auth.js and verification/session handling are implemented; Google/Facebook application credentials and a configured Twilio WhatsApp service/sender must still be supplied. See `docs/authentication-setup.md`. The password button now authenticates existing verified accounts through Auth.js and confirms a session before entering the dashboard. Unknown/unverified accounts and wrong passwords are rejected; typed emails alone never establish a session. Google requires a verified email claim, Facebook requires a matching provider ID, and WhatsApp requires the approved code. Sessions without the new server-issued verification marker are rejected.
+Public site -> dashboard (guest or authenticated, depending on configuration) -> choose scanning tool -> paste content/URL or upload media -> server calls an external provider or returns a demo fallback -> UI displays verdict and signals -> recent history is kept in browser storage.
 
-New password-account registration, verification-email delivery, and password recovery still need a real enrollment service. The verification page no longer pretends that an email was sent or resent. Existing sample/admin data does not grant login access.
+## Development commands
 
-Direct dashboard URLs now require a real session, and scan/private report APIs return HTTP 401 without one. The proxy and actual dashboard/API handlers independently check sessions. Database-backed persistence and cross-provider account linking are not enabled.
-
-## Local development
-
-Run these from the repository root:
+Run from the repository root, `C:\Users\Admin_IT PC1\Desktop\AI-SHIELD`:
 
 ```powershell
 npm.cmd run dev
@@ -133,10 +95,6 @@ npm.cmd run auth:check
 npm.cmd run build
 ```
 
-The dev script binds to `127.0.0.1`, normally on port 3000. The `.cmd` suffix avoids PowerShell's restriction on npm's `.ps1` launcher in this environment. `postinstall` runs `prisma generate`.
+The development script binds to `127.0.0.1`. Installation runs `prisma generate`. Database and provider setup are separate from installing dependencies.
 
-The committed Node test runner covers authentication configuration and WhatsApp verification; no Playwright browser-test configuration is committed. The initial pre-change repository lint check reported 36 errors and 77 warnings. Validate touched files separately and distinguish existing lint problems from new regressions. Native TypeScript test/check scripts require Node 22.18+ or Node 24.
-
-## Installed-plugin use for this change
-
-The Superpowers skills guided discovery and verification. Build Web Apps supplied React and rendered-UI testing guidance. Superdesign's CLI preflight succeeded, but its account was not authenticated; no external canvas design was generated. The Browser plugin was not available in this session.
+This indexing pass inspected source and file counts only; it did not run tests, build, start the application, connect to the database, or submit content to external providers.

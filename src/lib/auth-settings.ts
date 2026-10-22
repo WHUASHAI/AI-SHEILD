@@ -41,13 +41,16 @@ function isConfiguredValue(value: string | undefined): value is string {
     && !/your[-_ ]|placeholder|change[-_ ]?me|example|replace[-_ ]*(?:me|with)|insert[-_ ]*(?:secret|token|key)|(?:^|[-_ ])(?:dummy|todo|tbd)(?:$|[-_ ])/i.test(value);
 }
 
+export function getGoogleCredentials(env: NodeJS.ProcessEnv = process.env) {
+  // Keep each ID/secret pair together so credentials from different clients cannot mix.
+  const useAuthNames = Boolean(env.AUTH_GOOGLE_ID?.trim() || env.AUTH_GOOGLE_SECRET?.trim());
+  const clientId = (useAuthNames ? env.AUTH_GOOGLE_ID : env.GOOGLE_CLIENT_ID)?.trim();
+  const clientSecret = (useAuthNames ? env.AUTH_GOOGLE_SECRET : env.GOOGLE_CLIENT_SECRET)?.trim();
+  return isConfiguredValue(clientId) && isConfiguredValue(clientSecret) ? { clientId, clientSecret } : null;
+}
+
 export function getAuthProviderStatus(env: NodeJS.ProcessEnv = process.env) {
-  const secretReady = isUsableAuthSecret(env.AUTH_SECRET);
-  return {
-    google: secretReady && isConfiguredValue(env.AUTH_GOOGLE_ID) && isConfiguredValue(env.AUTH_GOOGLE_SECRET),
-    facebook: secretReady && isConfiguredValue(env.AUTH_FACEBOOK_ID) && isConfiguredValue(env.AUTH_FACEBOOK_SECRET)
-      && /^v\d{2}\.\d+$/.test(env.AUTH_FACEBOOK_API_VERSION ?? ''),
-  };
+  return { google: isUsableAuthSecret(env.AUTH_SECRET) && getGoogleCredentials(env) !== null };
 }
 
 export function getSafeAuthRedirect(url: string, baseUrl: string): string {

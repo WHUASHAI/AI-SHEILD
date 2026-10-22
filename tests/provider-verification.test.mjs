@@ -3,7 +3,6 @@ import test from 'node:test';
 import { Auth, setEnvDefaults } from '@auth/core';
 import { encode } from '@auth/core/jwt';
 import Google from '@auth/core/providers/google';
-import Facebook from '@auth/core/providers/facebook';
 import parseProviders from '../node_modules/@auth/core/lib/utils/providers.js';
 import { getUserAndAccount } from '../node_modules/@auth/core/lib/actions/callback/oauth/callback.js';
 
@@ -16,12 +15,12 @@ function implementation(name) {
   return policy[name];
 }
 
-test('removed GitHub login and existing GitHub sessions are rejected', () => {
-  const account = { provider: 'github', type: 'oauth', providerAccountId: '123456' };
+for (const provider of ['github', 'facebook']) test(`removed ${provider} login and existing sessions are rejected`, () => {
+  const account = { provider, type: 'oauth', providerAccountId: '123456' };
   const user = { id: 'internal-user', email: 'verified@example.test' };
   const profile = { id: 123456, email: user.email, email_verified: true };
   assert.equal(implementation('isTrustedProviderSignIn')({ account, user, profile }), false);
-  assert.equal(implementation('getVerifiedSessionToken')({ sub: 'github:123456', authenticationVerified: true }), null);
+  assert.equal(implementation('getVerifiedSessionToken')({ sub: `${provider}:123456`, authenticationVerified: true }), null);
   assert.equal(implementation('getVerifiedSessionToken')({}, account, user), null);
 });
 
@@ -38,7 +37,6 @@ test('Google rejects missing/unverified claims and mismatched identities', () =>
 test('real Auth.js profile conversion accepts verified OAuth accounts with independent user IDs', async () => {
   const cases = [
     [Google, { sub: '12345', name: 'Google record', email: 'Mixed.Case@EXAMPLE.TEST', email_verified: true }],
-    [Facebook, { id: '12345', name: 'Facebook record', picture: { data: { url: 'https://images.example.test/profile.png' } } }],
   ];
   for (const [providerFactory, profile] of cases) {
     const { providers } = parseProviders({ url: new URL('http://localhost:3000'), config: { basePath: '/api/auth', providers: [providerFactory] } });
@@ -49,12 +47,10 @@ test('real Auth.js profile conversion accepts verified OAuth accounts with indep
   }
 });
 
-test('Facebook requires matching authenticated provider IDs; unknown providers are denied', () => {
-  const account = { provider: 'facebook', type: 'oauth', providerAccountId: '12345678' };
+test('unknown providers and missing accounts are denied', () => {
+  const account = { provider: 'demo', type: 'oauth', providerAccountId: '12345678' };
   const user = { id: account.providerAccountId };
-  assert.equal(implementation('isTrustedProviderSignIn')({ account, user, profile: { id: user.id } }), true);
-  assert.equal(implementation('isTrustedProviderSignIn')({ account, user, profile: { id: 'other-user' } }), false);
-  assert.equal(implementation('isTrustedProviderSignIn')({ account: { ...account, provider: 'demo' }, user, profile: { id: user.id } }), false);
+  assert.equal(implementation('isTrustedProviderSignIn')({ account, user, profile: { id: user.id } }), false);
   assert.equal(implementation('isTrustedProviderSignIn')({ account: null, user }), false);
 });
 

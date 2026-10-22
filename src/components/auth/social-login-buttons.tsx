@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { getProviders, signIn } from 'next-auth/react';
 import { ArrowRight, Info, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,23 +17,13 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-function FacebookIcon({ className }: { className?: string }) {
-  return (
-    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073c0 6.026 4.388 11.02 10.125 11.927v-8.437H7.078v-3.49h3.047V9.413c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.971h-1.513c-1.491 0-1.956.931-1.956 1.887v2.263h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073Z" />
-    </svg>
-  );
-}
-
 const providers = [
   { id: 'google', name: 'Google', description: 'Use your Gmail or Google account', icon: GoogleIcon, color: 'text-foreground' },
-  { id: 'facebook', name: 'Facebook', description: 'Use your Facebook account', icon: FacebookIcon, color: 'text-[#4795FF]' },
 ] as const;
 
 type Provider = (typeof providers)[number];
 
-export function SocialLoginButtons({ disabled = false }: { disabled?: boolean }) {
-  const router = useRouter();
+export function SocialLoginButtons({ disabled = false, redirectTo = '/dashboard' }: { disabled?: boolean; redirectTo?: string }) {
   const [pendingProvider, setPendingProvider] = useState<Provider['id'] | null>(null);
   const [error, setError] = useState('');
 
@@ -44,10 +33,10 @@ export function SocialLoginButtons({ disabled = false }: { disabled?: boolean })
     try {
       const available = await getProviders();
       if (!available?.[provider.id]) {
-        setError(`${provider.name} sign-in is not available yet. Please choose another option.`);
+        setError('Google sign-in is unavailable on this deployment. Please contact support or continue as a guest.');
         return;
       }
-      await signIn(provider.id, { redirectTo: '/dashboard' });
+      await signIn(provider.id, { redirectTo });
     } catch {
       setError(`Could not connect to ${provider.name}. Please try again.`);
     } finally {

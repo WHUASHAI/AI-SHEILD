@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, ArrowLeft, RefreshCw, CheckCircle2, AlertTriangle, ExternalLink, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { signOut, useSession } from 'next-auth/react';
+import { SessionProvider, signOut, useSession } from 'next-auth/react';
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -240,7 +240,7 @@ export default function VerifyEmailPage() {
         </div>
       }
     >
-      <VerifyEmailContent />
+      <SessionProvider><VerifyEmailContent /></SessionProvider>
     </Suspense>
   );
 }
