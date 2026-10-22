@@ -90,7 +90,7 @@ export function DashboardHeader({ onMenuClick }: HeaderProps) {
               {isSigningOut ? 'Signing out…' : 'Sign out'}
             </Button>
           ) : (
-            <Button asChild className="bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 shadow-palette-md px-5">
+            <Button asChild className="bg-cyan-azure hover:bg-cyan-azure-dark text-white border border-cyan-azure-light shadow-palette-md px-5">
               <Link href="/sign-in">Sign In</Link>
             </Button>
           )}
