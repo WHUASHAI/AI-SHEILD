@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Menu, Search, Home, LogOut, Loader2 } from 'lucide-react';
+import { Menu, Search, Home } from 'lucide-react';
 import { getSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -80,14 +80,15 @@ export function DashboardHeader({ onMenuClick }: HeaderProps) {
         {/* Right */}
         <div className="flex items-center gap-2">
           {hasSession ? (
-            <>
-              <Button asChild className="bg-gradient-to-r from-cyan-azure-dark to-ucla-blue-dark text-white hover:from-cyan-azure-dark hover:to-space-cadet-light">
-                <Link href="/dashboard/new-scan">New Scan</Link>
-              </Button>
-              <Button type="button" variant="ghost" size="icon" disabled={isSigningOut} onClick={() => void handleSignOut()} aria-label="Sign out" title="Sign out">
-                {isSigningOut ? <Loader2 aria-hidden="true" className="animate-spin" /> : <LogOut aria-hidden="true" />}
-              </Button>
-            </>
+            <Button
+              type="button"
+              className="bg-gradient-to-r from-cyan-azure-dark to-ucla-blue-dark text-white hover:from-cyan-azure-dark hover:to-space-cadet-light"
+              disabled={isSigningOut}
+              onClick={() => void handleSignOut()}
+              aria-busy={isSigningOut}
+            >
+              {isSigningOut ? 'Signing out…' : 'Sign out'}
+            </Button>
           ) : (
             <Button asChild className="bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white border-0 shadow-palette-md px-5">
               <Link href="/sign-in">Sign In</Link>
