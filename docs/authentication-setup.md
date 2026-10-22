@@ -23,7 +23,11 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'
 
 `AUTH_SECRET` is required for authentication. There is no built-in fallback session signing key. Google sign-in uses encrypted HTTP-only JWT cookies and does not require a PostgreSQL database, Resend, Twilio, or a pre-created local user.
 
-`REQUIRE_AUTH=true` additionally requires a session for dashboard and scan/report APIs. Leave its current setting unchanged if guest scanning is intended.
+Scanning requires either a real session or an explicit **Continue as Guest** choice in the landing-page dialog. `POST /api/guest` sets a separate guest-mode cookie; it never creates a Google session. Guest access covers scanning, overview, and recent history, while account settings/admin/API keys and private report APIs still require authentication. The former `REQUIRE_AUTH` flag does not silently open the dashboard. Requests without either access mode fail closed.
+
+The public **Sign In** link always opens `/sign-in`, including when the browser already holds a valid session. Clicking **Continue with Google** clears guest mode and starts Google OAuth with `prompt=select_account`. Existing valid sessions still permit direct dashboard access; displaying the sign-in page does not silently sign a user out. The desktop/mobile header has only Sign In. Start Scanning remains in the landing-page content and opens Google and Guest choices.
+
+Both modes keep only the latest 20 scans. Guest history is held in the current document's memory: client-side navigation preserves it, while refresh or closing the page clears it. Google history is stored in browser localStorage, separately for each account, so it survives refresh and reopening with the same account in the same browser. Clearing browser data removes it; no database or cross-device synchronization is claimed. Old sessionStorage guest records are discarded instead of restored.
 
 ## Google Cloud configuration
 
@@ -60,6 +64,8 @@ Google's validated OIDC profile must contain a matching subject and email with `
 4. Reload and verify the session persists, then sign out and verify it clears.
 5. Repeat from the landing-page **Start Scanning** dialog and from a mobile viewport. Test cancellation too.
 
+6. In a private/incognito browser with neither session nor guest choice, open `/dashboard` directly: it must redirect to `/sign-in`. Choose Guest from the landing page, scan, and navigate to History. Only the latest 20 scans should remain. Refresh: guest history should be empty. Guest users must not access private reports/account tools. With an existing Google session, click the header **Sign In** link: the sign-in page must remain visible until the user chooses a sign-in method. Google history should remain after refresh and reopening in the same browser.
+
 Troubleshooting:
 
 | Symptom | Check |
@@ -87,8 +93,20 @@ Password-account lookup requires a real configured PostgreSQL database, existing
 ## Verification of this change (21 October 2026)
 
 - Nineteen targeted checks passed: Google credential configuration, readiness diagnostics, redirects, session-cookie proof, email-token signatures, and dashboard access decisions.
-- The dashboard regression was reproduced against the original source: an authenticated Google session without a separate confirmation record was redirected to email verification. Updated source renders the dashboard, while missing sessions still redirect when authentication is required.
+- The dashboard regression was reproduced against the original source: an authenticated Google session without a separate confirmation record was redirected to email verification. Updated source renders the dashboard, while missing sessions always redirect.
 - Syntax checks passed for all seven changed TypeScript/TSX files using an available TypeScript 5.9.3 compiler. This was not a full type check.
 - The full test command recorded 19 passing checks and three test-file failures: `auth-security.test.mjs`, `password-auth.test.mjs`, and `provider-verification.test.mjs` could not import the missing `@auth/core` dependency. The dashboard checks used an existing local TypeScript installation via `NODE_PATH`; no dependency versions were changed in this project.
 - `npm ci` could not download packages because outbound registry access was denied; an offline retry also lacked the required cached packages. The production build could not start because `next` is not installed.
 - Browser QA and real Google account consent were not performed. No deployment or Vercel environment changes were made, and no live site URL was provided during the change.
+
+## Sign-in navigation and guest access regression (22 October 2026)
+
+Two code paths reproduced the reported behavior: Auth.js redirected authenticated visits to `/sign-in` straight to `/dashboard`, and dashboard/API access was optional unless `REQUIRE_AUTH` was exactly `true`. Proxy authentication errors also previously continued the request. The updated code keeps sign-in visible, always protects private routes, and blocks private requests on auth failures. Header Start Scanning buttons and guest-entry shortcuts were removed.
+
+Twenty-four targeted checks passed. The new routing and dashboard tests failed against the previous behavior before the fixes and pass afterward. The full suite still has three dependency-loading failures (`auth-security.test.mjs`, `password-auth.test.mjs`, `provider-verification.test.mjs`) because `@auth/core` is unavailable. The build cannot start without the missing `next` dependency. Live Google OAuth and browser interaction remain unverified; no live site URL was provided during this change.
+
+## Google and Guest history behavior (22 October 2026)
+
+The requested follow-up restores Guest as an explicit landing-page choice. It does not restore the previous implicit guest bypass or the header's extra Start Scanning button. An existing Google session does not skip the sign-in page, and choosing Guest never fabricates Google authentication.
+
+The new shared history store is covered for the 20-scan limit, navigation, document reload, reopening an account, account isolation, corrupt saved data, subscriptions, and clearing history. Routing tests cover explicit guest access, denied private account/report access, guest entry when Google is unavailable, and same-origin guest-mode changes. Thirty-six targeted tests passed. Full build and live browser/Google OAuth checks remain blocked by the previously recorded missing dependencies; this change has not been deployed by the agent.

@@ -99,7 +99,7 @@ export default function DashboardPage() {
               }`}
             >
               <span className={`h-2 w-2 rounded-full ${isGuest ? 'bg-amber-400 animate-pulse' : 'bg-cyan-azure'}`} />
-              {isGuest ? 'Guest Session (Temporary)' : `Account Active (FIFO: ${scans.length}/${maxScans})`}
+              {isGuest ? `Guest history: ${scans.length}/${maxScans}` : `Saved history: ${scans.length}/${maxScans}`}
             </div>
           )}
 

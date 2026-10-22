@@ -5,6 +5,7 @@ import { Menu, Search, Home, LogOut, Loader2 } from 'lucide-react';
 import { getSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { isGuestBrowser } from '@/lib/guest-mode';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -19,7 +20,7 @@ export function DashboardHeader({ onMenuClick }: HeaderProps) {
 
   useEffect(() => {
     getSession()
-      .then((s) => setHasSession(Boolean(s?.user)))
+      .then((s) => setHasSession(!isGuestBrowser(document.cookie) && Boolean(s?.user)))
       .catch(() => setHasSession(false));
   }, []);
 

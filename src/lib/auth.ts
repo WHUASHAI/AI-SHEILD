@@ -6,6 +6,7 @@ import { getAuthProviderStatus, getAuthSessionSettings, getGoogleCredentials, ge
 import { findPasswordAccount } from './auth-db';
 import { authenticatePasswordAccount, consumePasswordAttempt } from './password-auth';
 import { getVerifiedSessionToken, isTrustedProviderSignIn } from './provider-verification';
+import { GUEST_COOKIE_NAME, isGuestCookie, isGuestAccessiblePath } from './guest-mode';
 
 export type { Session } from 'next-auth';
 
@@ -41,15 +42,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth(() => {
       signIn(input) { return isTrustedProviderSignIn(input); },
       authorized({ auth: session, request }) {
         const path = request.nextUrl.pathname;
-        if (process.env.REQUIRE_AUTH === 'true') {
-          if (path.startsWith('/api/scan/') || path.startsWith('/api/report/')) {
-            return session?.user ? true : NextResponse.json({ error: 'Sign in before scanning or viewing private reports.' }, { status: 401 });
-          }
-          if (path === '/dashboard' || path.startsWith('/dashboard/')) return Boolean(session?.user);
+        if (isGuestAccessiblePath(path) && isGuestCookie(request.cookies.get(GUEST_COOKIE_NAME)?.value)) return true;
+        if (path.startsWith('/api/scan/') || path.startsWith('/api/report/')) {
+          return session?.user ? true : NextResponse.json({ error: 'Sign in before scanning or viewing private reports.' }, { status: 401 });
         }
-        if (session?.user && (path === '/sign-in' || path.startsWith('/sign-in/') || path === '/sign-up')) {
-          return NextResponse.redirect(new URL('/dashboard', request.url));
-        }
+        if (path === '/dashboard' || path.startsWith('/dashboard/')) return Boolean(session?.user);
+        // Sign-in stays accessible so users can explicitly choose their Google account.
         return true;
       },
       redirect({ url, baseUrl }) { return getSafeAuthRedirect(url, baseUrl); },

@@ -112,12 +112,12 @@ export default function HistoryPage() {
                 {isGuest ? (
                   <>
                     <strong className="text-amber-300 font-semibold">Guest Mode Active: </strong>
-                    Your scans will stay in this browser during your visit, but will disappear when you exit the browser.
+                    Your latest {maxScans} scans stay available during this visit. Refreshing or closing the page clears guest history.
                   </>
                 ) : (
                   <>
                     <strong className="text-white font-semibold">Account History Active: </strong>
-                    Your scans are saved permanently (stores your <strong>{scans.length} / {maxScans}</strong> most recent scans in a rolling FIFO queue).
+                    Your latest <strong>{scans.length} / {maxScans}</strong> scans are saved in this browser and remain after refresh or reopening with the same Google account.
                   </>
                 )}
               </div>

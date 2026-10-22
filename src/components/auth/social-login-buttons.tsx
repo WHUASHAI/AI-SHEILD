@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { getProviders, signIn } from 'next-auth/react';
 import { ArrowRight, Info, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { isGuestBrowser } from '@/lib/guest-mode';
 
 // Google brand icon as inline SVG (brand icons removed from lucide-react v0.400+)
 function GoogleIcon({ className }: { className?: string }) {
@@ -23,24 +24,32 @@ const providers = [
 
 type Provider = (typeof providers)[number];
 
-export function SocialLoginButtons({ disabled = false, redirectTo = '/dashboard' }: { disabled?: boolean; redirectTo?: string }) {
+export function SocialLoginButtons({ disabled = false, redirectTo = '/dashboard', onPendingChange }: {
+  disabled?: boolean; redirectTo?: string; onPendingChange?: (pending: boolean) => void;
+}) {
   const [pendingProvider, setPendingProvider] = useState<Provider['id'] | null>(null);
   const [error, setError] = useState('');
 
   const startSignIn = async (provider: Provider) => {
     setError('');
     setPendingProvider(provider.id);
+    onPendingChange?.(true);
     try {
       const available = await getProviders();
       if (!available?.[provider.id]) {
-        setError('Google sign-in is unavailable on this deployment. Please contact support or continue as a guest.');
+        setError('Google sign-in is unavailable on this deployment. Please try again later or contact support.');
         return;
+      }
+      if (isGuestBrowser(document.cookie)) {
+        const response = await fetch('/api/guest', { method: 'DELETE' });
+        if (!response.ok) throw new Error('Could not leave guest mode');
       }
       await signIn(provider.id, { redirectTo });
     } catch {
       setError(`Could not connect to ${provider.name}. Please try again.`);
     } finally {
       setPendingProvider(null);
+      onPendingChange?.(false);
     }
   };
 

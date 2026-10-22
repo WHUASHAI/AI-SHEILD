@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireSessionResponse } from '@/lib/require-session';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const unauthorized = await requireSessionResponse();
+  const unauthorized = await requireSessionResponse({ allowGuest: false });
   if (unauthorized) return unauthorized;
   const { id } = await params;
   

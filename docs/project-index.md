@@ -8,7 +8,7 @@ Repository layout corrected on 22 October 2026: the active project is at the wor
 
 AI SHIELD is a web application for screening text, images, videos, and faces for possible AI generation or manipulation, plus checking text for online plagiarism matches. It combines a public site, dashboard, account screens, and server API routes. It calls external detection services rather than hosting a trained detection model.
 
-The checkout contains 25 page components, 14 API route handlers, and 63 component files. It is a partially implemented application: real provider integrations coexist with synthetic results, browser-only history, and unfinished account/report services. Detection scores do not prove content origin.
+The checkout contains 25 page components, 15 API route handlers, and 63 component files. It is a partially implemented application: real provider integrations coexist with synthetic results, browser-only history, and unfinished account/report services. Detection scores do not prove content origin.
 
 ## Technology
 
@@ -31,7 +31,8 @@ Next.js 16.2.12 App Router, React 19.2.4, TypeScript, Tailwind CSS 4, Radix/shad
 | `src/lib/auth-db.ts`, `password-auth.ts` | Existing stored password-account lookup, verification, attempt limits |
 | `src/lib/email-verification.ts` | Signed email tokens, confirmation cookies, Resend integration |
 | `src/lib/require-session.ts`, `src/proxy.ts` | Conditional private-route checks and request proxy |
-| `src/lib/use-recent-scans.ts` | Browser scan history and guest-to-user history migration |
+| `src/lib/use-recent-scans.ts`, `scan-history-store.ts` | Shared history across views: up to 20 document-only guest scans or 20 persisted scans per Google account |
+| `src/lib/guest-mode.ts`, `guest-access.ts`, `src/app/api/guest/` | Explicit public guest-mode selection and scanning access; separate from authentication |
 | `src/lib/db.ts` | Disabled scan database client |
 | `src/types/index.ts` | Shared scan/report types and configuration |
 | `prisma/schema.prisma` | User, account, session, verification, scan, signal, metadata, report, batch, API-key/activity, workspace/member, audit, notification models |
@@ -62,7 +63,7 @@ Provider environment names include `SIGHTENGINE_API_USER`, `SIGHTENGINE_API_SECR
 
 Google OAuth and existing verified password-account sign-in are wired through Auth.js. Facebook has been removed from provider registration, UI, and accepted sessions. Google credentials accept either `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` or `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, with the Auth.js naming family taking priority. Provider availability depends on a valid `AUTH_SECRET` and complete matching credentials. No WhatsApp page/request API is present in this checkout, despite older documentation describing one.
 
-Dashboard and scan/report API authentication is required only when `REQUIRE_AUTH` is exactly `true`. Otherwise guest access is allowed. Authenticated users enter the dashboard directly: both accepted sign-in methods already require verified email. The proxy catches authentication errors and continues; handler/layout checks supply conditional enforcement.
+Scanning and recent history require either a real session or an explicit landing-dialog Guest choice. The guest flag is not Google authentication and does not grant access to private reports/account tools. The former `REQUIRE_AUTH` flag cannot silently open access. Visiting `/sign-in` stays on the sign-in page even with an existing session; Continue with Google clears guest mode and opens Google account selection. The desktop/mobile header has only Sign In. Landing-page Start Scanning buttons open Google and Guest choices.
 
 Signup and forgot-password APIs return HTTP 501 placeholders. Email-send/check/verify routes exist, including a Resend email integration (`RESEND_API_KEY`). A verification link can update an existing database user when configured and set a confirmation cookie; this is separate from account creation.
 
@@ -72,7 +73,7 @@ Auth.js requires a configured signing secret and no longer uses a hardcoded fall
 
 Scan persistence is disabled in `src/lib/db.ts`. Password-account lookup uses a separate database path, so disabling scan persistence does not by itself disable password lookup.
 
-Guests keep scans in tab-scoped `sessionStorage` under `aishield_guest_scans`. Signed-in users keep at most 20 recent scans in `localStorage` under `aishield_user_scans_<userId>`. Guest scans merge into user browser history on sign-in. This does not provide server-side or cross-device account history.
+Guests keep at most 20 scans in one shared in-memory store for the loaded document. Client navigation preserves them; a full refresh or closing the page clears them. Old guest sessionStorage data is removed and never restored. Signed-in users keep at most 20 recent scans in `localStorage` under `aishield_user_scans_<userId>`, preserved on refresh and reopening in the same browser. Guest and account histories remain separate. This does not provide server-side or cross-device history.
 
 Dashboard statistics are hardcoded. API-key creation is local component state with generated sample keys, without a corresponding key-management backend. `GET /api/report/[id]` returns a database-setup placeholder. Public `/report/[token]` builds a demo result from the token rather than loading a saved report.
 
@@ -80,7 +81,7 @@ README claims about storage, Redis/BullMQ workers, batch/team tools, enhancement
 
 ## Main user flow
 
-Public site -> dashboard (guest or authenticated, depending on configuration) -> choose scanning tool -> paste content/URL or upload media -> server calls an external provider or returns a demo fallback -> UI displays verdict and signals -> recent history is kept in browser storage.
+Public site -> landing Start Scanning dialog -> choose Google or Guest -> dashboard -> choose scanning tool -> submit content -> provider analysis or demo fallback -> results -> recent history (guest memory or per-account browser storage).
 
 ## Development commands
 

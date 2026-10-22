@@ -11,7 +11,7 @@ const { outputText } = ts.transpileModule(readFileSync(filename, 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
 });
 
-async function renderDashboard(session, requireAuth, authError = false) {
+async function renderDashboard(session, requireAuth, authError = false, guest = false) {
   const exports = {};
   // Exercise the layout's access decision without a running Next.js server or identity provider.
   const modules = {
@@ -23,6 +23,7 @@ async function renderDashboard(session, requireAuth, authError = false) {
     } },
     '@/components/dashboard/dashboard-shell': { DashboardShell: 'DashboardShell' },
     '@/lib/email-verification': { isEmailConfirmed: async () => false },
+    '@/lib/guest-access': { hasGuestAccess: async () => guest },
   };
   vm.runInNewContext(outputText, {
     exports, process: { env: { REQUIRE_AUTH: requireAuth } },
@@ -45,6 +46,11 @@ test('protected dashboard redirects missing sessions and authentication failures
   await assert.rejects(renderDashboard(null, 'true', true), /^Error: redirect:\/sign-in$/);
 });
 
-test('dashboard retains guest access when authentication is optional', async () => {
-  assert.equal((await renderDashboard(null, 'false')).type, 'DashboardShell');
+test('dashboard requires a real session or explicit guest access, independent of REQUIRE_AUTH', async () => {
+  await assert.rejects(renderDashboard(null, undefined), /^Error: redirect:\/sign-in$/);
+  await assert.rejects(renderDashboard(null, 'false'), /^Error: redirect:\/sign-in$/);
+});
+
+test('explicit guest choice opens the dashboard without creating a Google session', async () => {
+  assert.equal((await renderDashboard(null, undefined, false, true)).type, 'DashboardShell');
 });
