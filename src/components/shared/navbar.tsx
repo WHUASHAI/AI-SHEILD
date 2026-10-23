@@ -90,8 +90,7 @@ export function Navbar() {
         {/* Right-side Actions */}
         <div className="hidden md:flex items-center gap-3">
           <Button
-            variant="ghost"
-            className="text-air-sup-blue hover:text-white hover:bg-white/5 px-4"
+            className="bg-cyan-azure hover:bg-cyan-azure-dark text-white border border-cyan-azure-light shadow-palette-md px-5"
             asChild
           >
             <Link href="/sign-in">Sign In</Link>
@@ -153,8 +152,7 @@ export function Navbar() {
 
           <div className="flex flex-col gap-3 mt-auto">
             <Button
-              variant="outline"
-              className="w-full h-11 border-cyan-azure/30 text-air-sup-blue hover:bg-cyan-azure/10"
+              className="w-full h-11 bg-cyan-azure hover:bg-cyan-azure-dark text-white border border-cyan-azure-light shadow-palette-md"
               asChild
               onClick={() => setMobileMenuOpen(false)}
             >
