@@ -51,7 +51,7 @@ export default function SignInPage() {
   return (
     <>
       <div className="flex flex-col space-y-3 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-pink-lavender">Welcome to AI Shield</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-pink-lavender">Welcome to Elucid AI</p>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Sign in to start scanning</h1>
         <p className="text-sm text-muted-foreground">
           Enter your email to continue.
@@ -83,7 +83,7 @@ export default function SignInPage() {
           {error && (
             <div role="alert" className="rounded-md border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400">{error}</div>
           )}
-          <Button type="submit" disabled={isContinuing} className="w-full bg-cyan-azure-dark text-white hover:bg-space-cadet-light">
+          <Button type="submit" disabled={isContinuing} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
             {isContinuing && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
             Continue
           </Button>

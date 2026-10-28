@@ -140,7 +140,7 @@ test('guest scan access works even when Google configuration is unavailable', as
   assert.equal(response.headers.get('x-middleware-next'), '1');
 });
 
-function guestEndpoint() {
+function guestEndpoint(env = { NODE_ENV: 'production', AUTH_URL: 'https://shield.test' }) {
   return load('src/app/api/guest/route.ts', {
     '@/lib/history-core': historyCore,
     'next/server': { NextResponse: { json(data, init) {
@@ -150,7 +150,7 @@ function guestEndpoint() {
       return response;
     } } },
     '@/lib/guest-mode': guestMode,
-    '@/lib/auth-settings': { getTrustedAuthOrigin: url => settings.getTrustedAuthOrigin(url, { NODE_ENV: 'production', AUTH_URL: 'https://shield.test' }) },
+    '@/lib/auth-settings': { getTrustedAuthOrigin: url => settings.getTrustedAuthOrigin(url, env), getGuestRequestOrigin: (url, host) => settings.getGuestRequestOrigin(url, host, env) },
   });
 }
 
@@ -184,5 +184,34 @@ test('another origin cannot change guest selection', () => {
       assert.equal(response.status, 403);
       assert.equal(response.cookieChanges.length, 0);
     }
+  }
+});
+
+test('local guest entry works on the incoming loopback host independently of the OAuth URL', async () => {
+  const endpoint = guestEndpoint({ NODE_ENV: 'development', AUTH_URL: 'http://localhost:3000' });
+  for (const host of ['localhost:3000', '127.0.0.1:3000', '[::1]:3000']) {
+    const request = { url: 'http://127.0.0.1:3000/api/guest',
+      headers: new Headers({ host, origin: `http://${host}` }), cookies: { get: () => undefined } };
+    const response = endpoint.POST(request);
+    assert.equal(response.status, 200, `Guest entry on ${host}`);
+    assert.deepEqual(await response.json(), { guest: true });
+    assert.ok(response.cookieChanges.every(([, , options]) => options.secure === false));
+    assert.equal(endpoint.DELETE(request).status, 200);
+  }
+});
+
+test('development guest entry still rejects cross-origin requests and non-loopback hosts', () => {
+  const endpoint = guestEndpoint({ NODE_ENV: 'development', AUTH_URL: 'http://localhost:3000' });
+  for (const [host, origin] of [
+    ['127.0.0.1:3000', 'http://localhost:3000'],
+    ['localhost:3000', 'http://localhost:3001'],
+    ['localhost:3000', 'https://foreign.test'],
+    ['foreign.test', 'https://foreign.test'],
+    ['localhost:3000', undefined],
+  ]) {
+    const request = { url: 'http://127.0.0.1:3000/api/guest',
+      headers: new Headers({ host, ...(origin ? { origin } : {}) }), cookies: { get: () => undefined } };
+    assert.equal(endpoint.POST(request).status, 403);
+    assert.equal(endpoint.DELETE(request).status, 403);
   }
 });

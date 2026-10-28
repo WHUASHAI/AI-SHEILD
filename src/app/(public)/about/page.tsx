@@ -4,7 +4,7 @@ export default function AboutPage() {
   return (
     <div className="pt-32 pb-20 container mx-auto px-4 max-w-4xl">
       <div className="text-center mb-16">
-        <h1 className="text-4xl font-bold text-white mb-6">About AI Shield</h1>
+        <h1 className="text-4xl font-bold text-white mb-6">About Elucid AI</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           We are on a mission to bring transparency and trust to digital media in the era of Generative AI.
         </p>
@@ -29,17 +29,17 @@ export default function AboutPage() {
       </div>
 
       <div className="prose prose-invert prose-cyan max-w-none">
-        <h2 className="text-2xl font-bold text-white mb-4">Why AI Shield Was Built</h2>
+        <h2 className="text-2xl font-bold text-white mb-4">Why Elucid AI Was Built</h2>
         <p className="text-muted-foreground mb-6">
           The rapid advancement of generative AI has brought incredible creative tools to the world. However, it has also introduced significant challenges regarding trust, authenticity, and misinformation. As deepfakes become more convincing and AI-written text becomes indistinguishable from human writing, the need for robust verification tools has never been greater.
         </p>
         <p className="text-muted-foreground mb-10">
-          We built AI Shield to democratize access to these vital technologies, ensuring that educators, journalists, and everyday users can verify the media they interact with.
+          We built Elucid AI to democratize access to these vital technologies, ensuring that educators, journalists, and everyday users can verify the media they interact with.
         </p>
 
         <h2 className="text-2xl font-bold text-white mb-4">How It Works (Overview)</h2>
         <p className="text-muted-foreground mb-6">
-          AI Shield utilizes an ensemble of machine learning models trained on vast datasets of both human-created and AI-generated content. For text, we analyze perplexity and burstiness. For images and videos, we detect subtle artifacts in pixel distribution, frequency domains, and compression artifacts that human eyes naturally miss.
+          Elucid AI utilizes an ensemble of machine learning models trained on vast datasets of both human-created and AI-generated content. For text, we analyze perplexity and burstiness. For images and videos, we detect subtle artifacts in pixel distribution, frequency domains, and compression artifacts that human eyes naturally miss.
         </p>
         <p className="text-muted-foreground mb-10">
           Importantly, our platform correlates multiple signals rather than relying on a single metric, providing a more robust probability assessment.
@@ -47,7 +47,7 @@ export default function AboutPage() {
 
         <h2 className="text-2xl font-bold text-white mb-4">Our Commitment</h2>
         <p className="text-muted-foreground mb-6">
-          We are committed to maintaining AI Shield as a free, open platform accessible to the public. We also pledge to continuously update our models to keep pace with the latest generative AI advancements while remaining radically transparent about the limitations of detection technology.
+          We are committed to maintaining Elucid AI as a free, open platform accessible to the public. We also pledge to continuously update our models to keep pace with the latest generative AI advancements while remaining radically transparent about the limitations of detection technology.
         </p>
       </div>
     </div>

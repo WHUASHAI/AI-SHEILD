@@ -1,6 +1,6 @@
-# AI SHIELD - Project Reference & Index (GEMINI.md)
+# Elucid AI - Project Reference & Index (GEMINI.md)
 
-AI SHIELD is a free, open-platform web application designed for comprehensive AI content detection across multiple media modalities (text, images, videos, deepfakes, etc.). This document serves as the repository's foundational reference, detailing system architecture, codebase indexing, data models, and team development standards.
+Elucid AI is a free, open-platform web application designed for comprehensive AI content detection across multiple media modalities (text, images, videos, deepfakes, etc.). This document serves as the repository's foundational reference, detailing system architecture, codebase indexing, data models, and team development standards.
 
 ---
 
@@ -82,7 +82,7 @@ C:\Users\IT TEAM\Desktop\AISHIELD\
 
 ## 3. Database Schema Blueprint (`prisma/schema.prisma`)
 
-Key models and relational paths defined in AI Shield:
+Key models and relational paths defined in Elucid AI:
 
 - **User**: Core profile containing role hierarchies (`"user"`, `"admin"`) and accounts associations.
 - **Account / Session / VerificationToken**: Standard schemas compliant with NextAuth architecture.
@@ -116,7 +116,7 @@ Key models and relational paths defined in AI Shield:
 
 ## 5. Team Architectural Mandates & Guidelines
 
-Developers modifying or building on AI Shield must strictly observe these instructions.
+Developers modifying or building on Elucid AI must strictly observe these instructions.
 
 ### 5.1 Next.js 16 (App Router) & React 19 Core Guidance
 - **Conventions & File Structures**: Follow Next.js 16 standards. Refer directly to `node_modules/next/dist/docs/` when introducing complex features or optimizing Server Actions.

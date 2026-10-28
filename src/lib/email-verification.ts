@@ -118,14 +118,14 @@ export async function sendVerificationEmail(
     };
   }
 
-  const fromEmail = process.env.EMAIL_FROM || 'AI Shield <onboarding@resend.dev>';
+  const fromEmail = process.env.EMAIL_FROM || 'Elucid AI <onboarding@resend.dev>';
 
   const html = `
     <!DOCTYPE html>
     <html>
       <head>
         <meta charset="utf-8">
-        <title>Confirm your AI Shield Account</title>
+        <title>Confirm your Elucid AI Account</title>
       </head>
       <body style="margin: 0; padding: 0; background-color: #050d18; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #e2e8f0;">
         <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #050d18; padding: 40px 20px;">
@@ -135,7 +135,8 @@ export async function sendVerificationEmail(
                 <tr>
                   <td align="center" style="padding-bottom: 24px;">
                     <div style="font-size: 24px; font-weight: bold; color: #60a5fa; letter-spacing: -0.5px;">
-                      🛡️ AI SHIELD
+                      <img src="${appUrl.replace(/\/$/, '')}/brand/elucid-ai-lens.png" alt="Elucid AI Logo" width="48" height="48" style="display: block; margin: 0 auto 12px; border: 0;" />
+                      Elucid AI
                     </div>
                   </td>
                 </tr>
@@ -148,7 +149,7 @@ export async function sendVerificationEmail(
                 </tr>
                 <tr>
                   <td style="padding-bottom: 24px; color: #94a3b8; font-size: 15px; line-height: 24px; text-align: center;">
-                    Hello! You recently signed in with Google using <strong style="color: #cbd5e1;">${normalizedEmail}</strong>. Please confirm your email address to activate your account and start using the AI Shield detection dashboard.
+                    Hello! You recently signed in with Google using <strong style="color: #cbd5e1;">${normalizedEmail}</strong>. Please confirm your email address to activate your account and start using the Elucid AI detection dashboard.
                   </td>
                 </tr>
                 <tr>
@@ -188,7 +189,7 @@ export async function sendVerificationEmail(
       body: JSON.stringify({
         from: fromEmail,
         to: [normalizedEmail],
-        subject: 'Confirm your AI Shield Account',
+        subject: 'Confirm your Elucid AI Account',
         html,
       }),
     });

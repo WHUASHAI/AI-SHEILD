@@ -151,7 +151,7 @@ export default function NewScanPage() {
         <Button
           onClick={handleStart}
           disabled={!selected}
-          className="h-12 px-8 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white font-semibold text-base shadow-palette-glow disabled:opacity-40 transition-all"
+          className="h-12 px-8 font-semibold text-base disabled:opacity-40 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
         >
           Start Analysis
           <ChevronRight className="w-4 h-4 ml-2" />

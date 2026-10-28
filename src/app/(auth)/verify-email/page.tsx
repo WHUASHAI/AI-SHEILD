@@ -120,7 +120,7 @@ function VerifyEmailContent() {
         </div>
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Email Confirmed!</h1>
-          <p className="text-sm text-muted-foreground">Redirecting you to the AI Shield dashboard...</p>
+          <p className="text-sm text-muted-foreground">Redirecting you to the Elucid AI dashboard...</p>
         </div>
       </div>
     );
@@ -203,7 +203,7 @@ function VerifyEmailContent() {
           type="button"
           onClick={() => void handleSendEmail(false)}
           disabled={isSending || cooldown > 0}
-          className="w-full bg-cyan-azure-dark text-white hover:bg-space-cadet-light py-5 rounded-xl font-medium"
+          className="w-full py-5 rounded-xl font-medium bg-primary text-primary-foreground hover:bg-primary/90"
         >
           {isSending ? (
             <RefreshCw className="mr-2 h-4 w-4 animate-spin" />

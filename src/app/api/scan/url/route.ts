@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         { name: 'Content Consistency', score: Math.random(), description: 'Content matches site historical patterns' },
       ],
       limitations: ['URL scanning is in beta'],
-      disclaimer: 'AI Shield provides a probability-based analysis.',
+      disclaimer: 'Elucid AI provides a probability-based analysis.',
     };
     
     return NextResponse.json(mockResult);

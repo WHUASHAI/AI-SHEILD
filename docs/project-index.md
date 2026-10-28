@@ -1,4 +1,4 @@
-﻿# AI SHIELD project index
+# Elucid AI project index
 
 Indexed from local source on 21 October 2026. This map describes implementation, not deployment readiness. External services and runtime behavior were not tested during indexing.
 
@@ -6,7 +6,7 @@ Repository layout corrected on 22 October 2026: the active project is at the wor
 
 ## Purpose and current state
 
-AI SHIELD is a web application for screening text, images, videos, and faces for possible AI generation or manipulation, plus checking text for online plagiarism matches. It combines a public site, dashboard, account screens, and server API routes. It calls external detection services rather than hosting a trained detection model.
+Elucid AI is a web application for screening text, images, videos, and faces for possible AI generation or manipulation, plus checking text for online plagiarism matches. It combines a public site, dashboard, account screens, and server API routes. It calls external detection services rather than hosting a trained detection model.
 
 The checkout contains 25 page components, 16 API route handlers, and 63 component files. It is a partially implemented application: real provider integrations coexist with synthetic results, browser-only personal history, database-backed aggregate counters, and unfinished account/report services. Detection scores do not prove content origin.
 
@@ -98,7 +98,7 @@ npm.cmd run auth:check
 npm.cmd run build
 ```
 
-The development script binds to `127.0.0.1`. Installation runs `prisma generate`. Database and provider setup are separate from installing dependencies.
+The development script binds to `localhost`. Guest entry also accepts same-origin requests through loopback addresses during development, while production retains its configured origin checks. Installation runs `prisma generate`. Database and provider setup are separate from installing dependencies.
 
 This indexing pass inspected source and file counts only; it did not run tests, build, start the application, connect to the database, or submit content to external providers.
 

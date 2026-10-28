@@ -6,6 +6,7 @@ import { getSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { isGuestBrowser } from '@/lib/guest-mode';
+import theme from '@/components/shared/app-theme.module.css';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -39,18 +40,13 @@ export function DashboardHeader({ onMenuClick }: HeaderProps) {
   return (
     <>
       <header
-        className="h-16 shrink-0 px-4 flex items-center justify-between sticky top-0 z-30"
-        style={{
-          background: 'rgba(7,17,30,0.85)',
-          backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(78,122,177,0.15)',
-          boxShadow: '0 1px 0 rgba(78,122,177,0.1)',
-        }}
+        className={`${theme.dashboardHeader} h-16 shrink-0 px-4 flex items-center justify-between sticky top-0 z-30`}
       >
         {/* Left */}
         <div className="flex items-center gap-3 flex-1">
           <button
             onClick={onMenuClick}
+            aria-label="Open dashboard navigation"
             className="md:hidden p-2 rounded-lg hover:bg-cyan-azure/10 text-air-sup-blue hover:text-pink-lavender transition-colors"
           >
             <Menu className="w-5 h-5" />
@@ -82,7 +78,7 @@ export function DashboardHeader({ onMenuClick }: HeaderProps) {
           {hasSession ? (
             <Button
               type="button"
-              className="bg-gradient-to-r from-cyan-azure-dark to-ucla-blue-dark text-white hover:from-cyan-azure-dark hover:to-space-cadet-light"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={isSigningOut}
               onClick={() => void handleSignOut()}
               aria-busy={isSigningOut}

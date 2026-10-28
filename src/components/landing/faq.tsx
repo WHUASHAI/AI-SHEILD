@@ -5,8 +5,8 @@ import { Plus, Minus, HelpCircle } from 'lucide-react';
 
 const faqs = [
   {
-    q: 'Is AI Shield really free?',
-    a: 'Yes, AI Shield is completely free to use. We do not have premium tiers, paywalls, or subscription fees. Our mission is to democratize access to AI detection tools. We rely on fair-use limits to prevent abuse.',
+    q: 'Is Elucid AI really free?',
+    a: 'Yes, Elucid AI is completely free to use. We do not have premium tiers, paywalls, or subscription fees. Our mission is to democratize access to AI detection tools. We rely on fair-use limits to prevent abuse.',
   },
   {
     q: 'How accurate is the detection?',
@@ -34,7 +34,7 @@ const faqs = [
   },
   {
     q: 'Do you have an API?',
-    a: 'Yes, we offer a free API for developers to integrate AI Shield into their own applications. Check our API documentation for details and rate limits.',
+    a: 'Yes, we offer a free API for developers to integrate Elucid AI into their own applications. Check our API documentation for details and rate limits.',
   },
 ];
 
@@ -119,7 +119,7 @@ export function FAQ() {
             Frequently Asked{' '}
             <span className="gradient-text">Questions</span>
           </h2>
-          <p className="text-air-sup-blue text-lg">Everything you need to know about AI Shield.</p>
+          <p className="text-air-sup-blue text-lg">Everything you need to know about Elucid AI.</p>
         </motion.div>
 
         <div className="space-y-3">

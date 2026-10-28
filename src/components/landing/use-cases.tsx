@@ -51,7 +51,7 @@ export function UseCases() {
           </span>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-5">
             Who Uses{' '}
-            <span className="gradient-text">AI Shield?</span>
+            <span className="gradient-text">Elucid AI?</span>
           </h2>
           <p className="text-air-sup-blue max-w-xl mx-auto text-lg">
             Trusted by professionals across industries to verify digital authenticity.

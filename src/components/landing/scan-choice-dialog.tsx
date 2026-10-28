@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { Logo } from '@/components/shared/logo';
 import {
   Dialog,
   DialogContent,
@@ -42,8 +43,8 @@ export function ScanChoiceDialog({ children }: ScanChoiceDialogProps) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-md border-cyan-azure/25 bg-[#0a1526]/95 backdrop-blur-xl p-6 text-foreground sm:rounded-2xl shadow-palette">
         <DialogHeader className="text-center sm:text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-azure/20 to-air-sup-blue/20 border border-cyan-azure/30">
-            <Shield className="h-6 w-6 text-cyan-azure" />
+          <div className="mx-auto mb-2">
+            <Logo variant="icon" size="lg" />
           </div>
           <DialogTitle className="text-2xl font-bold tracking-tight text-white">
             Start Scanning

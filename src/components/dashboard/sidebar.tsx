@@ -11,6 +11,7 @@ import {
   ChevronLeft, ChevronRight, X, BookCopy, Zap,
 } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
+import theme from '@/components/shared/app-theme.module.css';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -56,8 +57,7 @@ export function DashboardSidebar({ collapsed, mobileOpen, onCloseMobile, onToggl
   const pathname = usePathname();
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full relative overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #0a1628 0%, #07111e 100%)', borderRight: '1px solid rgba(78,122,177,0.18)' }}>
+    <div className={`${theme.sidebarSurface} flex flex-col h-full relative overflow-hidden`}>
       
       {/* Subtle left glow orb */}
       <div className="absolute top-20 -left-10 w-40 h-40 rounded-full pointer-events-none"
@@ -69,7 +69,7 @@ export function DashboardSidebar({ collapsed, mobileOpen, onCloseMobile, onToggl
         <Link href="/dashboard" className="flex items-center gap-2 overflow-hidden">
           <Logo variant={collapsed ? 'icon' : 'full'} size="sm" />
         </Link>
-        <button onClick={onCloseMobile}
+        <button aria-label="Close dashboard navigation" onClick={onCloseMobile}
           className="md:hidden p-2 rounded-lg hover:bg-cyan-azure/10 text-air-sup-blue hover:text-pink-lavender transition-colors">
           <X className="w-5 h-5" />
         </button>
@@ -93,11 +93,12 @@ export function DashboardSidebar({ collapsed, mobileOpen, onCloseMobile, onToggl
                     <Link
                       href={item.href}
                       title={collapsed ? item.label : undefined}
+                      aria-current={isActive ? 'page' : undefined}
                       onClick={onCloseMobile}
                       className={cn(
                         'relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group overflow-hidden',
                         isActive
-                          ? 'bg-cyan-azure/15 text-foreground'
+                          ? 'bg-pink-lavender/12 text-pink-lavender'
                           : isHighlight
                             ? 'bg-gradient-to-r from-cyan-azure/20 to-pink-lavender/15 text-foreground hover:from-cyan-azure/30 hover:to-pink-lavender/25 border border-cyan-azure/25'
                             : 'text-air-sup-blue hover:bg-white/5 hover:text-foreground'
@@ -108,7 +109,7 @@ export function DashboardSidebar({ collapsed, mobileOpen, onCloseMobile, onToggl
                         <motion.div
                           layoutId="activeBar"
                           className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full"
-                          style={{ background: 'linear-gradient(180deg, #4E7AB1, #CEB5D4)' }}
+                          style={{ background: '#CEB5D4' }}
                         />
                       )}
                       {/* Shimmer on hover for highlight item */}
@@ -118,7 +119,7 @@ export function DashboardSidebar({ collapsed, mobileOpen, onCloseMobile, onToggl
                       )}
                       <item.icon className={cn(
                         'w-4 h-4 shrink-0 transition-colors',
-                        isActive ? 'text-cyan-azure' : isHighlight ? 'text-cyan-azure' : 'text-ucla-blue group-hover:text-air-sup-blue'
+                        isActive ? 'text-pink-lavender' : isHighlight ? 'text-cyan-azure' : 'text-ucla-blue group-hover:text-air-sup-blue'
                       )} />
                       {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
                       {!collapsed && isHighlight && <Zap className="w-3 h-3 ml-auto text-pink-lavender/70" />}
@@ -135,9 +136,10 @@ export function DashboardSidebar({ collapsed, mobileOpen, onCloseMobile, onToggl
       <div className="shrink-0 p-2" style={{ borderTop: '1px solid rgba(78,122,177,0.12)' }}>
         <button
           onClick={() => {
-            console.log('Toggle button clicked');
+
             onToggleCollapse();
           }}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           className="hidden md:flex w-full items-center justify-center p-2 mb-2 rounded-lg hover:bg-cyan-azure/10 text-ucla-blue hover:text-air-sup-blue transition-colors"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}

@@ -116,7 +116,7 @@ export default function ImageDetectorPage() {
               onClick={handleScan}
               disabled={loading || files.length === 0}
               suppressHydrationWarning
-              className="w-full h-12 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white font-semibold text-base shadow-palette-glow disabled:opacity-50 transition-all"
+              className="w-full h-12 font-semibold text-base disabled:opacity-50 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {loading ? 'Analyzing with Sightengine...' : 'Run Comprehensive Analysis'}
               <ShieldCheck className="w-4 h-4 ml-2" />

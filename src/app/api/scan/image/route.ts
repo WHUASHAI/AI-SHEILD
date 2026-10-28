@@ -191,7 +191,7 @@ async function analyze(req: NextRequest) {
         'Illustration-style AI art may occasionally score lower',
       ],
       disclaimer:
-        'AI Shield uses Sightengine probability models. Results may contain false positives or negatives. Always apply human judgment for critical decisions.',
+        'Elucid AI uses Sightengine probability models. Results may contain false positives or negatives. Always apply human judgment for critical decisions.',
       modelVersion: 'sightengine-v1.0',
     });
 

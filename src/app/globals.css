@@ -8,6 +8,8 @@
   --color-cyan-azure:           #4E7AB1;   /* Bright blue – interactive */
   --color-air-superiority-blue: #7D9FC0;   /* Light blue – muted fg     */
 
+  --color-air-sup-blue: #9ab4d2;
+
   /* Derived dark variants */
   --color-space-cadet-dark:     #0b1e3a;
   --color-space-cadet-light:    #1B3A6B;
@@ -17,27 +19,27 @@
   --color-cyan-azure-light:     #6a98c8;
 
   /* ─── Semantic Roles ─────────────────────────────────────── */
-  --color-background:           var(--color-space-cadet);
+  --color-background:           #07111e;
   --color-foreground:           #f0f4fa;
-  --color-card:                 #162f59;
+  --color-card:                 #0c1b2d;
   --color-card-foreground:      #f0f4fa;
-  --color-popover:              #162f59;
+  --color-popover:              #102139;
   --color-popover-foreground:   #f0f4fa;
-  --color-primary:              var(--color-cyan-azure);
-  --color-primary-foreground:   #ffffff;
-  --color-secondary:            var(--color-air-superiority-blue);
-  --color-secondary-foreground: #ffffff;
-  --color-muted:                var(--color-ucla-blue);
-  --color-muted-foreground:     var(--color-air-superiority-blue);
-  --color-accent:               var(--color-pink-lavender);
-  --color-accent-foreground:    var(--color-space-cadet);
+  --color-primary:              #CEB5D4;
+  --color-primary-foreground:   #10213a;
+  --color-secondary:            #14263d;
+  --color-secondary-foreground: #d3dfed;
+  --color-muted:                #12233a;
+  --color-muted-foreground:     #9ab4d2;
+  --color-accent:               #CEB5D4;
+  --color-accent-foreground:    #10213a;
   --color-destructive:          hsl(0 63% 50%);
   --color-destructive-foreground: #ffffff;
-  --color-border:               rgba(78, 122, 177, 0.30);
+  --color-border:               rgba(125, 159, 192, 0.28);
   --color-border-solid:         var(--color-ucla-blue);
-  --color-input:                var(--color-ucla-blue-dark);
-  --color-ring:                 var(--color-cyan-azure);
-  --color-surface:              #1a3560;
+  --color-input:                #30455f;
+  --color-ring:                 #CEB5D4;
+  --color-surface:              #0c1b2d;
 
   /* ─── Typography ─────────────────────────────────────────── */
   --radius-lg: 0.75rem;

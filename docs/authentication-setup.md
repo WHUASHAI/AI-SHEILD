@@ -1,4 +1,25 @@
-﻿# Google sign-in on Vercel
+# Google sign-in on Vercel
+
+## Push and deployment checks (29 October 2026)
+
+The repository pins Node.js **24.x** for Vercel and CI. Keep Vercel's framework preset as **Next.js**, build command as `npm run build`, install command as `npm ci`, and output directory at its framework default. The project root must contain `package.json`, `next.config.ts`, and `src/`.
+
+`.github/workflows/checks.yml` runs a clean install, tests, and production build on pushes and pull requests. It checks the source independently; it does not block Vercel's Git integration or certify a real Google account login. The build now explicitly resolves its workspace root, including linked dependencies, and configures the social-image metadata base to remove the previous warnings.
+
+Keep the existing **Production** Vercel authentication variables. The local `.env.local` is ignored by Git and is not uploaded through a GitHub push. For the current live domain, `AUTH_URL` must be `https://elucid-ai-scan.vercel.app`. The Google OAuth Web client must register `https://elucid-ai-scan.vercel.app/api/auth/callback/google` exactly.
+
+The live domain was renamed to `elucid-ai-scan.vercel.app`. The first check after the rename found guest entry returning HTTP 403 and Google authorization still using the previous domain. Update the Vercel **Production** `AUTH_URL` to the origin above, update or remove any stale `NEXTAUTH_URL`, and redeploy. In the existing Google OAuth Web client, add the new origin under Authorized JavaScript origins and the exact new callback under Authorized redirect URIs. Keep the existing matching Google credentials and session secret. A domain rename does not replace the auth URLs stored in those settings.
+
+After the new deployment is ready, run:
+
+```powershell
+npm.cmd run check:deployment -- https://elucid-ai-scan.vercel.app
+```
+
+This checks the Elucid AI public pages, Google provider availability, unauthenticated session handling, protected dashboard access, guest selection and refresh with secure cookies, and the Google authorization callback. It reports errors without printing credentials, CSRF tokens, or cookies. It deliberately fails if the deployment still serves older branding or missing public pages. Complete one real Google login afterward, refresh the dashboard, and sign out to verify account consent, token exchange, and session persistence.
+
+Before this push, the existing live deployment accepted guest entry/refresh and reached Google's email-entry screen with the correct callback. It still served AI Shield branding and prefetched missing `/resources` and `/use-cases` pages. Those pages exist in the updated source, which must be pushed and redeployed before the new release can be checked live. Full real-account Google consent was not performed, and Vercel project settings/build logs were not available through a connected account.
+
 
 Google is the only social sign-in provider. Facebook has been removed from the UI, provider registration, and accepted sessions. Existing verified password accounts remain supported separately.
 

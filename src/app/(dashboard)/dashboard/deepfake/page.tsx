@@ -170,7 +170,7 @@ export default function DeepfakeDetectorPage() {
             <Button
               onClick={handleScan}
               disabled={loading || files.length === 0}
-              className="w-full h-12 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white font-semibold text-base shadow-palette-glow disabled:opacity-50 transition-all"
+              className="w-full h-12 font-semibold text-base disabled:opacity-50 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {loading ? 'Analyzing with Sightengine...' : 'Run Deepfake Analysis'}
               <ShieldCheck className="w-4 h-4 ml-2" />

@@ -102,7 +102,7 @@ export default function PasswordPage() {
         {error && (
           <div role="alert" className="rounded-md border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400">{error}</div>
         )}
-        <Button type="submit" disabled={isLoading} className="w-full bg-cyan-azure-dark text-white hover:bg-space-cadet-light">
+        <Button type="submit" disabled={isLoading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
           {isLoading && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
           Sign In
         </Button>

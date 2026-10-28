@@ -27,6 +27,16 @@ export function getTrustedAuthOrigin(requestUrl: string, env: NodeJS.ProcessEnv 
   }
 }
 
+export function getGuestRequestOrigin(requestUrl: string, requestHost: string | null, env: NodeJS.ProcessEnv = process.env): string | null {
+  // Local guest selection follows the browser's loopback host; OAuth keeps its configured callback origin.
+  const localEnv = { NODE_ENV: 'development' } as NodeJS.ProcessEnv;
+  if (env.NODE_ENV === 'development' && getTrustedAuthOrigin(requestUrl, localEnv)) {
+    const request = new URL(requestUrl);
+    return getTrustedAuthOrigin(requestHost ? `${request.protocol}//${requestHost}` : requestUrl, localEnv);
+  }
+  return getTrustedAuthOrigin(requestUrl, env);
+}
+
 export function getPasswordDatabaseUrl(env: NodeJS.ProcessEnv = process.env): string | null {
   try {
     const url = new URL(env.DATABASE_URL ?? '');

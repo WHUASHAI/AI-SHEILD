@@ -1,8 +1,8 @@
-# AI SHIELD: Client Discussion Guide
+# Elucid AI: Client Discussion Guide
 
-## 1. What is AI SHIELD?
+## 1. What is Elucid AI?
 
-**AI SHIELD** is a centralized platform designed to detect AI-generated content. As fake media becomes harder to distinguish from reality, AI SHIELD provides a single dashboard where users can upload different types of files to verify if they are real, original, or digitally created by AI.
+**Elucid AI** is a centralized platform designed to detect AI-generated content. As fake media becomes harder to distinguish from reality, Elucid AI provides a single dashboard where users can upload different types of files to verify if they are real, original, or digitally created by AI.
 
 ---
 
@@ -62,4 +62,4 @@ When a user uploads a photo or video containing people, this feature specificall
 * **Lighting and Quality Issues:** If a completely real video is extremely dark, blurry, or very low quality, the system might struggle to analyze the face properly. This poor quality can confuse the detector, leading to inaccurate results.
 
 ---
-*Summary for Client:* AI SHIELD is an easy-to-use platform to check for digital forgery across all major media types. While it is a very helpful tool, users should be aware of the file limits and understand that false alarms can occasionally happen due to the nature of AI technology.
+*Summary for Client:* Elucid AI is an easy-to-use platform to check for digital forgery across all major media types. While it is a very helpful tool, users should be aware of the file limits and understand that false alarms can occasionally happen due to the nature of AI technology.

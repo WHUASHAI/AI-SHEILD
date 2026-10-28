@@ -178,7 +178,7 @@ export default function SignUpPage() {
               </div>
             )}
 
-            <Button disabled={isLoading} className="w-full bg-cyan-600 hover:bg-cyan-700 text-foreground">
+            <Button disabled={isLoading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
               {isLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}

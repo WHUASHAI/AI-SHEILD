@@ -1,6 +1,7 @@
 import React from "react";
-import { ShieldAlert, Download, Share2, FileText, Calendar } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { Logo } from "@/components/shared/logo";
+import { ShieldAlert, FileText, Calendar } from "lucide-react";
 
 // This is a simplified public version for unauthenticated viewing
 export default async function PublicReportPage({ params }: { params: Promise<{ token: string }> }) {
@@ -20,19 +21,14 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
     confidence: confidence,
     date: new Date().toISOString().split('T')[0],
     text: "Sample analyzed content snippet...",
-    disclaimer: "AI Shield provides a probability-based analysis. Results may contain false positives or false negatives."
+    disclaimer: "Elucid AI provides a probability-based analysis. Results may contain false positives or false negatives."
   };
 
   return (
     <div className="min-h-screen bg-[#0a0f1e] text-gray-100 font-sans">
       <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-cyan-600 flex items-center justify-center">
-              <ShieldAlert className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-lg text-white">AI Shield</span>
-          </div>
+          <Logo size="md" />
           <span className="text-xs font-medium text-gray-400 bg-gray-800 px-3 py-1.5 rounded-full border border-gray-700">
             Shared Report
           </span>
@@ -85,19 +81,19 @@ export default async function PublicReportPage({ params }: { params: Promise<{ t
             <div className="flex-1 space-y-4">
               <h3 className="text-sm font-medium text-gray-400">Analyzed Content Snippet</h3>
               <div className="bg-gray-900 border border-gray-800 p-4 rounded-lg text-sm text-gray-300 italic">
-                "{report.text}"
+                &quot;{report.text}&quot;
               </div>
             </div>
           </div>
         </div>
 
         <div className="flex flex-center gap-4 pt-8">
-          <a href="/dashboard/new-scan" className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">
+          <Link href="/dashboard/new-scan" className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">
             Back to Scan
-          </a>
-          <a href="/" className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-500 rounded-lg transition-colors shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+          </Link>
+          <Link href="/" className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-500 rounded-lg transition-colors shadow-[0_0_15px_rgba(6,182,212,0.3)]">
             Analyze New Content
-          </a>
+          </Link>
         </div>
       </main>
     </div>

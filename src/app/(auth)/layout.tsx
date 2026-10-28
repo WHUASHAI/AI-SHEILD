@@ -1,13 +1,14 @@
 import Link from 'next/link';
 import { ScanLine, FileSearch } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
+import theme from '@/components/shared/app-theme.module.css';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-space-cadet">
+    <div className={`${theme.appTheme} ${theme.authShell} flex min-h-screen`} data-app-theme="elucid-v2">
 
       {/* ── Left brand panel ── */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 bg-gradient-to-br from-space-cadet-dark via-space-cadet to-ucla-blue/20 relative overflow-hidden border-r border-cyan-azure/15">
+      <div className={`${theme.authBrand} hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden border-r`}>
 
         {/* Grid pattern background */}
         <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
@@ -34,7 +35,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="space-y-4 max-w-md">
             <h1 className="text-4xl font-bold text-foreground tracking-tight leading-tight">
               Know Where Digital Content{' '}
-              <span className="gradient-text">Really Came From</span>
+              <span className={theme.authAccent}>Really Came From</span>
             </h1>
             <p className="text-lg text-air-sup-blue leading-relaxed">
               The most advanced multi-modal content detection platform to verify text, images, and
@@ -72,16 +73,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         {/* Footer note */}
         <div className="relative z-10 text-xs text-ucla-blue leading-relaxed">
-          <p>© {new Date().getFullYear()} AI Shield. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Elucid AI. All rights reserved.</p>
           <p className="mt-1">
-            AI Shield provides a probability-based analysis. Results may contain false positives or
+            Elucid AI provides a probability-based analysis. Results may contain false positives or
             false negatives and should not be treated as definitive proof.
           </p>
         </div>
       </div>
 
       {/* ── Right form panel ── */}
-      <div className="flex-1 flex flex-col p-8 overflow-y-auto bg-space-cadet">
+      <div className={`${theme.authForm} flex-1 flex flex-col p-5 sm:p-8 overflow-y-auto`}>
         {/* Mobile logo */}
         <div className="lg:hidden flex justify-center mb-8">
           <Link href="/">
@@ -90,7 +91,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-full max-w-md space-y-8">
+          <div className={`${theme.formCard} w-full max-w-md space-y-8`}>
             {children}
           </div>
         </div>

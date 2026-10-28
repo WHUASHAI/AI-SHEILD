@@ -75,7 +75,7 @@ function ResetPasswordContent() {
             This password reset link is invalid or has expired. Please request a new one.
           </p>
         </div>
-        <Button asChild className="mt-4 w-full bg-cyan-600 hover:bg-cyan-700 text-white">
+        <Button asChild className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90">
           <Link href="/forgot-password">Request new link</Link>
         </Button>
       </div>
@@ -94,7 +94,7 @@ function ResetPasswordContent() {
             Your password has been reset successfully. You can now sign in with your new password.
           </p>
         </div>
-        <Button asChild className="mt-4 w-full bg-cyan-600 hover:bg-cyan-700 text-white">
+        <Button asChild className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90">
           <Link href="/sign-in">Sign in</Link>
         </Button>
       </div>
@@ -150,7 +150,7 @@ function ResetPasswordContent() {
               </div>
             )}
 
-            <Button disabled={isLoading} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white">
+            <Button disabled={isLoading} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
               {isLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}

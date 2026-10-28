@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GUEST_COOKIE_NAME } from '@/lib/guest-mode';
-import { getTrustedAuthOrigin } from '@/lib/auth-settings';
+import { getGuestRequestOrigin } from '@/lib/auth-settings';
 import { guestTokenHash, newGuestToken } from '@/lib/history-core';
 
 function changeGuestMode(request: NextRequest, guest: boolean) {
-  const origin = getTrustedAuthOrigin(request.url);
+  const origin = getGuestRequestOrigin(request.url, request.headers.get('host'));
   if (!origin || request.headers.get('origin') !== origin) {
     return NextResponse.json({ error: 'Open guest scanning from this website.' }, { status: 403 });
   }

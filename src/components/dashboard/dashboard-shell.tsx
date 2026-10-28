@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import theme from '@/components/shared/app-theme.module.css';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
 import { DashboardHeader } from '@/components/dashboard/header';
 
@@ -15,7 +16,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden text-foreground" style={{ background: 'linear-gradient(160deg, #07111e 0%, #09182e 50%, #07111e 100%)' }}>
+    <div className={`${theme.appTheme} ${theme.dashboardShell} flex h-screen overflow-hidden text-foreground`} data-app-theme="elucid-v2">
       <DashboardSidebar collapsed={sidebarCollapsed} mobileOpen={mobileSidebarOpen} onCloseMobile={() => setMobileSidebarOpen(false)} onToggleCollapse={toggleSidebar} />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <DashboardHeader onMenuClick={() => setMobileSidebarOpen(value => !value)} isSidebarCollapsed={sidebarCollapsed} />

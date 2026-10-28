@@ -5,6 +5,7 @@ import { Menu, X, ChevronDown } from 'lucide-react';
 import { Logo } from './logo';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { PUBLIC_NAV_LINKS as navLinks, DETECTION_TOOL_LINKS as productLinks } from '@/lib/public-navigation';
 
 export function Navbar() {
   const [isScrolled, setIsScrolled]               = useState(false);
@@ -16,13 +17,6 @@ export function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const navLinks = [
-    { name: 'How It Works', href: '/how-it-works' },
-    { name: 'Use Cases',    href: '/use-cases' },
-    { name: 'Resources',    href: '/resources' },
-    { name: 'About',        href: '/about' },
-  ];
 
   return (
     <header
@@ -55,14 +49,7 @@ export function Navbar() {
                 onMouseLeave={() => setProductDropdownOpen(false)}
               >
                 <div className="glass-card rounded-xl shadow-palette overflow-hidden py-2">
-                  {[
-                    { label: 'Text Detector', href: '/dashboard/text' },
-                    { label: 'Image Detector', href: '/dashboard/image' },
-                    { label: 'Video Detector', href: '/dashboard/video' },
-                    { label: 'Deepfake Detector', href: '/dashboard/deepfake' },
-                    { label: 'Enhancement Detector', href: '/dashboard/enhancement' },
-                    { label: 'Plagiarism Detector', href: '/dashboard/plagiarism' }
-                  ].map((item) => (
+                  {productLinks.map((item) => (
                     <Link
                       key={item.label}
                       href={item.href}
@@ -118,13 +105,7 @@ export function Navbar() {
               Product Tools
             </div>
             <div className="grid grid-cols-1 gap-1">
-              {[
-                { label: 'Text Detector', href: '/dashboard/text' },
-                { label: 'Image Detector', href: '/dashboard/image' },
-                { label: 'Video Detector', href: '/dashboard/video' },
-                { label: 'Deepfake Detector', href: '/dashboard/deepfake' },
-                { label: 'Enhancement Detector', href: '/dashboard/enhancement' }
-              ].map((item) => (
+              {productLinks.map((item) => (
                 <Link
                   key={item.label}
                   href={item.href}

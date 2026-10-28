@@ -17,7 +17,7 @@ export function DisclaimerBanner({ className }: { className?: string }) {
       <div className="text-sm">
         <p className="font-semibold text-foreground/90 mb-0.5">Probability-based Analysis</p>
         <p className="text-air-sup-blue/70 leading-relaxed text-xs">
-          AI Shield provides probability scores, not definitive verdicts. Results may contain false positives or false negatives and should not be used as sole evidence in academic, legal, or disciplinary proceedings.
+          Elucid AI provides probability scores, not definitive verdicts. Results may contain false positives or false negatives and should not be used as sole evidence in academic, legal, or disciplinary proceedings.
         </p>
       </div>
     </div>

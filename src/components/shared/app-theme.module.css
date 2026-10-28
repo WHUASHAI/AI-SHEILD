@@ -1,0 +1,21 @@
+.appTheme {
+  --color-space-cadet: #0c1b2e;
+  --color-space-cadet-dark: #07111e;
+  --color-space-cadet-light: #142944;
+  --color-air-sup-blue: #9ab4d2;
+  --color-ucla-blue: #7d9fc0;
+  background: #07111e;
+  color: #f0f4fa;
+}
+.authShell { min-height: 100vh; background: #07111e; }
+.authBrand { background: radial-gradient(ellipse at 15% 25%, #4e7ab11c, transparent 65%), #0b192d; border-color: #7d9fc036; }
+.authForm { background: #07111e; }
+.formCard { padding: 32px; border: 1px solid #7d9fc036; border-radius: 18px; background: #0b192c; box-shadow: 0 20px 70px #0000001a; }
+.authAccent { color: #ceb5d4; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 400; }
+.dashboardShell { background: radial-gradient(ellipse at 80% 0, #4e7ab10b, transparent 55%), #07111e; }
+.dashboardHeader { background: #07111eeb; backdrop-filter: blur(16px); border-bottom: 1px solid #7d9fc033; }
+.sidebarSurface { background: #0b1729; border-right: 1px solid #7d9fc033; }
+.appTheme :global(.glass-card) { background: #0c1b2de8; border-color: #7d9fc033; }
+.appTheme :global(.bg-slate-900), .appTheme :global(.bg-gray-900) { background-color: #0c1b2d; }
+.appTheme :global(.bg-slate-950) { background-color: #07111e; }
+@media (max-width: 640px) { .formCard { padding: 22px; border-radius: 14px; } }

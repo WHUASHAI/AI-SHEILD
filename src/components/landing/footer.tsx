@@ -1,40 +1,17 @@
 'use client';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { usePathname } from 'next/navigation';
+import { LandingFooter } from './v2/footer';
 import { Logo } from '../shared/logo';
 import { DISCLAIMER } from '@/types';
-import { X, GitBranch, Link2, Mail, ExternalLink } from 'lucide-react';
-
-const socialLinks = [
-  { icon: X,         label: 'X (Twitter)', href: '#' },
-  { icon: GitBranch, label: 'GitHub',       href: '#' },
-  { icon: Link2,     label: 'LinkedIn',     href: '#' },
-  { icon: Mail,      label: 'Email',        href: 'mailto:hello@aishield.ai' },
-];
-
-const links = {
-  Product: [
-    ['Text Detector',      '/tools/text-detector'     ],
-    ['Image Detector',     '/tools/image-detector'    ],
-    ['Video Detector',     '/tools/video-detector'    ],
-    ['Deepfake Detector',  '/tools/deepfake-detector' ],
-    ['Batch Scanner',      '/tools/batch-scanner'     ],
-  ],
-  Resources: [
-    ['How It Works',       '/how-it-works' ],
-    ['Use Cases',          '/use-cases'    ],
-    ['API Documentation',  '/api-docs'     ],
-  ],
-  Company: [
-    ['About Us',           '/about'       ],
-    ['Limitations Policy', '/limitations' ],
-    ['Privacy Policy',     '/privacy'     ],
-    ['Terms of Service',   '/terms'       ],
-  ],
-};
+import { ExternalLink } from 'lucide-react';
+import { FOOTER_NAV_LINKS as links } from '@/lib/public-navigation';
 
 export function Footer() {
+  const pathname = usePathname();
   const currentYear = new Date().getFullYear();
+
+  if (pathname === '/') return <LandingFooter />;
 
   return (
     <footer className="relative overflow-hidden" style={{ background: '#070f1d' }}>
@@ -58,20 +35,6 @@ export function Footer() {
               Know where digital content really came from. Free, powerful AI detection for text, images, and videos.
             </p>
 
-            {/* Social icons */}
-            <div className="flex gap-2.5">
-              {socialLinks.map((s) => (
-                <Link
-                  key={s.label}
-                  href={s.href}
-                  aria-label={s.label}
-                  className="w-9 h-9 rounded-lg glass-card hover:border-cyan-azure/50 hover:bg-cyan-azure/10 flex items-center justify-center transition-all duration-200 text-air-sup-blue hover:text-pink-lavender"
-                >
-                  <s.icon className="w-4 h-4" />
-                </Link>
-              ))}
-            </div>
-
             {/* Status pill */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full badge-primary text-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
@@ -84,7 +47,7 @@ export function Footer() {
             <div key={section}>
               <h4 className="font-semibold text-pink-lavender mb-5 text-xs uppercase tracking-widest">{section}</h4>
               <ul className="space-y-3">
-                {items.map(([label, href]) => (
+                {items.map(({ label, href }) => (
                   <li key={label}>
                     <Link
                       href={href}
@@ -103,7 +66,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="py-6 border-t border-cyan-azure/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-ucla-blue/70">
-            © {currentYear} AI Shield. All rights reserved. Built with transparency.
+            © {currentYear} Elucid AI. All rights reserved. Built with transparency.
           </p>
           <div className="text-xs text-ucla-blue/50 max-w-xl text-center md:text-right leading-relaxed">
             {DISCLAIMER}

@@ -215,7 +215,7 @@ async function analyze(req: NextRequest) {
           : 'Very small face regions (< 64px) may not be analyzed',
       ],
       disclaimer:
-        'AI Shield uses Sightengine deepfake models for probability-based analysis. No detection system is 100% accurate. Consult digital forensics professionals for legal or critical decisions.',
+        'Elucid AI uses Sightengine deepfake models for probability-based analysis. No detection system is 100% accurate. Consult digital forensics professionals for legal or critical decisions.',
       modelVersion: 'sightengine-deepfake-v1.0',
     });
   } catch (error) {

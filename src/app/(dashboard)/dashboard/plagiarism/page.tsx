@@ -454,7 +454,7 @@ export default function PlagiarismDetectorPage() {
             <Button
               onClick={handleScan}
               disabled={loading || (inputMode === 'text' && text.length < 20)}
-              className="flex-1 h-12 bg-gradient-to-r from-cyan-azure to-air-sup-blue hover:from-cyan-azure-dark hover:to-cyan-azure text-white font-semibold text-base shadow-palette-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex-1 h-12 font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {loading ? (
                 <><RefreshCw className="w-5 h-5 mr-2 animate-spin" /> Scanning…</>

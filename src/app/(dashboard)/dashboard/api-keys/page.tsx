@@ -92,7 +92,7 @@ console.log(result.result); // 'Likely AI-Generated'`;
             <button 
               onClick={handleCreateKey}
               disabled={!newKey.trim()}
-              className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-foreground font-medium rounded-md transition-colors text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground font-medium rounded-md transition-colors text-sm"
             >
               <Plus className="w-4 h-4" /> Create Key
             </button>
@@ -208,7 +208,7 @@ console.log(result.result); // 'Likely AI-Generated'`;
   "signals": [
     { "name": "High Sentence Uniformity", "score": 0.82 }
   ],
-  "disclaimer": "AI Shield provides a probability-based analysis. Results may contain false positives or false negatives."
+  "disclaimer": "Elucid AI provides a probability-based analysis. Results may contain false positives or false negatives."
 }`}
               </pre>
             </div>

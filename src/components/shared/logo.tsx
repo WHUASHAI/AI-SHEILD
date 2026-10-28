@@ -12,9 +12,9 @@ export function Logo({ className, size = 'md', variant = 'full' }: LogoProps) {
   const px = iconSizes[size];
 
   const textConfig = {
-    sm: { wrapper: 'text-sm',  ai: 'text-sm',  shield: 'text-sm',  tracking: 'tracking-wide'  },
-    md: { wrapper: 'text-lg',  ai: 'text-lg',  shield: 'text-lg',  tracking: 'tracking-wider' },
-    lg: { wrapper: 'text-2xl', ai: 'text-2xl', shield: 'text-2xl', tracking: 'tracking-widest' },
+    sm: { wrapper: 'text-sm',  name: 'text-sm',  ai: 'text-sm',  tracking: 'tracking-wide'  },
+    md: { wrapper: 'text-lg',  name: 'text-lg',  ai: 'text-lg',  tracking: 'tracking-wider' },
+    lg: { wrapper: 'text-2xl', name: 'text-2xl', ai: 'text-2xl', tracking: 'tracking-widest' },
   };
   const t = textConfig[size];
 
@@ -35,12 +35,12 @@ export function Logo({ className, size = 'md', variant = 'full' }: LogoProps) {
           }}
         />
         <Image
-          src="/logo-icon.jpg"
-          alt="AI Shield Logo"
+          src="/brand/elucid-ai-lens.png"
+          alt="Elucid AI Logo"
           width={px}
           height={px}
-          className="relative z-10 object-cover rounded-lg"
-          priority
+          className="relative z-10 object-contain"
+          preload
         />
       </div>
 
@@ -48,22 +48,22 @@ export function Logo({ className, size = 'md', variant = 'full' }: LogoProps) {
       {variant === 'full' && (
         <span className={cn('flex items-baseline gap-0 font-extrabold leading-none', t.wrapper)}>
           <span
-            className={cn('text-foreground', t.ai)}
+            className={cn('text-foreground', t.name)}
             style={{ letterSpacing: '0.02em' }}
           >
-            AI
+            Elucid{' '}
           </span>
           <span
-            className={cn(t.shield, t.tracking)}
+            className={cn(t.ai, t.tracking)}
             style={{
-              background: 'linear-gradient(135deg, #4E7AB1 0%, #7D9FC0 50%, #CEB5D4 100%)',
+              background: 'linear-gradient(135deg, #43DFF1 0%, #65B9F6 50%, #C2A4FA 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
               marginLeft: '0.3em',
             }}
           >
-            SHIELD
+            AI
           </span>
         </span>
       )}

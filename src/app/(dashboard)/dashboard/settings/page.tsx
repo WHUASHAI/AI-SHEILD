@@ -144,7 +144,7 @@ export default function SettingsPage() {
                         <h3 className="text-sm font-semibold text-foreground">Data Retention</h3>
                       </div>
                       <p className="text-xs text-air-sup-blue/60 max-w-md">
-                        Choose how long AI Shield stores your scan history. After this period, reports and analyzed content are permanently deleted from our servers.
+                        Choose how long Elucid AI stores your scan history. After this period, reports and analyzed content are permanently deleted from our servers.
                       </p>
                       <select className="w-full max-w-xs bg-space-cadet-dark/80 border border-white/10 text-foreground text-sm rounded-xl px-4 py-3 focus:ring-2 focus:ring-cyan-azure/50 outline-none transition-all">
                         <option>Keep scans forever</option>
@@ -233,7 +233,7 @@ export default function SettingsPage() {
           {/* Footer Actions */}
           <div className="px-8 py-5 bg-white/5 border-t border-white/5 flex items-center justify-between">
             <p className="text-xs text-air-sup-blue/40">Last updated: Today at 10:42 AM</p>
-            <button className="btn-shimmer flex items-center gap-2.5 px-6 py-2.5 bg-gradient-to-r from-cyan-azure to-air-sup-blue text-white text-sm font-bold rounded-xl shadow-palette transition-all hover:scale-[1.02] active:scale-[0.98]">
+            <button className="btn-shimmer flex items-center gap-2.5 px-6 py-2.5 text-sm font-bold rounded-xl shadow-palette transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary text-primary-foreground hover:bg-primary/90">
               <Save className="w-4 h-4" />
               Save Changes
             </button>

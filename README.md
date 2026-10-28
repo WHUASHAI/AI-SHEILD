@@ -1,10 +1,10 @@
-# AI SHIELD
+# Elucid AI
 
 **Know Where Digital Content Really Came From**
 
 Free, open platform for AI content detection across text, images, videos, deepfakes, and enhanced media.
 
-> ⚠️ **Accuracy Notice:** AI Shield provides probability-based analysis. Results may contain false positives or false negatives and should not be treated as definitive proof that content was generated or modified by AI.
+> ⚠️ **Accuracy Notice:** Elucid AI provides probability-based analysis. Results may contain false positives or false negatives and should not be treated as definitive proof that content was generated or modified by AI.
 
 ---
 
@@ -83,6 +83,8 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+Use **Start Scanning → Continue as Guest** to enter without a Google account. Google sign-in requires `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`, with `http://localhost:3000/api/auth/callback/google` registered as a redirect URI for local development. Email/password sign-in requires the configured PostgreSQL database and a verified account. Run `npm run auth:check` to check configuration without printing credentials.
 
 ---
 
@@ -208,7 +210,7 @@ See `/dashboard/api-keys` for keys and full documentation.
 
 ## Disclaimer
 
-Results are probabilistic. AI SHIELD should be used as one signal among many, not as definitive proof. See `/limitations` for full accuracy notes.
+Results are probabilistic. Elucid AI should be used as one signal among many, not as definitive proof. See `/limitations` for full accuracy notes.
 
 No personal identification is performed. No AI-based accusations are made.
 
