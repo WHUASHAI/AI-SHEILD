@@ -13,6 +13,7 @@ interface FileDropzoneProps {
   maxSize?: number;
   className?: string;
   multiple?: boolean;
+  disabled?: boolean;
 }
 
 function formatBytes(bytes: number) {
@@ -28,6 +29,7 @@ export function FileDropzone({
   maxSize = 50 * 1024 * 1024,
   className,
   multiple = false,
+  disabled = false,
 }: FileDropzoneProps) {
   const [files, setFiles] = useState<(File & { preview?: string })[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +54,7 @@ export function FileDropzone({
 
   const remove = (target: File, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (disabled) return;
     const next = files.filter(f => f !== target);
     setFiles(next);
     onFilesAccepted(next);
@@ -59,7 +62,7 @@ export function FileDropzone({
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop, accept: acceptedTypes, maxFiles, maxSize, multiple,
+    onDrop, accept: acceptedTypes, maxFiles, maxSize, multiple, disabled,
   });
 
   const hasFiles = files.length > 0 && !multiple;
@@ -153,7 +156,7 @@ export function FileDropzone({
 
                 <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
-                    <button onClick={(e) => remove(file, e)}
+                    <button type="button" autoComplete="off" disabled={disabled} onClick={(e) => remove(file, e)}
                     className="p-2 rounded-xl text-air-sup-blue/20 hover:text-rose-400 hover:bg-rose-400/10 transition-all shrink-0">
                     <X className="w-4 h-4" />
                     </button>

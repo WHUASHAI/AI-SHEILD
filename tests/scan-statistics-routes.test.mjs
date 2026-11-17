@@ -18,13 +18,13 @@ function load(filename, modules, extra = {}) {
     fileName: filename, compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   });
   vm.runInNewContext(outputText, { exports, URL, URLSearchParams, File, FormData, Blob, Buffer,
-    console: { error() {}, warn() {} }, setTimeout: callback => { callback(); },
+    console: { error() {}, warn() {} }, AbortSignal, setTimeout: callback => { callback(); },
     require(id) { assert.ok(id in modules, `Unexpected dependency: ${id}`); return modules[id]; }, ...extra,
   });
   return exports;
 }
 
-function scanRoute(kind, { fail = false, mock = false, human = false, quota=false, flat=false, invalid=false, partial=false, invalidImage=false } = {}) {
+function scanRoute(kind, { fail = false, human = false, quota=false, partial=false, invalidImage=false } = {}) {
   const records = [];
   let providerCalls=0,externalCalls=0;
   const image = { status: 'success', request: { id: 'provider-id', timestamp: 1, operations: 1 },
@@ -53,22 +53,21 @@ function scanRoute(kind, { fail = false, mock = false, human = false, quota=fals
     zod, franc: { franc: () => 'eng' },
   }, {
     process: { env: { SIGHTENGINE_API_USER: 'synthetic-id', SIGHTENGINE_API_SECRET: 'synthetic-secret',
-      HUGGINGFACE_API_KEY: mock ? '' : 'synthetic-hf-key', SERP_API_KEY: 'synthetic-search-key' } },
-    fetch: async url => {
+      SERP_API_KEY: 'synthetic-search-key' } },
+    fetch: async () => {
       externalCalls++;
       if(quota)return Response.json({error:'Your account has run out of searches.'},{status:429});
       if (fail) return new Response(null, { status: 502 });
-      if (String(url).includes('huggingface')) {const scores=invalid?[{label:'POSITIVE',score:.9}]:[{label:'Fake',score:human?.01:.99},{label:'Real',score:human?.99:.01}];return Response.json(flat?scores:[scores]);}
       return Response.json({ organic_results: [] });
     },
   });
   return { records,get providerCalls(){return providerCalls;},get externalCalls(){return externalCalls;}, post: () => route.POST(new Request('https://shield.test/api/scan/' + kind, {
     method: 'POST', headers: { 'content-type': 'application/json', 'Idempotency-Key':'3f3ba00f-2b0d-438c-90d6-4541bff0fb24' },
-    body: JSON.stringify({ url: 'https://media.test/image.jpg', text: 'This is a substantial original sentence with enough words and characters for the plagiarism sampling procedure.' }),
+    body: JSON.stringify({ url: 'https://media.test/image.jpg', text: 'This is a substantial original sentence with enough words and characters for the plagiarism sampling procedure. '.repeat(5) }),
   })) };
 }
 
-for (const kind of ['text', 'image', 'video', 'deepfake', 'plagiarism']) test(`${kind} records exactly one completed provider-backed analysis`, async () => {
+for (const kind of ['image', 'video', 'deepfake', 'plagiarism']) test(`${kind} records exactly one completed provider-backed analysis`, async () => {
   const route = scanRoute(kind);
   const response = await route.post();
   assert.equal(response.status, 200);
@@ -84,17 +83,13 @@ for (const kind of ['image', 'video', 'deepfake', 'plagiarism']) test(`${kind} p
   assert.equal(route.records.length, 0);
 });
 
-test('missing text credentials fail without invented results or a platform scan', async () => {
-  const route = scanRoute('text', { mock: true });
+test('the retired text route returns no verdict, spends no provider calls, and records no statistics', async () => {
+  const route = scanRoute('text');
   const response=await route.post();
-  assert.equal(response.status, 503);
+  assert.equal(response.status, 410);
   assert.equal((await response.json()).result,undefined);
   assert.equal(route.records.length, 0);
-});
-
-test('a failed text provider cannot return fabricated detector scores',async()=>{
-  const route=scanRoute('text',{fail:true});const response=await route.post();
-  assert.ok(response.status>=400);assert.equal((await response.json()).confidence,undefined);assert.equal(route.records.length,0);
+  assert.equal(route.externalCalls + route.providerCalls, 0);
 });
 
 test('detector-confirmed likely-human outcomes reach the global classifier', async () => {
@@ -134,15 +129,10 @@ test('database adapter emits atomic parameterized daily increments and UTC date 
   assert.deepEqual(Array.from(reads[0].values), ['2026-10-22']);
 });
 
-for(const kind of ['text','image','video','deepfake','plagiarism'])test(kind+' quota errors stay explicit and cannot become saved verdicts',async()=>{
+for(const kind of ['image','video','deepfake','plagiarism'])test(kind+' quota errors stay explicit and cannot become saved verdicts',async()=>{
   const route=scanRoute(kind,{quota:true});const response=await route.post();
   assert.equal(response.status,429);const body=await response.json();assert.equal(body.code,'PROVIDER_LIMIT_REACHED');assert.equal(body.result,undefined);assert.equal(route.records.length,0);
   assert.equal(route.providerCalls+route.externalCalls,1);
-});
-test('flat real text scores use one classifier call and no extra plagiarism search',async()=>{
- const route=scanRoute('text',{flat:true});const response=await route.post();assert.equal(response.status,200);const body=await response.json();
- assert.equal(body.sourceModel,null);assert.equal(body.isPlagiarized,undefined);assert.equal(body.signals.length,1);assert.equal(route.externalCalls,1);
- const invalid=scanRoute('text',{invalid:true});assert.equal((await invalid.post()).status,502);assert.equal(invalid.records.length,0);
 });
 test('optional image deepfake failure is disclosed rather than claimed authentic',async()=>{
  const route=scanRoute('image',{partial:true});const response=await route.post();assert.equal(response.status,200);const body=await response.json();assert.equal(body.deepfakeAnalyzed,false);assert.match(body.providerWarning,/unavailable/);assert.equal(route.providerCalls,2);

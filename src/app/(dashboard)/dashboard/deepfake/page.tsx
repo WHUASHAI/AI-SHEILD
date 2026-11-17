@@ -5,8 +5,9 @@ import { UserX, ShieldCheck, Zap, Info, AlertTriangle, CheckCircle2, XCircle } f
 import { Button } from '@/components/ui/button';
 import { FileDropzone } from '@/components/detection/file-dropzone';
 import { cn } from '@/lib/utils';
+import { extractMediaFrames } from '@/lib/browser-media-backup';
 
-import { useScanSubmission } from '@/lib/use-scan-submission';
+import { useMediaScanSubmission } from '@/lib/use-media-scan-submission';
 
 interface DeepfakeScanResult {
   scanId: string;
@@ -19,7 +20,7 @@ interface DeepfakeScanResult {
   isVideo: boolean;
   breakdown: {
     deepfakeScore: number;
-    facesDetected: number;
+    facesDetected: number | null;
     totalFramesAnalyzed?: number;
   };
   faces: Array<{ id: number; deepfakeScore: number; verdict: string }>;
@@ -38,61 +39,7 @@ export default function DeepfakeDetectorPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [result, setResult] = useState<DeepfakeScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { submitScan, historyNotice } = useScanSubmission();
-
-  const extractFrames = async (file: File, frameCount: number): Promise<File[]> => {
-    return new Promise((resolve, reject) => {
-      const video = document.createElement('video');
-      video.style.display = 'none';
-      video.muted = true;
-      video.playsInline = true;
-      document.body.appendChild(video);
-      video.src = URL.createObjectURL(file);
-      video.load();
-
-      video.onloadedmetadata = () => {
-        const duration = video.duration;
-        const interval = duration / (frameCount + 1);
-        const frames: File[] = [];
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        let currentFrame = 1;
-
-        const captureFrame = () => {
-          if (currentFrame > frameCount) {
-            URL.revokeObjectURL(video.src);
-            if (video.parentNode) video.parentNode.removeChild(video);
-            resolve(frames);
-            return;
-          }
-          video.currentTime = currentFrame * interval;
-        };
-
-        video.onseeked = () => {
-          // Give browser decoder time to paint the frame buffer
-          setTimeout(() => {
-            if (!ctx) return;
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob((blob) => {
-              if (blob) {
-                frames.push(new File([blob], `frame_${currentFrame}.jpg`, { type: 'image/jpeg' }));
-              }
-              currentFrame++;
-              captureFrame();
-            }, 'image/jpeg', 0.8);
-          }, 150);
-        };
-
-        video.onerror = (e) => {
-          if (video.parentNode) video.parentNode.removeChild(video);
-          reject(e);
-        };
-        captureFrame();
-      };
-    });
-  };
+  const { submitScan, historyNotice, backupProgress, cancelBackup } = useMediaScanSubmission('deepfake');
 
   const handleScan = useCallback(async () => {
     if (files.length === 0) return;
@@ -103,8 +50,8 @@ export default function DeepfakeDetectorPage() {
     try {
       const formData = new FormData();
       if (files[0].type.startsWith('video/')) {
-        const extractedFrames = await extractFrames(files[0], 3);
-        extractedFrames.forEach((f, i) => formData.append(`frame_${i}`, f));
+        const extractedFrames = await extractMediaFrames(files[0], 3);
+        extractedFrames.forEach((frame, i) => { formData.append(`frame_${i}`, frame.file); formData.append(`timestamp_${i}`, String(frame.timestamp)); });
         formData.append('isFrames', 'true');
       } else {
         formData.append('file', files[0]);
@@ -122,10 +69,9 @@ export default function DeepfakeDetectorPage() {
         return;
       }
 
-      setResult(data as DeepfakeScanResult);
       setResult(data);
-    } catch {
-      setError('Network error. Please check your connection and try again.');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Deepfake analysis is unavailable. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -145,7 +91,7 @@ export default function DeepfakeDetectorPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Deepfake Detection</h1>
           <p className="text-sm text-air-sup-blue mt-0.5">
-            Powered by Sightengine — real face-swap & lip-sync manipulation detection.
+            Visual manipulation analysis with an automatic free backup.
           </p>
         </div>
       </div>
@@ -154,7 +100,7 @@ export default function DeepfakeDetectorPage() {
         {/* Left: Upload */}
         <div className="xl:col-span-3 space-y-6">
           <div className="glass-card rounded-2xl p-6 space-y-5">
-            <FileDropzone
+            <FileDropzone disabled={loading}
               onFilesAccepted={(f) => { setFiles(f); setResult(null); setError(null); }}
               acceptedTypes={{ 'video/*': ['.mp4', '.mov', '.webm'], 'image/*': ['.jpeg', '.jpg', '.png'] }}
               maxSize={200 * 1024 * 1024}
@@ -167,16 +113,20 @@ export default function DeepfakeDetectorPage() {
               </div>
             )}
 
-            <Button
+            <Button type="button" autoComplete="off"
               onClick={handleScan}
               disabled={loading || files.length === 0}
               className="w-full h-12 font-semibold text-base disabled:opacity-50 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              {loading ? 'Analyzing with Sightengine...' : 'Run Deepfake Analysis'}
+              {loading ? 'Analyzing...' : 'Run Deepfake Analysis'}
               <ShieldCheck className="w-4 h-4 ml-2" />
             </Button>
+            {loading && backupProgress && <div className="space-y-2">
+              <p role="status" aria-live="polite" className="text-xs text-air-sup-blue">{backupProgress}</p>
+              <Button type="button" autoComplete="off" variant="outline" onClick={cancelBackup}>Cancel backup analysis</Button>
+            </div>}
 
-            {loading && (
+            {loading && !backupProgress && (
               <p className="text-xs text-center text-ucla-blue animate-pulse">
                 Running face-swap & manipulation detection — please wait...
               </p>
@@ -241,9 +191,9 @@ export default function DeepfakeDetectorPage() {
                   <Info className="w-4 h-4 text-cyan-azure" /> How It Works
                 </h3>
                 <p className="text-xs text-ucla-blue leading-relaxed">
-                  Upload your image or video. Sightengine&apos;s deepfake model analyzes each face for
-                  GAN-based face-swap artifacts, facial inconsistencies, lip-sync manipulation,
-                  and biometric mismatches — in real time.
+                  Sightengine runs the primary check. If unavailable, a trained visual classifier runs
+                  on your device. Use clear portraits; the backup does not locate faces or check audio,
+                  lip-sync, or identity. Video uploads use three sampled frames.
                 </p>
               </div>
             </>
@@ -277,7 +227,7 @@ export default function DeepfakeDetectorPage() {
                   </div>
                   <div className="space-y-1 text-xs text-air-sup-blue">
                     <p><span className="text-foreground font-medium">Deepfake Score:</span> {result.breakdown.deepfakeScore}%</p>
-                    <p><span className="text-foreground font-medium">Faces Detected:</span> {result.breakdown.facesDetected}</p>
+                    <p><span className="text-foreground font-medium">Faces Detected:</span> {result.breakdown.facesDetected ?? 'Not measured'}</p>
                     {result.isVideo && (
                       <p><span className="text-foreground font-medium">Frames Analyzed:</span> {result.breakdown.totalFramesAnalyzed}</p>
                     )}

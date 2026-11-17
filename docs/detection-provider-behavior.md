@@ -1,19 +1,21 @@
 # Detection providers and honest results
 
-These changes extend the approved persistent-history implementation after the user reported fabricated text results and exhausted detector allowances. They do not add environment-variable requirements or alter the live deployment by themselves.
+These changes extend the persistent-history implementation and the 17 November 2026 switch to on-device text detection. Local source changes do not update the live deployment by themselves.
 
 ## What sightengine.ts does
 
 `src/lib/sightengine.ts` is the server API client. It sends requests to `https://api.sightengine.com/1.0` using `SIGHTENGINE_API_USER` and `SIGHTENGINE_API_SECRET` from Vercel. The endpoint is in source; secret values are intentionally not. The file handles image URLs, image uploads, video uploads, video URLs, and response interpretation. It does not host or train the detector models.
 
-The other providers remain `HUGGINGFACE_API_KEY` for text and `SERP_API_KEY` for sampled plagiarism web searches. Users do not enter these keys. Guest and account usage shares the website owner's provider allowance.
+Text detection requires no API key. Sampled plagiarism web searches use `SERP_API_KEY`; the other external detector keys remain server-only. Guest and account usage shares the website owner's external provider allowance.
+
+The Text page uses a free experimental [on-device model](local-text-detector.md), Fakespot RoBERTa. It downloads a real model and runs locally. Its paid provider option and outbound integration have been removed; the old POST endpoint returns HTTP 410. Local scores are not sent to History or platform counters.
 
 ## Corrected behavior
 
-- Text analysis uses the documented Hugging Face router and the existing RoBERTa detector model. It accepts only actual, valid Real/Fake probability responses. Missing keys, unavailable models, malformed results, and exhausted credits return an error, without a verdict or counter increment.
+- Text analysis accepts at least 50 readable English words, up to 50,000 characters. Every token-bounded passage is checked automatically; the scan-depth selector has been removed. The two successful verdicts are Likely AI-Generated and Likely Human-Created, with AI/Human model percentages. The user requested removal of the low-confidence banner; a brief accuracy note and expandable limitations remain. Unsupported inputs and failures do not become invented verdicts.
 - Removed deterministic/random text verdicts, randomly chosen generator names, invented burstiness/perplexity signals, fabricated plagiarism scores, and the extra plagiarism search from the Text route. The Plagiarism page remains the separate web-match tool.
-- The configured text model was trained on English GPT-2 outputs. It cannot reliably attribute text to ChatGPT, Claude, Gemini, or other modern generators. The result shows this limitation and discloses when only the first 2,000 characters were analyzed.
-- Provider HTTP 402/429 and recognized quota errors return a safe `PROVIDER_LIMIT_REACHED` response. Authentication/configuration failures, temporary failures, and malformed responses remain distinct. Raw upstream errors and credential-bearing URLs are not echoed.
+- The text detector cannot verify which generator wrote the text. A separate free trained source-family classifier estimates ChatGPT/OpenAI, Claude/Anthropic, Gemini/Google, or Other AI from likely-AI text. DeepSeek is not a separately trained class. These are labelled guesses, not verified origin; explicit text claims remain separate evidence and sourceModel stays null. A secondary-model failure preserves the real AI/Human result without inventing a brand. Plagiarism remains a separate tool.
+- External provider HTTP 429 and recognized quota errors return a safe `PROVIDER_LIMIT_REACHED` response. Authentication/configuration failures, temporary failures, and malformed responses remain distinct. Raw upstream errors and credential-bearing URLs are not echoed.
 - Browser submissions do not automatically retry after transport failure and reject overlapping submissions from the same mounted detector. A new intentional click remains a new operation. Existing completion receipts prevent recounting a completed operation.
 - Deepfake frame analysis stops on provider failure rather than spending more calls after a known outage/quota failure. If an optional deepfake check fails after a successful image generation check, the response explicitly warns that only generation was assessed; face/deepfake values show Not checked.
 - Plagiarism displays the actual count of sampled searches and describes its exact-web-match scope. It does not claim to inspect millions of sources, private academic indexes, paraphrasing, or structural similarity. Its percentage is a sample match rate, not a full-document plagiarism measure.
@@ -28,8 +30,6 @@ Subsequent provider/error/retry checks use local fixtures only. Do not run addit
 
 Provider references checked during implementation:
 
-- [Hugging Face text classification API](https://huggingface.co/docs/inference-providers/tasks/text-classification)
-- [HF Inference router](https://huggingface.co/docs/inference-providers/providers/hf-inference)
-- [Configured detector model and limitations](https://huggingface.co/openai-community/roberta-base-openai-detector)
+- [Fakespot RoBERTa text model](https://huggingface.co/fakespot-ai/roberta-base-ai-text-detection-v1)
 - [Sightengine operation accounting](https://sightengine.com/faq/what-is-an-operation)
 - [SerpApi status and error codes](https://serpapi.com/api-status-and-error-codes)

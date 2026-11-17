@@ -34,6 +34,8 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  /** Firefox uses this to control restoration of dynamic button state on reload. */
+  autoComplete?: 'on' | 'off';
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(

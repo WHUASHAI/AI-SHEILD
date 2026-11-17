@@ -6,7 +6,7 @@ Repository layout corrected on 22 October 2026: the active project is at the wor
 
 ## Purpose and current state
 
-Elucid AI is a web application for screening text, images, videos, and faces for possible AI generation or manipulation, plus checking text for online plagiarism matches. It combines a public site, dashboard, account screens, and server API routes. It calls external detection services rather than hosting a trained detection model.
+Elucid AI is a web application for screening text, images, videos, and faces for possible AI generation or manipulation, plus checking text for online plagiarism matches. It combines a public site, dashboard, account screens, and server API routes. It offers an experimental on-device Fakespot text detector alongside external detection services.
 
 The checkout contains 25 page components, 16 API route handlers, and 63 component files. It is a partially implemented application: real provider integrations coexist with synthetic results, browser-only personal history, database-backed aggregate counters, and unfinished account/report services. Detection scores do not prove content origin.
 
@@ -52,14 +52,15 @@ Route groups in parentheses organize layouts without appearing in URLs. Agent gu
 
 | Feature / endpoint | Actual behavior |
 | --- | --- |
-| Text: `POST /api/scan/text` | Detects language with franc. Attempts Hugging Face RoBERTa inference on the first 2,000 characters. Missing/failed inference falls back to scores derived from a text hash and a synthetic model attribution. Optional SerpAPI search has mock matches when its key is absent. Some search scores are randomized. |
+| Free on-device text mode | Sole Text page mode. Uses pinned Fakespot RoBERTa weights for at least 50 words of English. Every passage is checked automatically, with no scan-depth selector. A separate trained XLM-RoBERTa model estimates OpenAI, Anthropic, Google, or Other AI source families for AI results. Binary likely AI/human labels, complementary scores, coverage and passage excerpts. No confidence banner or technical download/API intro. Source families are guesses; no verified origin is claimed. No paid detection API, History write, or global counter update. See `docs/local-text-detector.md`. |
+| Text: `POST /api/scan/text` | Retired paid integration. Returns HTTP 410 instructing old clients to refresh and use the on-device detector; no outbound call, verdict, or statistics update. |
 | Image: `POST /api/scan/image` | Calls Sightengine for generation and face-manipulation scores; requires provider credentials. Returns verdict, signals, and face data. |
 | Video: `POST /api/scan/video` | URL analysis through Sightengine, or uploaded sampled frames through its image API. The video page samples three frames in the browser. Uploaded-frame mode does not analyze audio. |
 | Deepfake: `POST /api/scan/deepfake` | Calls Sightengine for faces in images or sampled video frames. Video verdict uses the maximum detected face score. Some displayed signals are derived from that score rather than separate measurements. |
 | Plagiarism: `POST /api/scan/plagiarism` | Samples sentences and queries SerpAPI for quoted web matches; requires `SERP_API_KEY`. Coverage is limited to searched/indexed text. |
 | URL: `POST /api/scan/url` | Validates URL syntax and returns randomized demo scores; it does not analyze the destination content. |
 
-Provider environment names include `SIGHTENGINE_API_USER`, `SIGHTENGINE_API_SECRET`, `HUGGINGFACE_API_KEY`, and `SERP_API_KEY`; text also accepts `SERPAPI_API_KEY`. Integration code is not evidence that credentials, accounts, or remote endpoints currently work.
+Provider environment names include `SIGHTENGINE_API_USER`, `SIGHTENGINE_API_SECRET`, and `SERP_API_KEY`. Text detection downloads model files from Hugging Face without hosted inference credits or an API key. It does not query the plagiarism search provider. See `docs/local-text-detector.md`. Integration code alone does not establish that live credentials or provider accounts work.
 
 ## Accounts and access
 

@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { FileDropzone } from '@/components/detection/file-dropzone';
 import { cn } from '@/lib/utils';
+import { extractMediaFrames } from '@/lib/browser-media-backup';
 
 interface VideoScanResult {
   scanId:       string;
@@ -40,7 +41,7 @@ const RESULT_CONFIG = {
 
 type InputMode = 'upload' | 'url';
 
-import { useScanSubmission } from '@/lib/use-scan-submission';
+import { useMediaScanSubmission } from '@/lib/use-media-scan-submission';
 
 
 export default function VideoDetectorPage() {
@@ -51,63 +52,9 @@ export default function VideoDetectorPage() {
   const [result,  setResult]  = useState<VideoScanResult | null>(null);
   const [error,   setError]   = useState<string | null>(null);
   const [hint,    setHint]    = useState<string | null>(null);
-  const { submitScan, historyNotice } = useScanSubmission();
+  const { submitScan, historyNotice, backupProgress, cancelBackup } = useMediaScanSubmission('video');
 
   const reset = () => { setResult(null); setError(null); setHint(null); };
-
-  const extractFrames = async (file: File, frameCount: number): Promise<File[]> => {
-    return new Promise((resolve, reject) => {
-      const video = document.createElement('video');
-      video.style.display = 'none';
-      video.muted = true;
-      video.playsInline = true;
-      document.body.appendChild(video);
-      video.src = URL.createObjectURL(file);
-      video.load();
-
-      video.onloadedmetadata = () => {
-        const duration = video.duration;
-        const interval = duration / (frameCount + 1);
-        const frames: File[] = [];
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        let currentFrame = 1;
-
-        const captureFrame = () => {
-          if (currentFrame > frameCount) {
-            URL.revokeObjectURL(video.src);
-            if (video.parentNode) video.parentNode.removeChild(video);
-            resolve(frames);
-            return;
-          }
-          video.currentTime = currentFrame * interval;
-        };
-
-        video.onseeked = () => {
-          // Give browser decoder time to paint the frame buffer
-          setTimeout(() => {
-            if (!ctx) return;
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob((blob) => {
-              if (blob) {
-                frames.push(new File([blob], `frame_${currentFrame}.jpg`, { type: 'image/jpeg' }));
-              }
-              currentFrame++;
-              captureFrame();
-            }, 'image/jpeg', 0.8);
-          }, 150);
-        };
-
-        video.onerror = (e) => {
-          if (video.parentNode) video.parentNode.removeChild(video);
-          reject(e);
-        };
-        captureFrame();
-      };
-    });
-  };
 
   const handleScan = useCallback(async () => {
     const isUpload = mode === 'upload';
@@ -121,9 +68,9 @@ export default function VideoDetectorPage() {
       let res: Response;
 
       if (isUpload) {
-        const extractedFrames = await extractFrames(files[0], 3); // Extract 3 keyframes for accuracy
+        const extractedFrames = await extractMediaFrames(files[0], 3);
         const formData = new FormData();
-        extractedFrames.forEach((f, i) => formData.append(`frame_${i}`, f));
+        extractedFrames.forEach((frame, i) => { formData.append(`frame_${i}`, frame.file); formData.append(`timestamp_${i}`, String(frame.timestamp)); });
         formData.append('isFrames', 'true');
         res = await submitScan('/api/scan/video', { method: 'POST', body: formData });
       } else {
@@ -141,8 +88,8 @@ export default function VideoDetectorPage() {
         return;
       }
       setResult(data);
-    } catch {
-      setError('Network error. Please check your connection and try again.');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Video analysis is unavailable. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -163,7 +110,7 @@ export default function VideoDetectorPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Video Analysis</h1>
           <p className="text-sm text-air-sup-blue mt-0.5">
-            Powered by Sightengine — frame-by-frame AI &amp; deepfake detection.
+            Video analysis with an automatic free backup.
           </p>
         </div>
       </div>
@@ -175,7 +122,7 @@ export default function VideoDetectorPage() {
 
             {/* Mode tabs */}
             <div className="flex rounded-xl overflow-hidden border border-white/10 bg-space-cadet-dark/40 p-1 gap-1">
-              <button
+              <button type="button" autoComplete="off" disabled={loading}
                 onClick={() => { setMode('upload'); reset(); }}
                 className={cn(
                   'flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200',
@@ -187,7 +134,7 @@ export default function VideoDetectorPage() {
                 <Upload className="w-4 h-4" />
                 Upload File
               </button>
-              <button
+              <button type="button" autoComplete="off" disabled={loading}
                 onClick={() => { setMode('url'); reset(); }}
                 className={cn(
                   'flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200',
@@ -203,7 +150,7 @@ export default function VideoDetectorPage() {
 
             {/* Upload mode */}
             {mode === 'upload' && (
-              <FileDropzone
+              <FileDropzone disabled={loading}
                 onFilesAccepted={(f) => { setFiles(f); reset(); }}
                 acceptedTypes={{
                   'video/mp4':       ['.mp4'],
@@ -222,7 +169,7 @@ export default function VideoDetectorPage() {
                 <div className="relative flex items-center">
                   <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-air-sup-blue/50 pointer-events-none" />
                   <input
-                    type="url"
+                    type="url" autoComplete="off" disabled={loading}
                     value={url}
                     onChange={(e) => { setUrl(e.target.value); reset(); }}
                     placeholder="https://example.com/video.mp4"
@@ -232,13 +179,13 @@ export default function VideoDetectorPage() {
                       'focus:border-cyan-azure/50 focus:ring-2 focus:ring-cyan-azure/10 transition-all',
                     )}
                   />
-                  <button
+                  <button type="button" autoComplete="off" disabled={loading}
                     onClick={async () => {
                       try {
                         const text = await navigator.clipboard.readText();
                         setUrl(text);
                         reset();
-                      } catch (err) {
+                      } catch {
                         console.error('Clipboard permission denied');
                       }
                     }}
@@ -266,10 +213,9 @@ export default function VideoDetectorPage() {
               </div>
             )}
 
-            <Button
+            <Button type="button" autoComplete="off"
               onClick={handleScan}
               disabled={loading || !canRun}
-              suppressHydrationWarning
               className="w-full h-12 font-semibold text-base disabled:opacity-50 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {loading ? (
@@ -284,8 +230,12 @@ export default function VideoDetectorPage() {
                 </>
               )}
             </Button>
+            {loading && backupProgress && <div className="space-y-2">
+              <p role="status" aria-live="polite" className="text-xs text-air-sup-blue">{backupProgress}</p>
+              <Button type="button" autoComplete="off" variant="outline" onClick={cancelBackup}>Cancel backup analysis</Button>
+            </div>}
 
-            {loading && (
+            {loading && !backupProgress && (
               <p className="text-xs text-center text-ucla-blue animate-pulse">
                 {mode === 'url'
                   ? 'Fetching and analyzing video via URL — this may take a moment...'
@@ -367,12 +317,12 @@ export default function VideoDetectorPage() {
                   <Info className="w-4 h-4 text-cyan-azure" /> How It Works
                 </h3>
                 <p className="text-xs text-ucla-blue leading-relaxed">
-                  Sightengine analyzes temporal frames, motion consistency, and facial artifacts to detect
-                  AI generation (Sora, Runway, Pika, Kling) and deepfake manipulation in real-time.
+                  Sightengine runs the primary check. When unavailable, local image and deepfake classifiers
+                  analyze three sampled frames. The backup does not analyze audio, lip-sync, or motion between frames.
                 </p>
                 <div className="flex flex-col gap-1.5 text-xs text-air-sup-blue/70">
                   <p>📁 <span className="font-medium">File upload:</span> MP4, MOV, WebM, AVI, MKV (max 200 MB)</p>
-                  <p>🔗 <span className="font-medium">URL:</span> Direct public video links or HLS streams</p>
+                  <p>🔗 <span className="font-medium">URL:</span> Public video links; backup requires a downloadable, browser-readable video</p>
                 </div>
               </div>
             </>

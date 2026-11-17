@@ -17,10 +17,10 @@ interface ScanResult {
   overallScore: number;
   breakdown: {
     aiGenerated: number;
-    photo: number;
-    illustration: number;
-    facesDetected: number;
-    deepfakeScore: number;
+    photo: number | null;
+    illustration: number | null;
+    facesDetected: number | null;
+    deepfakeScore: number | null;
     isEnhanced: boolean;
   };
   signals: Array<{ name: string; score: number; description: string }>;
@@ -37,7 +37,7 @@ const RESULT_CONFIG = {
   inconclusive: { icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', badge: 'Inconclusive' },
 };
 
-import { useScanSubmission } from '@/lib/use-scan-submission';
+import { useMediaScanSubmission } from '@/lib/use-media-scan-submission';
 
 
 export default function ImageDetectorPage() {
@@ -45,7 +45,7 @@ export default function ImageDetectorPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { submitScan, historyNotice } = useScanSubmission();
+  const { submitScan, historyNotice, backupProgress, cancelBackup } = useMediaScanSubmission('image');
 
   const handleScan = useCallback(async () => {
     if (files.length === 0) return;
@@ -69,8 +69,8 @@ export default function ImageDetectorPage() {
         return;
       }
       setResult(data);
-    } catch {
-      setError('Network error. Please check your connection and try again.');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Image analysis is unavailable. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ export default function ImageDetectorPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Image & Enhancement Analysis</h1>
           <p className="text-sm text-air-sup-blue mt-0.5">
-            Powered by Sightengine — real AI generation & deepfake detection.
+            AI image analysis with an automatic free backup.
           </p>
         </div>
       </div>
@@ -99,7 +99,7 @@ export default function ImageDetectorPage() {
         {/* Left: Upload */}
         <div className="xl:col-span-3 space-y-6">
           <div className="glass-card rounded-2xl p-6 space-y-5">
-            <FileDropzone
+              <FileDropzone disabled={loading}
               onFilesAccepted={(f) => { setFiles(f); setResult(null); setError(null); }}
               acceptedTypes={{ 'image/*': ['.jpeg', '.jpg', '.png', '.webp'] }}
               maxSize={50 * 1024 * 1024}
@@ -112,15 +112,19 @@ export default function ImageDetectorPage() {
               </div>
             )}
 
-            <Button
+            <Button type="button" autoComplete="off"
               onClick={handleScan}
               disabled={loading || files.length === 0}
               suppressHydrationWarning
               className="w-full h-12 font-semibold text-base disabled:opacity-50 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              {loading ? 'Analyzing with Sightengine...' : 'Run Comprehensive Analysis'}
+              {loading ? 'Analyzing...' : 'Run Comprehensive Analysis'}
               <ShieldCheck className="w-4 h-4 ml-2" />
             </Button>
+            {loading && backupProgress && <div className="space-y-2">
+              <p role="status" aria-live="polite" className="text-xs text-air-sup-blue">{backupProgress}</p>
+              <Button type="button" autoComplete="off" variant="outline" onClick={cancelBackup}>Cancel backup analysis</Button>
+            </div>}
           </div>
 
           {/* Signals breakdown */}
@@ -186,12 +190,12 @@ export default function ImageDetectorPage() {
                   <Info className="w-4 h-4 text-cyan-azure" /> How It Works
                 </h3>
                 <p className="text-xs text-ucla-blue leading-relaxed">
-                  Upload your image and our AI models will analyze for GAN artifacts, Stable Diffusion patterns,
-                  DALL-E signatures, Midjourney textures, and deepfake facial manipulations — all in real time via Sightengine.
+                  Sightengine runs the primary check. If its credits run out or the service is unavailable,
+                  a trained image classifier runs on your device automatically.
                 </p>
                 <div className="flex items-center gap-2 text-xs text-cyan-azure font-medium">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Powered by Sightengine</span>
+                  <span>Automatic on-device backup</span>
                 </div>
               </div>
             </>
@@ -227,8 +231,8 @@ export default function ImageDetectorPage() {
                   </div>
                   <div className="space-y-1 text-xs text-air-sup-blue">
                     <p><span className="text-foreground font-medium">AI Score:</span> {result.breakdown.aiGenerated}%</p>
-                  <p><span className="text-foreground font-medium">Photo:</span> {result.breakdown.photo}%</p>
-                  {result.breakdown.illustration > 5 && (
+                  <p><span className="text-foreground font-medium">Photo:</span> {result.breakdown.photo == null ? 'Not measured' : result.breakdown.photo + '%'}</p>
+                  {(result.breakdown.illustration ?? 0) > 5 && (
                     <p><span className="text-foreground font-medium">Illustration:</span> {result.breakdown.illustration}%</p>
                   )}
                   {result.breakdown.isEnhanced && (
