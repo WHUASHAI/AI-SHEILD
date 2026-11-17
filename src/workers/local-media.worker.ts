@@ -19,8 +19,10 @@ self.addEventListener('message', async (event: MessageEvent<{ id: string; kind: 
       if (!Number.isInteger(frame.width) || !Number.isInteger(frame.height) || frame.width < 1 || frame.height < 1
         || frame.width > 1024 || frame.height > 1024 || frame.data.length !== frame.width * frame.height * 4) throw new Error('Invalid image pixels.');
       const image = new RawImage(frame.data, frame.width, frame.height, 4).rgb();
-      const prediction: MediaPrediction = { timestamp: frame.timestamp };
+      const prediction: MediaPrediction = { timestamp: frame.timestamp, faceCount: frame.faces?.length };
       for (const modelKind of required) {
+        if (modelKind === 'deepfake' && (!Array.isArray(frame.faces) || frame.faces.length > 5)) throw new Error('Missing face detection.');
+        if (modelKind === 'deepfake' && !frame.faces!.length) continue;
         const config = MEDIA_MODELS[modelKind];
         if (!models[modelKind]) {
           progress(`Preparing free ${modelKind} backup. The first use downloads its model...`);
@@ -34,7 +36,13 @@ self.addEventListener('message', async (event: MessageEvent<{ id: string; kind: 
         }
         const classifier = await models[modelKind]!;
         progress(`Checking ${isVideo ? 'sampled frame' : 'image'} ${index + 1} of ${frames.length} with the ${modelKind} backup...`);
-        const score = readMediaScore(await classifier(image, { top_k: 2 }), modelKind);
+        const inputs = modelKind === 'image' ? [image] : frame.faces!.map(face => {
+          if (face.width < 1 || face.height < 1 || face.width > 1024 || face.height > 1024 || face.data.length !== face.width * face.height * 4) throw new Error('Invalid face crop.');
+          return new RawImage(face.data, face.width, face.height, 4).rgb();
+        });
+        const scores: number[] = [];
+        for (const input of inputs) scores.push(readMediaScore(await classifier(input, { top_k: 2 }), modelKind));
+        const score = Math.max(...scores);
         if (modelKind === 'image') prediction.ai = score; else prediction.deepfake = score;
       }
       predictions.push(prediction);

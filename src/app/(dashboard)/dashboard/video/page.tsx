@@ -20,13 +20,13 @@ interface VideoScanResult {
   overallScore: number;
   breakdown: {
     avgAiGeneratedScore:    number;
-    avgDeepfakeScore:       number;
+    avgDeepfakeScore:       number | null;
     totalFramesAnalyzed:    number;
     aiSuspiciousFrames:     number;
     deepfakeSuspiciousFrames: number;
   };
   signals:   Array<{ name: string; score: number; description: string }>;
-  timeline:  Array<{ timestamp: number; aiScore: number; deepfakeScore: number }>;
+  timeline:  Array<{ timestamp: number; aiScore: number; deepfakeScore: number | null }>;
   limitations: string[];
   disclaimer:  string;
 }
@@ -252,11 +252,11 @@ export default function VideoDetectorPage() {
               </h3>
               <div className="flex items-end gap-0.5 h-16">
                 {result.timeline.map((frame, i) => {
-                  const maxScore = Math.max(frame.aiScore, frame.deepfakeScore);
+                  const maxScore = Math.max(frame.aiScore, frame.deepfakeScore ?? 0);
                   return (
                     <div
                       key={i}
-                      title={`${frame.timestamp.toFixed(1)}s — AI: ${frame.aiScore}%, Deepfake: ${frame.deepfakeScore}%`}
+                      title={`${frame.timestamp.toFixed(1)}s — AI: ${frame.aiScore}%, Deepfake: ${frame.deepfakeScore == null ? 'No clear face' : frame.deepfakeScore + '%'}`}
                       className={cn(
                         'flex-1 rounded-sm transition-all',
                         maxScore >= 70 ? 'bg-red-400/80' : maxScore >= 40 ? 'bg-amber-400/80' : 'bg-emerald-400/80',
@@ -318,7 +318,7 @@ export default function VideoDetectorPage() {
                 </h3>
                 <p className="text-xs text-ucla-blue leading-relaxed">
                   Sightengine runs the primary check. When unavailable, local image and deepfake classifiers
-                  analyze three sampled frames. The backup does not analyze audio, lip-sync, or motion between frames.
+                  analyze three sampled frames and detected face regions. The backup does not analyze audio, lip-sync, or motion between frames.
                 </p>
                 <div className="flex flex-col gap-1.5 text-xs text-air-sup-blue/70">
                   <p>📁 <span className="font-medium">File upload:</span> MP4, MOV, WebM, AVI, MKV (max 200 MB)</p>
@@ -356,7 +356,7 @@ export default function VideoDetectorPage() {
                   </div>
                   <div className="space-y-1 text-xs text-air-sup-blue">
                     <p><span className="text-foreground font-medium">AI Generated:</span> {result.breakdown.avgAiGeneratedScore}%</p>
-                    <p><span className="text-foreground font-medium">Deepfake:</span> {result.breakdown.avgDeepfakeScore}%</p>
+                    <p><span className="text-foreground font-medium">Deepfake:</span> {result.breakdown.avgDeepfakeScore == null ? 'No clear faces detected' : result.breakdown.avgDeepfakeScore + '%'}</p>
                     <p><span className="text-foreground font-medium">Frames:</span> {result.breakdown.totalFramesAnalyzed}</p>
                     <p><span className="text-foreground font-medium">Flagged:</span> {result.breakdown.aiSuspiciousFrames}</p>
                   </div>

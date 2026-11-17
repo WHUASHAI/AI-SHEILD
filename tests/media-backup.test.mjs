@@ -20,11 +20,11 @@ test('local media output reflects real frame scores and does not invent faces, p
   assert.equal(image.deepfakeAnalyzed,false); assert.equal(image.breakdown.deepfakeScore,null);
   assert.equal(image.historySaved,false); assert.equal(image.statisticsRecorded,false);
   assert.equal(image.sourceModel,undefined); assert.equal(image.mode,'local-backup');
-  const deepfake = core.localMediaResult('deepfake',[{timestamp:0,deepfake:.1}],false);
+  const deepfake = core.localMediaResult('deepfake',[{timestamp:0,deepfake:.1,faceCount:1}],false);
   assert.equal(deepfake.result,'human'); assert.equal(deepfake.label,'Lower Deepfake Signals');
   assert.equal(deepfake.overallScore,90); assert.equal(deepfake.faces.length,0);
   const video = core.localMediaResult('video',[
-    {timestamp:2.5,ai:.9,deepfake:.1},{timestamp:5,ai:.7,deepfake:.2},{timestamp:7.5,ai:.8,deepfake:.3},
+    {timestamp:2.5,ai:.9,deepfake:.1,faceCount:1},{timestamp:5,ai:.7,deepfake:.2,faceCount:1},{timestamp:7.5,ai:.8,deepfake:.3,faceCount:1},
   ],true);
   assert.equal(video.breakdown.totalFramesAnalyzed,3); assert.equal(video.breakdown.avgAiGeneratedScore,80);
   assert.equal(video.breakdown.avgDeepfakeScore,20); assert.equal(video.timeline[2].timestamp,7.5);
@@ -69,7 +69,7 @@ test('service outages can use backup but model failure and cancellation produce 
   assert.equal((await cached.json()).mode,'local-backup');
 });
 
-function workerFixture({failure=false,invalid=false}={}) {
+function workerFixture({failure=false,invalid=false,noFaces=false}={}) {
   let listener; const messages=[],loads=[];
   class RawImage { rgb(){return this;} }
   load('src/workers/local-media.worker.ts',{
@@ -80,8 +80,19 @@ function workerFixture({failure=false,invalid=false}={}) {
       };
     }},'../lib/local-media-detector':core,
   },{self:{addEventListener:(_name,fn)=>{listener=fn;},postMessage:message=>messages.push(message)}});
-  return {messages,loads,run:(kind,count=1)=>listener({data:{id:'fixture',kind,isVideo:count>1||kind==='video',frames:Array.from({length:count},(_,i)=>({data:new Uint8Array(4),width:1,height:1,timestamp:i*2}))}})};
+  return {messages,loads,run:(kind,count=1)=>listener({data:{id:'fixture',kind,isVideo:count>1||kind==='video',frames:Array.from({length:count},(_,i)=>({data:new Uint8Array(4),width:1,height:1,timestamp:i*2,faces:noFaces?[]:[{data:new Uint8Array(4),width:1,height:1,timestamp:i*2}]}))}})};
 }
+
+test('no-face media cannot be assigned a deepfake or authenticity verdict, and video still checks AI generation', async () => {
+  const photo=workerFixture({noFaces:true}); await photo.run('deepfake');
+  const result=photo.messages.at(-1).result;
+  assert.equal(photo.loads.length,0); assert.equal(result.result,'inconclusive');
+  assert.equal(result.overallScore,null); assert.equal(result.deepfakeAnalyzed,false);
+  assert.equal(result.breakdown.deepfakeScore,null); assert.equal(result.breakdown.facesDetected,0);
+  const video=workerFixture({noFaces:true}); await video.run('video',3);
+  assert.equal(video.loads.length,1); assert.equal(video.messages.at(-1).result.result,'ai_generated');
+  assert.equal(video.messages.at(-1).result.breakdown.avgDeepfakeScore,null);
+});
 
 test('media worker runs two pinned trained models for video, reuses them across frames, and covers every supplied frame', async () => {
   const worker=workerFixture(); await worker.run('video',3); await worker.run('image');

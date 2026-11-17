@@ -112,6 +112,10 @@ export async function runMediaBackup(kind: MediaKind, init: RequestInit, progres
   if (!files.length || files.length > MAX_MEDIA_FRAMES || (!isVideo && files[0].file.size > 20 * 1024 * 1024)) throw new Error('No usable media was supplied to the backup.');
   const frames: MediaPixels[] = [];
   for (const item of files) frames.push(await imagePixels(item.file, item.timestamp, signal));
+  if (kind !== 'image') {
+    const { addFaceCrops } = await import('./local-face-crops');
+    await addFaceCrops(frames, progress, signal);
+  }
   checkAbort(signal);
   return new Promise((resolve, reject) => {
     let worker: Worker;
@@ -132,7 +136,7 @@ export async function runMediaBackup(kind: MediaKind, init: RequestInit, progres
       else finish(new Error(event.data.message ?? 'The backup could not run. No verdict was generated.'));
     };
     worker.onerror = () => finish(new Error('The backup worker could not run. Try a current desktop browser.'));
-    try { worker.postMessage({ id, kind, isVideo, frames }, frames.map(frame => frame.data.buffer)); }
+    try { worker.postMessage({ id, kind, isVideo, frames }, frames.flatMap(frame => [frame.data.buffer, ...(frame.faces ?? []).map(face => face.data.buffer)])); }
     catch { finish(new Error('The backup could not read the image pixels.')); }
   });
 }

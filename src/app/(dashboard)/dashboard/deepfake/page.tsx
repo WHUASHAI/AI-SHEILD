@@ -13,13 +13,14 @@ interface DeepfakeScanResult {
   scanId: string;
   status: string;
   provider: string;
-  result: 'deepfake' | 'human';
+  result: 'deepfake' | 'human' | 'inconclusive';
+  mode?: string;
   label: string;
   confidence: number;
-  overallScore: number;
+  overallScore: number | null;
   isVideo: boolean;
   breakdown: {
-    deepfakeScore: number;
+    deepfakeScore: number | null;
     facesDetected: number | null;
     totalFramesAnalyzed?: number;
   };
@@ -32,6 +33,7 @@ interface DeepfakeScanResult {
 const RESULT_CONFIG = {
   deepfake: { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
   human: { icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+  inconclusive: { icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
 };
 
 export default function DeepfakeDetectorPage() {
@@ -192,7 +194,7 @@ export default function DeepfakeDetectorPage() {
                 </h3>
                 <p className="text-xs text-ucla-blue leading-relaxed">
                   Sightengine runs the primary check. If unavailable, a trained visual classifier runs
-                  on your device. Use clear portraits; the backup does not locate faces or check audio,
+                  on your device. The backup checks detected face regions; it does not check audio,
                   lip-sync, or identity. Video uploads use three sampled frames.
                 </p>
               </div>
@@ -210,7 +212,7 @@ export default function DeepfakeDetectorPage() {
 
                 {/* Confidence ring */}
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="relative w-20 h-20">
+                  {result.overallScore != null && <div className="relative w-20 h-20">
                     <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
                       <circle cx="40" cy="40" r="32" fill="none" stroke="currentColor" strokeWidth="6" className="text-space-cadet-dark/40" />
                       <circle
@@ -224,10 +226,10 @@ export default function DeepfakeDetectorPage() {
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span className={cn('text-lg font-bold', config?.color)}>{result.overallScore}%</span>
                     </div>
-                  </div>
+                  </div>}
                   <div className="space-y-1 text-xs text-air-sup-blue">
-                    <p><span className="text-foreground font-medium">Deepfake Score:</span> {result.breakdown.deepfakeScore}%</p>
-                    <p><span className="text-foreground font-medium">Faces Detected:</span> {result.breakdown.facesDetected ?? 'Not measured'}</p>
+                    <p><span className="text-foreground font-medium">Deepfake Score:</span> {result.breakdown.deepfakeScore == null ? 'Not evaluated' : result.breakdown.deepfakeScore + '%'}</p>
+                    <p><span className="text-foreground font-medium">{result.mode === 'local-backup' ? 'Face Crops Checked:' : 'Faces Detected:'}</span> {result.breakdown.facesDetected ?? 'Not measured'}</p>
                     {result.isVideo && (
                       <p><span className="text-foreground font-medium">Frames Analyzed:</span> {result.breakdown.totalFramesAnalyzed}</p>
                     )}
