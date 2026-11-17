@@ -4,16 +4,18 @@ import { cleanLocalText, LOCAL_TEXT_MODEL, LOCAL_TEXT_REVISION, localTextResult,
   selectTextPassages, validateLocalText, localTextWords, findPlatformMentions, findPlatformClues, LocalTextInputError,
   type LocalTextDepth } from '../lib/local-text-detector';
 import { estimateSourceFamily } from './source-family-model';
+import { loadCompactTextModel, COMPACT_TEXT_MODEL, COMPACT_TEXT_REVISION } from './compact-text-model';
 
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 // Works without cross-origin isolation / SharedArrayBuffer on the deployed site.
 env.backends.onnx.wasm!.numThreads = 1;
 let classifier: Promise<TextClassificationPipeline> | null = null;
+let classifierCompact = false;
 let busy = false;
 
-self.addEventListener('message', async (event: MessageEvent<{ id: string; text: string; depth?: LocalTextDepth }>) => {
-  const { id, text, depth = 'thorough' } = event.data;
+self.addEventListener('message', async (event: MessageEvent<{ id: string; text: string; depth?: LocalTextDepth; compact?: boolean }>) => {
+  const { id, text, depth = 'thorough', compact = false } = event.data;
   if (busy) { self.postMessage({ id, type: 'error', message: 'A scan is already running.' }); return; }
   busy = true;
   const progress = (message: string) => self.postMessage({ id, type: 'progress', message });
@@ -30,9 +32,11 @@ self.addEventListener('message', async (event: MessageEvent<{ id: string; text: 
     const unique = new Set(words.map(word => word.toLowerCase())).size;
     if (language !== 'eng') throw new LocalTextInputError('Unable to analyze: this detector supports English prose only. No authorship verdict was generated.');
     if (unique < 8 || unique / words.length < 0.02) throw new LocalTextInputError('Unable to analyze: the input is too repetitive for a useful prediction.');
-    progress('Loading the local model. The first download is about 499 MB; keep this tab open.');
+    progress(compact ? 'Loading the smaller detector. The first download is about 125 MB; keep this tab open.' : 'Loading the local model. The first download is about 499 MB; keep this tab open.');
+    if (classifier && classifierCompact !== compact) { await (await classifier).dispose(); classifier = null; }
     if (!classifier) {
-      classifier = pipeline<'text-classification'>('text-classification', LOCAL_TEXT_MODEL, {
+      classifierCompact = compact;
+      classifier = compact ? loadCompactTextModel(progress) : pipeline<'text-classification'>('text-classification', LOCAL_TEXT_MODEL, {
         revision: LOCAL_TEXT_REVISION, dtype: 'fp32', device: 'wasm',
         progress_callback: (event: { status: string; file?: string; progress?: number }) => {
           if (event.status === 'progress' && event.file?.endsWith('.onnx')) {
@@ -55,6 +59,7 @@ self.addEventListener('message', async (event: MessageEvent<{ id: string; text: 
     const result = localTextResult({ wordCount: words.length, language, languageUncertain,
       platformMentions: findPlatformMentions(text), platformClues: findPlatformClues(text),
       passages, totalPassages: selected.totalPassages, totalTokens: tokens.length });
+    if (compact) { result.modelVersion = `${COMPACT_TEXT_MODEL}@${COMPACT_TEXT_REVISION}:int8`; result.provider = 'Fakespot on-device (compact)'; }
     if (result.result === 'Likely AI-Generated') {
       try { result.platformGuess = await estimateSourceFamily(cleaned, progress); }
       catch (error) {
@@ -64,6 +69,7 @@ self.addEventListener('message', async (event: MessageEvent<{ id: string; text: 
     }
     self.postMessage({ id, type: 'result', result });
   } catch (error) {
-    self.postMessage({ id, type: 'error', message: error instanceof LocalTextInputError ? error.message : 'The local detector could not run. Check the download connection and available memory, or try a desktop browser. No verdict was generated.' });
+    self.postMessage({ id, type: 'error', recoverable: !(error instanceof LocalTextInputError),
+      message: error instanceof LocalTextInputError ? error.message : 'The detector could not download or run its model. Check your connection, close other heavy tabs, and retry. No verdict was generated.' });
   } finally { busy = false; }
 });

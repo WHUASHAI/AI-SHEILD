@@ -125,6 +125,7 @@ function workerFixture({ language = 'eng', fail = false, invalid = false, realLa
   load('src/workers/local-text.worker.ts', {
     '@huggingface/transformers': { env: { backends: { onnx: { wasm: {} } } }, pipeline: async (...args) => { loads.push(args); return detector; } },
     franc: { francAll: realLanguage ? francAll : () => [[language, 1]] }, '../lib/local-text-detector': core,
+    './compact-text-model': { COMPACT_TEXT_MODEL: 'compact-fixture', COMPACT_TEXT_REVISION: 'revision', loadCompactTextModel: async () => detector },
     './source-family-model': { estimateSourceFamily: async text => {
       sourceCalls.push(text);
       if (sourceFailure) throw new Error('Source model unavailable');
