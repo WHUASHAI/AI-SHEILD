@@ -2,7 +2,7 @@ import { FaceDetector, FilesetResolver } from '@mediapipe/tasks-vision';
 import type { MediaPixels } from './local-media-detector';
 
 export async function addFaceCrops(frames: MediaPixels[], progress: (text: string) => void, signal: AbortSignal) {
-  progress('Locating faces for the free deepfake backup...');
+  progress('Locating faces…');
   const files = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3/wasm');
   const detector = await FaceDetector.createFromOptions(files, {
     baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite', delegate: 'CPU' },

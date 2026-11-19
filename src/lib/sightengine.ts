@@ -18,18 +18,19 @@ export interface SightengineImageResponse {
   status: 'success' | 'failure';
   request: { id: string; timestamp: number; operations: number };
   /**
-   * Returned by the `ai-generated` model:
+   * Returned by the `genai` and/or `deepfake` models:
    * - ai_generated: probability the image was fully AI-created
    * - photo:        probability it is a real camera photograph
    * - illustration: probability it is a human-made illustration/graphic
    */
   type?: {
-    ai_generated:  number;
-    photo:         number;
-    illustration:  number;
-    other:         number;
+    ai_generated?: number;
+    photo?: number;
+    illustration?: number;
+    other?: number;
+    deepfake?: number;
   };
-  /** Per-face deepfake scores — returned by the `deepfake` model */
+  /** Optional face metadata; the deepfake model itself returns type.deepfake. */
   faces?: Array<{
     id:               number;
     deepfake:         number;
@@ -45,8 +46,8 @@ export interface SightengineVideoResponse {
   /** Per-frame analysis data */
   data?: {
     frames: Array<{
-      info:  { ts: number };
-      type?: { ai_generated: number; photo: number };
+      info: { ts?: number; position?: number };
+      type?: SightengineImageResponse['type'];
       faces?: Array<{ id: number; deepfake: number }>;
     }>;
   };
@@ -183,6 +184,19 @@ export async function checkVideoUrl(
 
 // ─── Score interpreters ───────────────────────────────────────────────────────
 
+/** The documented deepfake result is an image/frame score, not a faces list.
+ * A missing score is a provider failure, never evidence of missing faces.
+ * https://sightengine.com/docs/deepfake-detection
+ */
+export function readDeepfakeScore(response: Pick<SightengineImageResponse, 'status' | 'type' | 'error'>): number {
+  const score = response.type?.deepfake;
+  if (response.status !== 'success' || response.error || typeof score !== 'number'
+    || !Number.isFinite(score) || score < 0 || score > 1) {
+    throw new ProviderError('Deepfake analysis returned no usable score. Please try later.', 502, 'INVALID_PROVIDER_RESPONSE');
+  }
+  return score;
+}
+
 /** Converts a Sightengine ai_generated score (0–1) into a verdict. */
 export function interpretAiScore(score: number): {
   score:  number;
@@ -202,7 +216,7 @@ export function interpretDeepfakeScore(score: number): {
   label:  string;
 } {
   const pct = Math.round(score * 100);
-  if (pct >= 50) return { score: pct, result: 'deepfake', label: 'Deepfake Detected' };
+  if (score >= 0.5) return { score: pct, result: 'deepfake', label: 'Deepfake Detected' };
   return          { score: pct, result: 'human',    label: 'Likely Authentic' };
 }
 
@@ -214,15 +228,10 @@ export function avgVideoAiScore(response: SightengineVideoResponse): number {
   return scores.reduce((a, b) => a + b, 0) / scores.length;
 }
 
-/** Averages deepfake scores across all detected faces across all video frames. */
+/** Averages the documented type.deepfake score across analyzed video frames. */
 export function avgVideoDeepfakeScore(response: SightengineVideoResponse): number {
-  const frames    = response.data?.frames ?? [];
-  const allScores: number[] = [];
-  for (const frame of frames) {
-    for (const face of frame.faces ?? []) {
-      allScores.push(face.deepfake);
-    }
-  }
-  if (allScores.length === 0) return 0;
+  const frames = response.data?.frames ?? [];
+  if (!frames.length) throw new ProviderError('Video analysis returned no usable frames.', 502, 'INVALID_PROVIDER_RESPONSE');
+  const allScores = frames.map(frame => readDeepfakeScore({ status: response.status, error: response.error, type: frame.type }));
   return allScores.reduce((a, b) => a + b, 0) / allScores.length;
 }

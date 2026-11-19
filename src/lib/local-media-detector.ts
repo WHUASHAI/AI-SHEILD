@@ -37,7 +37,7 @@ export function localMediaResult(kind: MediaKind, frames: MediaPrediction[], isV
   const score = result === 'deepfake' ? deepfake : result === 'ai_generated' ? ai : 1 - (kind === 'deepfake' ? deepfake : Math.max(ai, deepfake));
   const models = kind === 'video' ? [MEDIA_MODELS.image, MEDIA_MODELS.deepfake] : [MEDIA_MODELS[kind]];
   return {
-    status: 'completed', mode: 'local-backup', provider: 'On-device backup (ViT)',
+    status: 'completed', mode: 'local-backup', provider: 'On-device vision analysis',
     historySaved: false, statisticsRecorded: false, isVideo, result,
     label: noFace ? 'No Clear Faces Detected' : result === 'deepfake' ? 'Likely Deepfake' : result === 'ai_generated' ? 'Likely AI-Generated' : kind === 'deepfake' ? 'Lower Deepfake Signals' : 'Likely Human-Created',
     confidence: noFace ? null : percent(score), overallScore: noFace ? null : percent(score), deepfakeAnalyzed: faceFrames.length > 0,
@@ -55,12 +55,12 @@ export function localMediaResult(kind: MediaKind, frames: MediaPrediction[], isV
     ],
     timeline: frames.map(frame => ({ timestamp: frame.timestamp, aiScore: percent(frame.ai ?? 0), deepfakeScore: frame.deepfake === undefined ? null : percent(frame.deepfake) })),
     limitations: [
-      'Experimental backup: class scores are not accuracy rates or proof of authenticity. New generators and edited or compressed media can be misclassified.',
+      'Scores estimate visual patterns associated with AI generation or manipulation. New generators, editing, and compression can affect the result.',
       ...(kind !== 'deepfake' ? ['The image model was trained on CIFAKE; modern generators, artwork, and unfamiliar images may differ from its training data.'] : []),
       ...(kind !== 'image' ? ['Face detection checks up to five clear face regions per sampled frame. Face counts are crops checked, not unique people. Audio, lip-sync, identity, and faces the detector missed are not analyzed.'] : []),
       ...(noFace ? ['No clear faces were detected, so no deepfake score or authenticity verdict was generated.'] : []),
       ...(isVideo ? [`Only ${frames.length} frames were sampled. Unchecked moments and temporal manipulation may be missed.`] : []),
-      'Local backup results stay on this page and are not saved to History or counted in website statistics.',
+      'This result stays on this page and is excluded from History and website statistics.',
     ],
     disclaimer: 'An on-device model estimate. Review alongside the original media and other evidence.',
     modelVersion: models.map(model => `${model.id}@${model.revision}:q8`).join('; ') + (kind === 'image' ? '' : '; MediaPipe-1.2.3:BlazeFace-short-range-v1'),

@@ -2,167 +2,61 @@ import { providerFailure } from '@/lib/provider-response';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSessionResponse } from '@/lib/require-session';
 import { withScanHistory } from '@/lib/with-scan-history';
-import {
-  checkImageFile,
-  checkImageUrl,
-  checkVideoFile,
-  interpretDeepfakeScore,
-  avgVideoDeepfakeScore,
-} from '@/lib/sightengine';
+import { checkImageFile, checkImageUrl, interpretDeepfakeScore, readDeepfakeScore } from '@/lib/sightengine';
 
-// Use Node.js runtime to support large FormData uploads without Edge size limits
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
-
-function seededRandom(seed: number) {
-  const x = Math.sin(seed++) * 10000;
-  return x - Math.floor(x);
-}
 
 async function analyze(req: NextRequest) {
   const unauthorized = await requireSessionResponse();
   if (unauthorized) return unauthorized;
   try {
-    const contentType = req.headers.get('content-type') ?? '';
-    const isMultipart = contentType.includes('multipart/form-data');
-
-    let deepfakeScore = 0;
-    let faceData: Array<{ id: number; deepfakeScore: number; verdict: string; position?: unknown }> = [];
+    let deepfakeScore: number;
     let isVideo = false;
-    let totalFrames = 0;
+    const timeline: Array<{ timestamp: number; deepfakeScore: number }> = [];
 
-    if (isMultipart) {
+    if (req.headers.get('content-type')?.includes('multipart/form-data')) {
       const form = await req.formData();
-      const isFrames = form.get('isFrames') === 'true';
-
-      if (isFrames) {
-        isVideo = true;
-        const frames: File[] = [];
-        for (const [key, value] of form.entries()) {
-          if (key.startsWith('frame_') && value instanceof File) {
-            frames.push(value);
-          }
+      isVideo = form.get('isFrames') === 'true';
+      if (isVideo) {
+        const frames = [...form.entries()].filter(([key]) => key.startsWith('frame_'));
+        if (!frames.length || frames.length > 8 || frames.some(([key, value]) =>
+          !/^frame_\d+$/.test(key) || !(value instanceof File) || !value.size || !value.type.startsWith('image/'))) {
+          return NextResponse.json({ error: 'Provide between one and eight decoded image frames.' }, { status: 400 });
         }
-
-        if (frames.length === 0) {
-          return NextResponse.json({ error: 'No frames provided.' }, { status: 400 });
+        const samples = frames.map(([key, value]) => ({
+          file: value as File,
+          timestamp: form.has(`timestamp_${key.slice(6)}`) ? Number(form.get(`timestamp_${key.slice(6)}`)) : NaN,
+        }));
+        if (samples.some(sample => !Number.isFinite(sample.timestamp) || sample.timestamp < 0)) {
+          return NextResponse.json({ error: 'Video frame timestamps must be valid seconds.' }, { status: 400 });
         }
-
-        totalFrames = frames.length;
-        let maxScore = 0;
-        let faceCount = 0;
-
-        for (const frame of frames) {
-          const seResponse = await checkImageFile(frame, 'deepfake');
-          if (seResponse && seResponse.status === 'success' && seResponse.faces) {
-            for (const f of seResponse.faces) {
-               maxScore = Math.max(maxScore, f.deepfake);
-            }
-            if (seResponse.faces.length > 0) faceCount++;
-          }
+        let highestScore = 0;
+        for (const sample of samples) {
+          // Each successful call returns type.deepfake, even without a faces array.
+          // Fail immediately on unusable output/quota errors, preserving local fallback.
+          const score = readDeepfakeScore(await checkImageFile(sample.file, 'deepfake'));
+          highestScore = Math.max(highestScore, score);
+          timeline.push({ timestamp: sample.timestamp, deepfakeScore: Math.round(score * 100) });
         }
-
-        if (faceCount === 0) {
-           return NextResponse.json({ error: 'No faces detected across video frames.' }, { status: 400 });
-        }
-
-        deepfakeScore = maxScore;
-        faceData = [
-          {
-            id: 1,
-            deepfakeScore: Math.round(maxScore * 100),
-            verdict: maxScore >= 0.5 ? 'Deepfake' : 'Authentic',
-          }
-        ];
-
+        // Preserve the highest-frame decision without rounding before classification.
+        deepfakeScore = highestScore;
       } else {
         const file = form.get('file');
-
-        if (!file || !(file instanceof File)) {
-          return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+        if (!(file instanceof File) || !file.size || !file.type.startsWith('image/')) {
+          return NextResponse.json({ error: 'Provide an image, or upload a video through the frame-extraction page.' }, { status: 400 });
         }
-
-        const isVideoFile = file.type.startsWith('video/');
-        const isImageFile = file.type.startsWith('image/');
-
-        if (!isVideoFile && !isImageFile) {
-          return NextResponse.json(
-            { error: 'Unsupported file type. Provide an image (JPEG/PNG/WebP) or video (MP4/MOV/WebM).' },
-            { status: 400 },
-          );
-        }
-
-        if (isVideoFile) {
-          return NextResponse.json(
-            { error: 'Video files must be processed via frame extraction.' },
-            { status: 400 },
-          );
-        }
-
-        // Image deepfake check (Uses Real Sightengine API)
-        const seResponse = await checkImageFile(file, 'deepfake');
-
-        if (seResponse.status === 'failure' || seResponse.error) {
-          return NextResponse.json(
-            { error: 'Detection service error', details: seResponse.error?.message },
-            { status: 502 },
-          );
-        }
-
-        const faces = seResponse.faces ?? [];
-        
-        // If no faces are detected by the deepfake model, it might still be a fake image, 
-        // just not a 'face-swap'. We will gracefully fall back to 0 score rather than hard-crashing.
-        if (faces.length === 0) {
-          deepfakeScore = 0;
-          faceData = [];
-        } else {
-          deepfakeScore = faces.reduce((max, f) => Math.max(max, f.deepfake), 0);
-          faceData = faces.map((f) => ({
-            id: f.id,
-            deepfakeScore: Math.round(f.deepfake * 100),
-            verdict: f.deepfake >= 0.5 ? 'Deepfake' : 'Authentic',
-            position: f.position,
-          }));
-        }
-
+        deepfakeScore = readDeepfakeScore(await checkImageFile(file, 'deepfake'));
       }
-
     } else {
-      // JSON body with image URL (Uses Real Sightengine API)
-      const body = await req.json() as { url?: string };
-      if (!body.url) {
-        return NextResponse.json(
-          { error: 'Provide a multipart file upload or a JSON body with { url }.' },
-          { status: 400 },
-        );
+      let body: { url?: unknown };
+      try { body = await req.json(); }
+      catch { return NextResponse.json({ error: 'Provide a JSON body with an image URL.' }, { status: 400 }); }
+      if (!body || typeof body.url !== 'string' || !/^https?:\/\//i.test(body.url)) {
+        return NextResponse.json({ error: 'Provide a public HTTP or HTTPS image URL.' }, { status: 400 });
       }
-
-      const seResponse = await checkImageUrl(body.url, 'deepfake');
-
-      if (seResponse.status === 'failure' || seResponse.error) {
-        return NextResponse.json(
-          { error: 'Detection service error', details: seResponse.error?.message },
-          { status: 502 },
-        );
-      }
-
-      const faces = seResponse.faces ?? [];
-      
-      // Graceful fallback for 0 faces
-      if (faces.length === 0) {
-        deepfakeScore = 0;
-        faceData = [];
-      } else {
-        deepfakeScore = faces.reduce((max, f) => Math.max(max, f.deepfake), 0);
-        faceData = faces.map((f) => ({
-          id: f.id,
-          deepfakeScore: Math.round(f.deepfake * 100),
-          verdict: f.deepfake >= 0.5 ? 'Deepfake' : 'Authentic',
-          position: f.position,
-        }));
-      }
+      deepfakeScore = readDeepfakeScore(await checkImageUrl(body.url, 'deepfake'));
     }
 
     const verdict = interpretDeepfakeScore(deepfakeScore);
@@ -172,50 +66,34 @@ async function analyze(req: NextRequest) {
       scanId: `deepfake_${Date.now()}`,
       status: 'completed',
       provider: 'Sightengine',
-      result: faceData.length ? verdict.result : 'inconclusive',
-      label: faceData.length ? verdict.label : 'Inconclusive: no faces detected',
+      result: verdict.result,
+      label: verdict.result === 'deepfake' ? verdict.label : 'Lower Deepfake Signals',
       confidence: finalScore,
       overallScore: finalScore,
+      deepfakeAnalyzed: true,
       isVideo,
-
       breakdown: {
         deepfakeScore: finalScore,
-        facesDetected: faceData.length,
-        ...(isVideo && { totalFramesAnalyzed: totalFrames }),
+        // Sightengine supplies a frame-level score, not a face count or boxes.
+        facesDetected: null,
+        ...(isVideo && { totalFramesAnalyzed: timeline.length }),
       },
-
-      faces: faceData,
-
-      signals: [
-        {
-          name: 'Deepfake Probability',
-          score: deepfakeScore,
-          description: isVideo
-            ? `Averaged deepfake face-swap probability across ${totalFrames} video frames`
-            : `Highest deepfake score across ${faceData.length} detected face(s)`,
-        },
-        {
-          name: 'Face Manipulation Check',
-          score: deepfakeScore,
-          description: 'Detection of face-swap, face regeneration, and facial re-enactment techniques',
-        },
-        {
-          name: 'Lip-sync & Facial Consistency',
-          score: deepfakeScore * 0.85,
-          description: 'Analysis of lip movement patterns and facial geometry consistency',
-        },
-      ],
-
+      faces: [],
+      ...(isVideo && { timeline }),
+      signals: [{
+        name: 'Visual Deepfake Score',
+        score: deepfakeScore,
+        description: isVideo
+          ? `Highest deepfake model score across ${timeline.length} sampled video frames`
+          : 'Deepfake model score for the image; individual face counts are not supplied',
+      }],
       limitations: [
-        'Low-resolution media may reduce detection accuracy significantly',
-        'Some advanced deepfake techniques may evade detection',
-        'Faces must be clearly visible and large enough in the frame',
-        isVideo
-          ? 'Video analysis is sampled per frame — rapid face cuts may reduce coverage'
-          : 'Very small face regions (< 64px) may not be analyzed',
+        'Low-resolution media and small, obscured, or distant faces can reduce detection reliability.',
+        'The provider reports an image/frame score, not individual face counts. A low score does not prove authenticity or confirm that a face was detected.',
+        'Audio, lip-sync, identity, and motion between sampled frames are not analyzed.',
+        ...(isVideo ? [`Only ${timeline.length} frames were sampled. Manipulation between those frames may be missed.`] : []),
       ],
-      disclaimer:
-        'Elucid AI uses Sightengine deepfake models for probability-based analysis. No detection system is 100% accurate. Consult digital forensics professionals for legal or critical decisions.',
+      disclaimer: 'Elucid AI provides a model estimate, not proof of authenticity. Review alongside the original media and other evidence.',
       modelVersion: 'sightengine-deepfake-v1.0',
     });
   } catch (error) {

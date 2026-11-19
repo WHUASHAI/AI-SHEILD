@@ -2,7 +2,7 @@ import { providerFailure } from '@/lib/provider-response';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSessionResponse } from '@/lib/require-session';
 import { withScanHistory } from '@/lib/with-scan-history';
-import { checkImageFile, checkVideoUrl, avgVideoAiScore, avgVideoDeepfakeScore } from '@/lib/sightengine';
+import { checkImageFile, checkVideoUrl, avgVideoAiScore, avgVideoDeepfakeScore, readDeepfakeScore } from '@/lib/sightengine';
 
 export const runtime    = 'nodejs';
 export const maxDuration = 60;
@@ -60,16 +60,16 @@ async function analyze(req: NextRequest) {
             avgDeepfakeScore: Math.round(avgDf * 100),
             totalFramesAnalyzed: frames.length,
             aiSuspiciousFrames: frames.filter(f => (f.type?.ai_generated ?? 0) > 0.5).length,
-            deepfakeSuspiciousFrames: frames.filter(f => (f.faces?.some(face => face.deepfake > 0.5) ?? false)).length,
+            deepfakeSuspiciousFrames: frames.filter(f => readDeepfakeScore({ status: response.status, type: f.type }) > 0.5).length,
           },
           signals: [
             { name: 'Average AI Generation Score', score: avgAi, description: 'Average AI generated probability across all frames' },
             { name: 'Average Deepfake Score', score: avgDf, description: 'Average face manipulation probability across all frames' },
           ],
           timeline: frames.map((f, i) => ({
-            timestamp: i + 1,
+            timestamp: f.info?.position ?? f.info?.ts ?? i + 1,
             aiScore: Math.round((f.type?.ai_generated ?? 0) * 100),
-            deepfakeScore: Math.round(Math.max(...(f.faces?.map(face => face.deepfake) ?? [0])) * 100)
+            deepfakeScore: Math.round(readDeepfakeScore({ status: response.status, type: f.type }) * 100)
           })),
           limitations: [
             'Analyzed natively via Sightengine Stream API.',
@@ -111,8 +111,7 @@ async function analyze(req: NextRequest) {
           }
           
           const aiRaw = res.type?.ai_generated ?? 0;
-          const faces = res.faces ?? [];
-          const dfRaw = faces.reduce((max: number, f: any) => Math.max(max, f.deepfake), 0);
+          const dfRaw = readDeepfakeScore(res);
 
           totalAi += aiRaw;
           totalDf += dfRaw;
@@ -121,7 +120,7 @@ async function analyze(req: NextRequest) {
           if (dfRaw > 0.5) dfSuspicious++;
 
           timeline.push({
-            timestamp: i + 1,
+            timestamp: Number(form.get(`timestamp_${i}`) ?? i + 1),
             aiScore: Math.round(aiRaw * 100),
             deepfakeScore: Math.round(dfRaw * 100)
           });

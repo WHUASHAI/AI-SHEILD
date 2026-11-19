@@ -1,6 +1,6 @@
-// A quota response never becomes a detector verdict. Only a successful local
-// inference can replace it. Never repeat a paid request automatically.
-export function createMediaFallbackPolicy(now = () => Date.now()) {
+// Each upstream service has its own cooldown. An outage in one service
+// must not suppress requests to another.
+export function createProviderCooldown(now = () => Date.now()) {
   let unavailableUntil = 0;
   return {
     blocked: () => now() < unavailableUntil,
@@ -11,11 +11,12 @@ export function createMediaFallbackPolicy(now = () => Date.now()) {
     },
   };
 }
-export const mediaFallbackPolicy = createMediaFallbackPolicy();
+export const sightengineCooldown = createProviderCooldown();
+export const searchCooldown = createProviderCooldown();
 
-export async function submitWithMediaBackup(
+export async function submitWithDetectorBackup(
   primary: () => Promise<Response>, backup: () => Promise<unknown>,
-  policy = mediaFallbackPolicy, onSwitch: () => void = () => {},
+  policy: ReturnType<typeof createProviderCooldown>, onSwitch: () => void = () => {},
 ): Promise<Response> {
   const local = async () => { onSwitch(); return Response.json(await backup()); };
   if (policy.blocked()) return local();

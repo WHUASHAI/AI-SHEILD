@@ -13,6 +13,7 @@ import { extractMediaFrames } from '@/lib/browser-media-backup';
 interface VideoScanResult {
   scanId:       string;
   status:       string;
+  mode?:        string;
   provider:     string;
   result:       'ai_generated' | 'ai_enhanced' | 'human' | 'deepfake' | 'inconclusive';
   label:        string;
@@ -101,7 +102,7 @@ export default function VideoDetectorPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      {historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
+      {result && result.mode !== 'local-backup' && historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-azure/20 to-air-sup-blue/20 border border-cyan-azure/30 flex items-center justify-center">
@@ -110,7 +111,7 @@ export default function VideoDetectorPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Video Analysis</h1>
           <p className="text-sm text-air-sup-blue mt-0.5">
-            Video analysis with an automatic free backup.
+            Check video frames for signs of AI generation or face manipulation.
           </p>
         </div>
       </div>
@@ -232,7 +233,7 @@ export default function VideoDetectorPage() {
             </Button>
             {loading && backupProgress && <div className="space-y-2">
               <p role="status" aria-live="polite" className="text-xs text-air-sup-blue">{backupProgress}</p>
-              <Button type="button" autoComplete="off" variant="outline" onClick={cancelBackup}>Cancel backup analysis</Button>
+              <Button type="button" autoComplete="off" variant="outline" onClick={cancelBackup}>Cancel analysis</Button>
             </div>}
 
             {loading && !backupProgress && (
@@ -317,12 +318,12 @@ export default function VideoDetectorPage() {
                   <Info className="w-4 h-4 text-cyan-azure" /> How It Works
                 </h3>
                 <p className="text-xs text-ucla-blue leading-relaxed">
-                  Sightengine runs the primary check. When unavailable, local image and deepfake classifiers
-                  analyze three sampled frames and detected face regions. The backup does not analyze audio, lip-sync, or motion between frames.
+                  Uploaded videos are checked at three points in the clip. The timeline shows the visual
+                  scores for each sampled frame. Audio and movement between frames are outside the scan.
                 </p>
                 <div className="flex flex-col gap-1.5 text-xs text-air-sup-blue/70">
                   <p>📁 <span className="font-medium">File upload:</span> MP4, MOV, WebM, AVI, MKV (max 200 MB)</p>
-                  <p>🔗 <span className="font-medium">URL:</span> Public video links; backup requires a downloadable, browser-readable video</p>
+                  <p>🔗 <span className="font-medium">URL:</span> Use a public link to a video file your browser can read.</p>
                 </div>
               </div>
             </>

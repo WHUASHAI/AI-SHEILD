@@ -4,7 +4,57 @@ import {load} from './history-loader.mjs';
 import * as core from '../src/lib/history-core.ts';
 const responseModule=load('src/lib/history-response.ts',{
   'next/server':{NextResponse:{json:(data,init)=>Response.json(data,init)}},
-  './auth-settings':{getTrustedAuthOrigin:()=> 'https://shield.test'},'./history-core':core,
+  './auth-settings':{getTrustedAuthOrigin:()=> 'https://shield.test',getGuestRequestOrigin:()=> 'https://shield.test'},'./history-core':core,
+});
+
+function responseForEnvironment(env) {
+  const settings=load('src/lib/auth-settings.ts',{}, {process:{env}});
+  const responses=load('src/lib/history-response.ts',{
+    'next/server':{NextResponse:{json:(data,init)=>Response.json(data,init)}},
+    './auth-settings':settings,'./history-core':core,
+  });
+  return {settings,responses};
+}
+
+test('local scan/history actions follow the actual loopback host and port instead of the configured OAuth address',()=>{
+  const {settings,responses}=responseForEnvironment({NODE_ENV:'development',AUTH_URL:'http://localhost:3001'});
+  for(const origin of ['http://localhost:3000','http://localhost:3002','http://127.0.0.1:3000','http://[::1]:3000']) {
+    for(const path of ['/api/scan/deepfake','/api/history']) {
+      const request=new Request(origin+path,{method:'POST',headers:{origin,host:new URL(origin).host}});
+      assert.doesNotThrow(()=>responses.requireHistoryOrigin(request));
+    }
+  }
+  assert.equal(settings.getTrustedAuthOrigin('http://localhost:3000/api/auth/signin'),'http://localhost:3001');
+});
+
+test('local actions still reject other origins, ports, missing origins, and forged non-loopback hosts',()=>{
+  const {responses}=responseForEnvironment({NODE_ENV:'development',AUTH_URL:'http://localhost:3001'});
+  for(const headers of [
+    {host:'localhost:3000'},
+    {host:'localhost:3000',origin:'null'},
+    {host:'localhost:3000',origin:'http://localhost:3001'},
+    {host:'localhost:3000',origin:'https://evil.test'},
+    {host:'evil.test',origin:'http://evil.test'},
+    {host:'localhost:3000',origin:'https://evil.test','x-forwarded-host':'evil.test','x-forwarded-proto':'https'},
+  ]) assert.throws(()=>responses.requireHistoryOrigin(new Request('http://localhost:3000/api/scan/deepfake',{method:'POST',headers})),error=>error.status===403);
+});
+
+test('production scan/history actions keep the configured HTTPS origin behind a proxy and reject hostile origins',()=>{
+  const {responses}=responseForEnvironment({NODE_ENV:'production',AUTH_URL:'https://elucid.test/api/auth'});
+  assert.doesNotThrow(()=>responses.requireHistoryOrigin(new Request('http://localhost:3000/api/scan/deepfake',{
+    method:'POST',headers:{origin:'https://elucid.test',host:'localhost:3000'},
+  })));
+  for(const origin of ['https://evil.test','http://localhost:3000','http://elucid.test','https://elucid.test.evil.test']) {
+    assert.throws(()=>responses.requireHistoryOrigin(new Request('http://localhost:3000/api/scan/deepfake',{
+      method:'POST',headers:{origin,host:new URL(origin).host,'x-forwarded-host':new URL(origin).host},
+    })),error=>error.status===403);
+  }
+  for(const env of [{NODE_ENV:'production'},{NODE_ENV:'production',AUTH_URL:'http://localhost:3000'}]) {
+    const {responses:invalid}=responseForEnvironment(env);
+    assert.throws(()=>invalid.requireHistoryOrigin(new Request('http://localhost:3000/api/scan/deepfake',{
+      method:'POST',headers:{origin:'http://localhost:3000',host:'localhost:3000'},
+    })),error=>error.status===403);
+  }
 });
 test('history responses are private and cross-origin mutations fail closed',()=>{
   const response=responseModule.privateJson({items:[]});assert.equal(response.headers.get('cache-control'),'private, no-store');

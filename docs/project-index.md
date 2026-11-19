@@ -1,106 +1,141 @@
 # Elucid AI project index
 
-Indexed from local source on 21 October 2026. This map describes implementation, not deployment readiness. External services and runtime behavior were not tested during indexing.
+Indexed from local source on 20 November 2026. This describes the checked-out application, not verified live deployment behavior. No external detector requests, database connections, or deployment changes were made. Credentials and cookie contents were not inspected.
 
-Repository layout corrected on 22 October 2026: the active project is at the workspace root. The duplicate nested checkout was archived under `.local-backups/`; its old Git link still needs removal from a normal terminal because this session cannot write the outer Git index. See `docs/repository-layout.md`.
+## Purpose
 
-## Purpose and current state
+Elucid AI is a web application for screening digital content for possible AI generation, facial manipulation, and copied text. A public website leads visitors into a dashboard through Google sign-in or an explicit Guest choice. Its five current tools are **Text, Image, Video, Deepfake, and Plagiarism**.
 
-Elucid AI is a web application for screening text, images, videos, and faces for possible AI generation or manipulation, plus checking text for online plagiarism matches. It combines a public site, dashboard, account screens, and server API routes. It offers an experimental on-device Fakespot text detector alongside external detection services.
+The application integrates pretrained models and external services. This is not a model-training repository. Scores are estimates and can be wrong; they do not establish authorship, authenticity, or original ownership.
 
-The checkout contains 25 page components, 16 API route handlers, and 63 component files. It is a partially implemented application: real provider integrations coexist with synthetic results, browser-only personal history, database-backed aggregate counters, and unfinished account/report services. Detection scores do not prove content origin.
+## The five tools
 
-## Technology
+### 1. Text detection
 
-Next.js 16.2.12 App Router, React 19.2.4, TypeScript, Tailwind CSS 4, Radix/shadcn-style components, Framer Motion, Recharts, React Dropzone, React Hook Form, and Zod. Auth.js 5 handles sessions/providers. Prisma 7 defines a PostgreSQL schema.
+- **Question:** Does this writing resemble AI-generated or human-written English?
+- **Input:** At least 50 readable words, up to 50,000 characters. Language and extreme-repetition checks can reject unsuitable input.
+- **Implementation:** Fakespot RoBERTa runs in a browser Web Worker through Hugging Face Transformers and ONNX/WASM. The page checks every token-bounded passage and combines the scores. A separate model can estimate OpenAI, Anthropic, Google, or Other AI source families for likely-AI results.
+- **Downloads:** The default primary model is approximately 499 MB. A compact int8 export is selected when the browser reports device memory of 4 GB or less. Source-family estimation requires another model download.
+- **Output:** Likely AI-Generated or Likely Human-Created, complementary model scores, passage coverage, and excerpts. Generator-family labels are guesses, not verified attribution.
+- **Limits:** English prose only; download, memory, and accuracy constraints apply. Local results are not saved to History or counted in platform statistics. The old paid `POST /api/scan/text` integration is retired and returns HTTP 410 after its access check.
+- **Entry points:** `src/app/(dashboard)/dashboard/text/page.tsx`, `src/lib/local-text-detector.ts`, `src/lib/local-text-client.ts`, `src/workers/local-text.worker.ts`, `src/workers/compact-text-model.ts`, `src/workers/source-family-model.ts`.
 
-## Source map
+### 2. Image detection
 
-| Path | Responsibility |
+- **Question:** Does this picture show signs of AI generation or manipulation?
+- **Input:** Uploaded images; the page accepts up to 50 MB. The server route also supports image URLs.
+- **Implementation:** Sightengine supplies generation scores and an additional face/deepfake check. Some score combinations receive an enhanced/edited label. An eligible provider outage or quota response switches the browser to a pretrained local image classifier.
+- **Output:** Verdict, scores, signal summaries, and available face information. The backup provides a narrower image-classification result without the primary route's face check.
+- **Limits:** Compression, unfamiliar generators, artwork, and edits can cause mistakes. The enhanced label is a score-based heuristic, not proof of a particular editing operation. Local backup results stay on the page and are not saved or counted.
+- **Entry points:** `src/app/(dashboard)/dashboard/image/page.tsx`, `src/app/api/scan/image/route.ts`, `src/lib/sightengine.ts`, `src/workers/local-media.worker.ts`.
+
+### 3. Video analysis
+
+- **Question:** Do sampled pictures from a video show AI generation or face manipulation?
+- **Input:** Uploaded video or public video URL. Current upload/extraction code limits files to 200 MB.
+- **Implementation:** For uploads, the browser extracts three frames distributed through the video and sends them to Sightengine image analysis. The URL route uses Sightengine video analysis. The local backup classifies three sampled frames and detected face crops.
+- **Output:** Aggregate generation/deepfake scores and a sampled-frame timeline.
+- **Limits:** Three frames provide sparse coverage and can miss short manipulations. Uploaded-frame analysis does not assess audio. The local backup does not assess lip-sync or motion between frames. URL backup requires a downloadable video that the browser has permission to read.
+- **Entry points:** `src/app/(dashboard)/dashboard/video/page.tsx`, `src/app/api/scan/video/route.ts`, `src/lib/browser-media-backup.ts`, `src/workers/local-media.worker.ts`.
+
+### 4. Deepfake detection
+
+- **Question:** Do visible faces show signs of synthetic alteration or face swapping?
+- **Input:** Images or videos containing clear faces. The page permits uploads up to 200 MB; videos use three extracted frames.
+- **Implementation:** Sightengine supplies `type.deepfake`, an image/frame-level score. The sampled-video route takes the highest unrounded frame score and preserves sample timestamps. The browser backup uses MediaPipe face detection and a separate visual deepfake classifier, checking up to five face crops per frame.
+- **Output:** Visual model scores and a likely-deepfake/lower-signal verdict. Sightengine does not supply individual face counts; these display as not reported. Local backup with no detected faces yields an inconclusive/no-clear-faces result.
+- **Limits:** Neither path analyzes audio, lip-sync, identity, or motion between sampled frames. A low primary score does not confirm face detection or authenticity. Missing/malformed provider scores are errors, not no-face or authentic results. See [deepfake fix validation](deepfake-fix-validation.md).
+- **Entry points:** `src/app/(dashboard)/dashboard/deepfake/page.tsx`, `src/app/api/scan/deepfake/route.ts`, `src/lib/local-face-crops.ts`, `src/lib/local-media-detector.ts`.
+- **Presentation preset:** Videos with `clear` in the filename can show an explicitly labelled 100% demo on this page. It bypasses analysis and is excluded from History/statistics. This is not a model result. See [presentation demo instructions](deepfake-presentation-demo.md).
+
+### 5. Plagiarism check
+
+- **Question:** Do sampled sentences match text already indexed on the public web?
+- **Input:** Text between 20 and 50,000 characters, containing substantial sentences suitable for searching.
+- **Implementation:** The server randomly selects up to three qualifying sentences in standard/academic mode or five in deep mode. It submits quoted searches through SerpApi and uses the first organic result as a match for each sentence.
+- **Automatic backup.** When SerpApi reaches its quota or becomes unavailable, the browser checks exact six-word passages. It searches English Wikipedia for up to three phrases (five in deep mode) and compares returned excerpts plus four bundled reference texts. If Wikipedia is unavailable, the bundled comparison still runs. A reader can add their own reference on the result page. The backup reports the fraction of submitted words covered by matching passages and lists the sources checked.
+- **Output:** Matching source links, sampled-sentence results, and the percentage of searched sentences with matches.
+- **Limits:** This is a sample match rate, not the fraction of the entire document that is plagiarized. Private academic collections, paraphrasing, structural similarity, and unindexed pages are not assessed. A match does not establish which site published first. AI text detection and plagiarism are separate questions: human writing can be copied, and AI writing can have no exact web matches.
+- **Entry points:** `src/app/(dashboard)/dashboard/plagiarism/page.tsx`, `src/app/api/scan/plagiarism/route.ts`, `src/lib/plagiarism-backup.ts`, `src/lib/local-plagiarism.ts`.
+
+## Folder map
+
+Counts are a snapshot of local files, excluding dependency/build/backup folders from the application counts.
+
+| Path | Contents and responsibility |
 | --- | --- |
-| `src/app/(public)/` | Landing page, about, how-it-works, limitations |
-| `src/app/(auth)/` | Sign-in, password step, sign-up, recovery, email verification |
-| `src/app/(dashboard)/` | Dashboard layout and scanning, history, reports, settings, API-key, admin, help screens |
-| `src/app/api/scan/` | Text, image, video, deepfake, plagiarism, URL handlers |
-| `src/app/api/auth/` | Auth.js, password sign-in, signup/recovery placeholders, email verification |
-| `src/app/api/report/[id]/` | Report persistence placeholder |
-| `src/app/report/[token]/` | Public shared report demonstration |
-| `src/components/` | UI primitives and landing, dashboard, detection, auth, history components |
-| `src/lib/sightengine.ts` | External image/video/deepfake API client and score interpretation |
-| `src/lib/auth.ts`, `auth-settings.ts` | Provider registration, JWT sessions, redirects, conditional access checks |
-| `src/lib/auth-db.ts`, `password-auth.ts` | Existing stored password-account lookup, verification, attempt limits |
-| `src/lib/email-verification.ts` | Signed email tokens, confirmation cookies, Resend integration |
-| `src/lib/require-session.ts`, `src/proxy.ts` | Conditional private-route checks and request proxy |
-| `src/lib/use-recent-scans.ts`, `history-client.ts`, `scan-history-repository.ts` | Private database history for accounts and guests; 20 results per page, no storage cap |
-| `src/lib/guest-mode.ts`, `guest-access.ts`, `src/app/api/guest/` | Explicit public guest-mode selection and scanning access; separate from authentication |
-| `src/lib/db.ts` | Disabled scan database client |
-| `src/lib/platform-statistics.ts`, `statistics-db.ts`, `scan-statistics.ts` | Shared anonymous UTC daily counters and server-side recording of real scan completions |
-| `src/lib/use-platform-statistics.ts`, `src/app/api/statistics/` | Website-wide overview totals and activity; refresh every 30 seconds and on focus |
-| `src/types/index.ts` | Shared scan/report types and configuration |
-| `prisma/schema.prisma` | User, account, session, verification, scan, signal, metadata, report, batch, API-key/activity, workspace/member, audit, notification models |
-| `tests/` | Seven Node test files focused on authentication and verification |
-| `scripts/check-auth.mjs` | Authentication configuration readiness checker |
-| `docs/authentication-setup.md` | Setup reference; verify against source because older documentation can differ |
-| `client_discussion/project_overview.md` | Client-facing feature discussion |
-| `public/` | Static branding and assets |
-| `index.html`, `src/app/page.tsx.bak` | Standalone HTML and inactive source backup |
-| `BACKUP-INV/` | Separate inventory/document/photo backup, outside the application flow |
+| `src/app/` | 54 files, including 27 page components and 18 API route handlers; public pages, authentication, dashboard, and server endpoints |
+| `src/components/` | 71 reusable UI, landing, dashboard, detection, authentication, and history components |
+| `src/lib/` | 46 files for providers, detection and reference matching, authentication, submission, history, statistics, and the explicit Deepfake demo |
+| `src/workers/` | 4 files for browser text/media inference and model loading; not a Redis processing queue |
+| `prisma/` | Database schema and three SQL setup scripts; users, scans, completion receipts, counters, and other planned entities |
+| `public/` | 30 static assets, including branding and preview imagery |
+| `tests/` | 32 Node test files plus a loader helper covering auth, providers, local inference, reference matching, the presentation preset, history, statistics, and deployment checks |
+| `scripts/` | Authentication readiness, deployment configuration, and public-link checks |
+| `docs/` | Setup references, model/provider behavior, architecture, and dated plans/specifications |
+| `client_discussion/` | Plain-language feature discussion; some limits and capability descriptions are outdated |
+| `.github/workflows/` | Automated repository checks |
+| `.local-backups/` | Archived material outside the active application flow |
+| `node_modules/` | Installed dependencies and the Next.js guides required by `AGENTS.md` before code changes |
+| `.next/` | Generated Next.js build/development output |
+| `index.html`, `src/app/page.tsx.bak` | Standalone HTML and inactive source backup; active homepage is `src/app/(public)/page.tsx` |
+| Root configuration | Package scripts, TypeScript, Next.js, Tailwind, ESLint, Prisma, and environment configuration |
 
-Route groups in parentheses organize layouts without appearing in URLs. Agent guidance is in `AGENTS.md`; it requires consulting installed Next.js documentation before code changes.
+## Architecture and user flow
 
-## Detection implementation
+The installed stack is Next.js 16.2.12, React 19.2.4, TypeScript, Tailwind CSS 4, Radix UI, Framer Motion, Recharts, Auth.js 5, and Prisma 7 with PostgreSQL. Browser inference uses Hugging Face Transformers and ONNX/WASM; MediaPipe finds faces for local checks. Node 24 is specified in `package.json`.
 
-| Feature / endpoint | Actual behavior |
-| --- | --- |
-| Free on-device text mode | Sole Text page mode. Uses pinned Fakespot RoBERTa weights for at least 50 words of English. Every passage is checked automatically, with no scan-depth selector. A separate trained XLM-RoBERTa model estimates OpenAI, Anthropic, Google, or Other AI source families for AI results. Binary likely AI/human labels, complementary scores, coverage and passage excerpts. No confidence banner or technical download/API intro. Source families are guesses; no verified origin is claimed. No paid detection API, History write, or global counter update. See `docs/local-text-detector.md`. |
-| Text: `POST /api/scan/text` | Retired paid integration. Returns HTTP 410 instructing old clients to refresh and use the on-device detector; no outbound call, verdict, or statistics update. |
-| Image: `POST /api/scan/image` | Calls Sightengine for generation and face-manipulation scores; requires provider credentials. Returns verdict, signals, and face data. |
-| Video: `POST /api/scan/video` | URL analysis through Sightengine, or uploaded sampled frames through its image API. The video page samples three frames in the browser. Uploaded-frame mode does not analyze audio. |
-| Deepfake: `POST /api/scan/deepfake` | Calls Sightengine for faces in images or sampled video frames. Video verdict uses the maximum detected face score. Some displayed signals are derived from that score rather than separate measurements. |
-| Plagiarism: `POST /api/scan/plagiarism` | Samples sentences and queries SerpAPI for quoted web matches; requires `SERP_API_KEY`. Coverage is limited to searched/indexed text. |
-| URL: `POST /api/scan/url` | Validates URL syntax and returns randomized demo scores; it does not analyze the destination content. |
+Typical flow:
 
-Provider environment names include `SIGHTENGINE_API_USER`, `SIGHTENGINE_API_SECRET`, and `SERP_API_KEY`. Text detection downloads model files from Hugging Face without hosted inference credits or an API key. It does not query the plagiarism search provider. See `docs/local-text-detector.md`. Integration code alone does not establish that live credentials or provider accounts work.
+1. Visit the public site and choose Start Scanning.
+2. Choose Google or Guest and enter the dashboard.
+3. Select a tool and provide content.
+4. Run local text inference, a media scan with automatic on-device backup, or a web plagiarism search with automatic reference comparison.
+5. View results. Successful primary analyses attempt to save a private summary and update shared counters. On-device results stay on the page.
 
-## Accounts and access
+Relevant connections:
 
-Google OAuth and existing verified password-account sign-in are wired through Auth.js. Facebook has been removed from provider registration, UI, and accepted sessions. Google credentials accept either `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` or `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, with the Auth.js naming family taking priority. Provider availability depends on a valid `AUTH_SECRET` and complete matching credentials. No WhatsApp page/request API is present in this checkout, despite older documentation describing one.
+- **Google/password authentication:** `src/lib/auth.ts`, `auth-settings.ts`, `auth-db.ts`, and auth routes. Password sign-in supports existing verified database accounts.
+- **External media:** `src/lib/sightengine.ts`; server-only `SIGHTENGINE_API_USER` and `SIGHTENGINE_API_SECRET` configuration.
+- **Plagiarism search.** SerpApi uses the server-side `SERP_API_KEY`. The browser backup uses public Wikipedia search and bundled references without an API key.
+- **Local models:** Downloads from Hugging Face/CDN; inference executes on the visitor's device. This does not guarantee fully offline operation.
+- **History:** `with-scan-history.ts`, `scan-persistence.ts`, `scan-history-repository.ts`, `src/app/api/history/`, and `src/lib/auth-db.ts`.
+- **Shared statistics:** `src/app/api/statistics/`, `platform-statistics.ts`, and `statistics-db.ts`.
 
-Scanning and recent history require either a real session or an explicit landing-dialog Guest choice. The guest flag is not Google authentication and does not grant access to private reports/account tools. The former `REQUIRE_AUTH` flag cannot silently open access. Visiting `/sign-in` stays on the sign-in page even with an existing session; Continue with Google clears guest mode and opens Google account selection. The desktop/mobile header has only Sign In. Landing-page Start Scanning buttons open Google and Guest choices.
+## Current implementation versus older claims
 
-Signup and forgot-password APIs return HTTP 501 placeholders. Email-send/check/verify routes exist, including a Resend email integration (`RESEND_API_KEY`). A verification link can update an existing database user when configured and set a confirmation cookie; this is separate from account creation.
+- **The five tools include Plagiarism.** Enhancement is not a separate dashboard page. The older README feature list differs from current navigation and homepage tools.
+- **Persistent history is implemented in source.** Account and guest ownership are separate. Twenty is a page size, not a storage cap. Successful external results save an allowlisted summary, completion receipt, and statistics transactionally; this history implementation does not retain submitted text or uploaded media. A storage outage produces an unsaved notice. Live database/schema availability was not checked.
+- **The disabled legacy `src/lib/db.ts` does not disable current history.** Active history uses the Prisma client in `src/lib/auth-db.ts`. Older descriptions of browser-only history are obsolete.
+- **Local results stay on the scan page.** Text and media run trained models. The plagiarism backup measures overlap with the sources it checked. History and platform statistics exclude these results.
+- **Signup and forgot-password remain unfinished.** Their APIs return HTTP 501 setup placeholders. Google and existing verified password-account sign-in have separate implementations.
+- **Reports remain partial.** `GET /api/report/[id]` returns a setup placeholder, Reports is an empty screen, and public `/report/[token]` uses demonstration data. Saved history has its own result-viewing route.
+- **Generic URL scanning is a demo.** `POST /api/scan/url` validates syntax and generates random scores without analyzing the destination. This differs from the real video-URL path inside `POST /api/scan/video`.
+- **Several README promises exceed current implementation.** Separate batch/team/enhancement pages, Redis/BullMQ processing, and a complete public developer API were not found. API-key UI does not establish a working backend service.
+- **Older limits differ.** Client discussion mentions 2 GB videos and a 30-minute cap; current extraction enforces 200 MB and does not establish that duration cap. Claims of independent lip-sync analysis also exceed the inspected code.
 
-Auth.js requires a configured signing secret and no longer uses a hardcoded fallback. The separate legacy email-verification helper still contains fallback behavior requiring review before relying on that enrollment flow. See `docs/authentication-setup.md` for Google/Vercel setup and deployment checks.
+## Entry points and development
 
-## Persistence and demonstration data
+Start with the five tool pages, their routes, and `src/components/dashboard/sidebar.tsx` to understand current scope. Related references:
 
-Scan persistence is disabled in `src/lib/db.ts`. Password-account lookup uses a separate database path, so disabling scan persistence does not by itself disable password lookup.
+- [Local text detector](local-text-detector.md)
+- [Provider behavior](detection-provider-behavior.md)
+- [Authentication setup](authentication-setup.md)
+- [Persistent history setup](persistent-history-setup.md)
+- [Persistent history validation](persistent-history-validation.md)
+- [Repository layout history](repository-layout.md)
 
-Guests keep at most 20 scans in one shared in-memory store for the loaded document. Client navigation preserves them; a full refresh or closing the page clears them. Old guest sessionStorage data is removed and never restored. Signed-in users keep at most 20 recent scans in `localStorage` under `aishield_user_scans_<userId>`, preserved on refresh and reopening in the same browser. Guest and account histories remain separate. This does not provide server-side or cross-device history.
+Compare these historical documents with current source, particularly newer compact text and local media backup implementations.
 
-Overview statistics and seven-day activity use shared PostgreSQL daily counters across Google and guest users, recorded only by successful server-side detector integrations. Demo/failed results are excluded; missing database setup shows unavailable, not demo totals. These counters do not save personal history or raw content. Setup is documented in `docs/platform-statistics-setup.md`; earlier browser-only scans cannot be reconstructed globally. The sidebar now links History immediately before Settings instead of Reports. API-key creation remains local component state without a matching backend. `GET /api/report/[id]` returns a database-setup placeholder, and public `/report/[token]` builds a demo result from the token.
-
-README claims about storage, Redis/BullMQ workers, batch/team tools, enhancement pages, and a hosted developer API should be treated as intended capabilities unless a matching implementation is established. No corresponding workers directory or batch/team/enhancement pages were found.
-
-## Main user flow
-
-Public site -> landing Start Scanning dialog -> choose Google or Guest -> dashboard -> choose scanning tool -> submit content -> provider analysis or demo fallback -> results -> recent history (guest memory or per-account browser storage).
-
-## Development commands
-
-Run from the repository root, `C:\Users\Admin_IT PC1\Desktop\AI-SHIELD`:
+Run from `C:\Users\IT PC_2\Desktop\ELUCID-AI`:
 
 ```powershell
 npm.cmd run dev
-npm.cmd run lint
 npm.cmd test
+npm.cmd run lint
 npm.cmd run auth:check
-.\node_modules\.bin\tsc.cmd --noEmit --incremental false
+npm.cmd run check:deployment
 npm.cmd run build
 ```
 
-The development script binds to `localhost`. Guest entry also accepts same-origin requests through loopback addresses during development, while production retains its configured origin checks. Installation runs `prisma generate`. Database and provider setup are separate from installing dependencies.
-
-This indexing pass inspected source and file counts only; it did not run tests, build, start the application, connect to the database, or submit content to external providers.
-
-Persistent history deployment: [setup guide](persistent-history-setup.md). Empty Neon bootstrap: `prisma/persistent-history.sql`.
+Indexing inspected local structure and source only. Tests, build, browser behavior, model downloads, provider credentials/credits, production schema, and live deployment were not validated in this pass.

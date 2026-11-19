@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { ImageIcon, ShieldCheck, Zap, Info, Sparkles, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
+import { ImageIcon, ShieldCheck, Zap, Info, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FileDropzone } from '@/components/detection/file-dropzone';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 interface ScanResult {
   scanId: string;
   status: string;
+  mode?: string;
   deepfakeAnalyzed?: boolean;
   provider: string;
   result: 'ai_generated' | 'ai_enhanced' | 'human' | 'deepfake' | 'inconclusive';
@@ -81,7 +82,7 @@ export default function ImageDetectorPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      {historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
+      {result && result.mode !== 'local-backup' && historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-azure/20 to-air-sup-blue/20 border border-cyan-azure/30 flex items-center justify-center">
@@ -90,7 +91,7 @@ export default function ImageDetectorPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Image & Enhancement Analysis</h1>
           <p className="text-sm text-air-sup-blue mt-0.5">
-            AI image analysis with an automatic free backup.
+            Check an image for signs of AI generation or editing.
           </p>
         </div>
       </div>
@@ -123,7 +124,7 @@ export default function ImageDetectorPage() {
             </Button>
             {loading && backupProgress && <div className="space-y-2">
               <p role="status" aria-live="polite" className="text-xs text-air-sup-blue">{backupProgress}</p>
-              <Button type="button" autoComplete="off" variant="outline" onClick={cancelBackup}>Cancel backup analysis</Button>
+              <Button type="button" autoComplete="off" variant="outline" onClick={cancelBackup}>Cancel analysis</Button>
             </div>}
           </div>
 
@@ -190,13 +191,9 @@ export default function ImageDetectorPage() {
                   <Info className="w-4 h-4 text-cyan-azure" /> How It Works
                 </h3>
                 <p className="text-xs text-ucla-blue leading-relaxed">
-                  Sightengine runs the primary check. If its credits run out or the service is unavailable,
-                  a trained image classifier runs on your device automatically.
+                  The model checks visual patterns associated with AI-generated images. The result shows
+                  the generation score and any additional checks that ran.
                 </p>
-                <div className="flex items-center gap-2 text-xs text-cyan-azure font-medium">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Automatic on-device backup</span>
-                </div>
               </div>
             </>
           ) : (
@@ -239,7 +236,7 @@ export default function ImageDetectorPage() {
                     <p className="text-amber-400 font-semibold text-xs">⚡ Enhancement / Edit Detected</p>
                   )}
                   <p><span className="text-foreground font-medium">Deepfake:</span> {result.deepfakeAnalyzed === false ? 'Not checked' : result.breakdown.deepfakeScore + '%'}</p>
-                    <p><span className="text-foreground font-medium">Faces:</span> {result.deepfakeAnalyzed === false ? 'Not checked' : result.breakdown.facesDetected}</p>
+                    <p><span className="text-foreground font-medium">Faces:</span> {result.deepfakeAnalyzed === false ? 'Not checked' : result.breakdown.facesDetected ?? 'Not reported by provider'}</p>
                   </div>
                 </div>
 

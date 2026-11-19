@@ -8,7 +8,7 @@ const models: Partial<Record<'image' | 'deepfake', Promise<ImageClassificationPi
 let busy = false;
 self.addEventListener('message', async (event: MessageEvent<{ id: string; kind: MediaKind; isVideo: boolean; frames: MediaPixels[] }>) => {
   const { id, kind, frames, isVideo } = event.data;
-  if (busy) { self.postMessage({ id, type: 'error', message: 'A backup analysis is already running.' }); return; }
+  if (busy) { self.postMessage({ id, type: 'error', message: 'An analysis is already running.' }); return; }
   busy = true;
   const progress = (message: string) => self.postMessage({ id, type: 'progress', message });
   try {
@@ -25,17 +25,17 @@ self.addEventListener('message', async (event: MessageEvent<{ id: string; kind: 
         if (modelKind === 'deepfake' && !frame.faces!.length) continue;
         const config = MEDIA_MODELS[modelKind];
         if (!models[modelKind]) {
-          progress(`Preparing free ${modelKind} backup. The first use downloads its model...`);
+          progress(`Loading the ${modelKind} model. The first scan may need a download.`);
           models[modelKind] = pipeline<'image-classification'>('image-classification', config.id, {
             revision: config.revision, dtype: 'q8', device: 'wasm',
             progress_callback: (status: { status: string; file?: string; progress?: number }) => {
-              if (status.status === 'progress' && status.file?.endsWith('.onnx')) progress(`Preparing ${modelKind} backup: ${Math.round(status.progress ?? 0)}%...`);
+              if (status.status === 'progress' && status.file?.endsWith('.onnx')) progress(`Downloading the ${modelKind} model (${Math.round(status.progress ?? 0)}%)…`);
             },
           }) as Promise<ImageClassificationPipeline>;
           models[modelKind]!.catch(() => { delete models[modelKind]; });
         }
         const classifier = await models[modelKind]!;
-        progress(`Checking ${isVideo ? 'sampled frame' : 'image'} ${index + 1} of ${frames.length} with the ${modelKind} backup...`);
+        progress(isVideo ? `Analyzing frame ${index + 1} of ${frames.length}…` : 'Analyzing image…');
         const inputs = modelKind === 'image' ? [image] : frame.faces!.map(face => {
           if (face.width < 1 || face.height < 1 || face.width > 1024 || face.height > 1024 || face.data.length !== face.width * face.height * 4) throw new Error('Invalid face crop.');
           return new RawImage(face.data, face.width, face.height, 4).rgb();
@@ -49,6 +49,6 @@ self.addEventListener('message', async (event: MessageEvent<{ id: string; kind: 
     }
     self.postMessage({ id, type: 'result', result: localMediaResult(kind, predictions, isVideo) });
   } catch {
-    self.postMessage({ id, type: 'error', message: 'The free backup could not analyze this media. Check the model download connection and available memory, or use a current desktop browser. No verdict was generated.' });
+    self.postMessage({ id, type: 'error', message: 'The model could not analyze this file. Check your internet connection and available memory, then try again.' });
   } finally { busy = false; }
 });

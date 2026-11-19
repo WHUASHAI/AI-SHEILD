@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BookCopy, ScanSearch, Upload, Globe, FileText, AlertTriangle,
+  BookCopy, ScanSearch, Upload, FileText, AlertTriangle,
   CheckCircle2, XCircle, Info, ChevronDown, ChevronUp,
   ExternalLink, Download, BarChart3, Zap, RefreshCw,
   ClipboardPaste, Layers, Hash, Shield,
@@ -12,6 +12,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 import { useScanSubmission } from '@/lib/use-scan-submission';
+import { searchCooldown, submitWithDetectorBackup } from '@/lib/detector-fallback';
+import { plagiarismTextLimit } from '@/lib/local-plagiarism';
+import { runPlagiarismBackup, type PlagiarismBackup } from '@/lib/plagiarism-backup';
+import { LocalPlagiarismReport } from '@/components/detection/local-plagiarism-report';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -221,13 +225,17 @@ export default function PlagiarismDetectorPage() {
   const [scanMode, setScanMode]   = useState<ScanMode>('standard');
   const [text, setText]           = useState('');
   const [loading, setLoading]     = useState(false);
+  const [usingBackup, setUsingBackup] = useState(false);
   const [result, setResult]       = useState<ScanResult | null>(null);
+  const [localScan, setLocalScan] = useState<{ text: string; backup: PlagiarismBackup } | null>(null);
   const [error, setError]         = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'sources' | 'sentences' | 'breakdown'>('sources');
   const [fileName, setFileName]   = useState<string | null>(null);
   const fileRef                   = useRef<HTMLInputElement>(null);
   const resultRef                 = useRef<HTMLDivElement>(null);
   const { submitScan, historyNotice } = useScanSubmission();
+  const active = useRef<AbortController | null>(null);
+  useEffect(() => () => active.current?.abort(), []);
 
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
   const charCount = text.length;
@@ -242,34 +250,47 @@ export default function PlagiarismDetectorPage() {
   }, []);
 
   const handleScan = async () => {
+    if (active.current) return;
     const content = text;
     if (!content.trim() || content.trim().length < 20) {
       setError('Please enter at least 20 characters to scan.');
       return;
     }
+    if (content.length > plagiarismTextLimit) {
+      setError('Use up to 50,000 characters per scan.');
+      return;
+    }
     setError(null);
     setResult(null);
+    setLocalScan(null);
     setLoading(true);
+    setUsingBackup(false);
+    const controller = new AbortController();
+    active.current = controller;
 
     try {
-      const res = await submitScan('/api/scan/plagiarism', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: text,
-          sourceUrl: '',
-          mode: scanMode,
+      const res = await submitWithDetectorBackup(
+        () => submitScan('/api/scan/plagiarism', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: content, mode: scanMode }),
+          signal: controller.signal,
         }),
-      });
+        () => runPlagiarismBackup(content, scanMode, controller.signal),
+        searchCooldown,
+        () => setUsingBackup(true),
+      );
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error ?? 'Scan failed');
       }
-      const data: ScanResult = await res.json();
-      setResult(data);
+      const data = await res.json();
+      if (data.mode === 'local-backup') setLocalScan({ text: content, backup: data });
+      else setResult(data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
+      active.current = null;
       setLoading(false);
     }
   };
@@ -277,6 +298,7 @@ export default function PlagiarismDetectorPage() {
   const handleClear = () => {
     setText('');
     setResult(null);
+    setLocalScan(null);
     setError(null);
     setFileName(null);
   };
@@ -316,7 +338,7 @@ export default function PlagiarismDetectorPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      {historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
+      {result && historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
 
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -329,7 +351,7 @@ export default function PlagiarismDetectorPage() {
               Plagiarism Detector
             </h1>
             <p className="text-sm text-air-sup-blue mt-0.5">
-              Scan text, URLs, or documents for plagiarism.
+              Search for matching passages online. If web search is unavailable, the backup looks up sampled phrases on English Wikipedia and compares sources on your device.
             </p>
           </div>
         </div>
@@ -465,6 +487,7 @@ export default function PlagiarismDetectorPage() {
             {(text || result) && (
               <Button
                 onClick={handleClear}
+                disabled={loading}
                 variant="outline"
                 className="h-12 px-5 border-cyan-azure/25 text-air-sup-blue hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-colors"
               >
@@ -504,35 +527,19 @@ export default function PlagiarismDetectorPage() {
                     <Shield className="w-8 h-8 text-cyan-azure" />
                   </div>
                 </div>
-                <div className="text-center">
-                  <p className="font-semibold text-foreground">Scanning Sources…</p>
+                <div className="text-center" role="status">
+                  <p className="font-semibold text-foreground">{usingBackup ? 'Checking reference passages…' : 'Scanning sources…'}</p>
                   <p className="text-sm text-air-sup-blue mt-1">
-                    Searching for web matches for up to {scanMode === 'deep' ? '5' : '3'} sampled sentences
+                    {usingBackup ? 'Web search is unavailable. Checking Wikipedia excerpts and bundled texts.'
+                      : `Searching for web matches for up to ${scanMode === 'deep' ? 5 : 3} sampled sentences.`}
                   </p>
                 </div>
-                {[
-                  'Indexing content…',
-                  'Cross-referencing databases…',
-                  'Analyzing sentence structure…',
-                  'Generating report…',
-                ].map((step, i) => (
-                  <motion.div
-                    key={step}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 1, 0.4] }}
-                    transition={{ delay: i * 0.4, duration: 1.2, repeat: Infinity }}
-                    className="flex items-center gap-2 text-xs text-air-sup-blue"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-azure animate-pulse" />
-                    {step}
-                  </motion.div>
-                ))}
               </motion.div>
             )}
           </AnimatePresence>
 
           {/* Idle state guide */}
-          {!loading && !result && (
+          {!loading && !result && !localScan && (
             <div className="glass-card rounded-2xl p-6 space-y-5">
               <h3 className="font-semibold text-foreground flex items-center gap-2">
                 <Info className="w-4 h-4 text-cyan-azure" /> How It Works
@@ -559,6 +566,8 @@ export default function PlagiarismDetectorPage() {
               </div>
             </div>
           )}
+
+          {localScan && <LocalPlagiarismReport text={localScan.text} backup={localScan.backup} />}
 
           {/* Similarity meter (results) */}
           {result && !loading && (

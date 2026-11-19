@@ -31,7 +31,7 @@ export async function extractMediaFrames(file: Blob, count = 3, signal?: AbortSi
     const metadata = waitForMedia(video, 'loadedmetadata', signal);
     video.src = objectUrl; video.load(); await metadata;
     if (!Number.isFinite(video.duration) || video.duration <= 0 || !video.videoWidth || !video.videoHeight) {
-      throw new Error('The backup needs a finite, decodable video file. Upload an MP4 or WebM file instead of a live stream.');
+      throw new Error('Upload an MP4 or WebM video with a known duration so frames can be sampled.');
     }
     const canvas = document.createElement('canvas');
     const scale = Math.min(1, 1024 / Math.max(video.videoWidth, video.videoHeight));
@@ -68,7 +68,7 @@ async function remoteVideo(url: string, signal: AbortSignal): Promise<Blob> {
     return new Blob(chunks, { type: response.headers.get('content-type') ?? 'video/mp4' });
   } catch {
     checkAbort(signal);
-    throw new Error('The online provider is unavailable and the backup cannot read this video URL. Download the video and upload it here (up to 200 MB).');
+    throw new Error('This video link could not be read. Download the video and upload the file here (up to 200 MB).');
   }
 }
 
@@ -76,7 +76,7 @@ async function imagePixels(file: File, timestamp: number, signal: AbortSignal): 
   checkAbort(signal);
   let bitmap: ImageBitmap;
   try { bitmap = await createImageBitmap(file); }
-  catch { throw new Error('This image cannot be decoded for backup analysis. Use a JPEG, PNG, or WebP image.'); }
+  catch { throw new Error('This image could not be decoded. Try a JPEG, PNG, or WebP file.'); }
   try {
     if (!bitmap.width || !bitmap.height || bitmap.width * bitmap.height > 40000000) throw new Error('The image is too large to analyze safely. Resize it to under 40 megapixels.');
     const scale = Math.min(1, 1024 / Math.max(bitmap.width, bitmap.height));
@@ -106,10 +106,11 @@ export async function runMediaBackup(kind: MediaKind, init: RequestInit, progres
     }
   } else if (kind === 'video' && typeof init.body === 'string') {
     const body = JSON.parse(init.body);
-    progress('Reading video for the free backup...');
+    progress('Reading video…');
     files = await extractMediaFrames(await remoteVideo(String(body.url ?? ''), signal), 3, signal);
   }
-  if (!files.length || files.length > MAX_MEDIA_FRAMES || (!isVideo && files[0].file.size > 20 * 1024 * 1024)) throw new Error('No usable media was supplied to the backup.');
+  if (!files.length || files.length > MAX_MEDIA_FRAMES) throw new Error('No usable image or video frames were found.');
+  if (!isVideo && files[0].file.size > 20 * 1024 * 1024) throw new Error('Use an image of 20 MB or less for this analysis.');
   const frames: MediaPixels[] = [];
   for (const item of files) frames.push(await imagePixels(item.file, item.timestamp, signal));
   if (kind !== 'image') {
@@ -120,23 +121,23 @@ export async function runMediaBackup(kind: MediaKind, init: RequestInit, progres
   return new Promise((resolve, reject) => {
     let worker: Worker;
     try { worker = new Worker(new URL('../workers/local-media.worker.ts', import.meta.url), { type: 'module' }); }
-    catch { reject(new Error('The free backup needs a browser that supports Web Workers.')); return; }
+    catch { reject(new Error('Use a browser that supports Web Workers to run this analysis.')); return; }
     const finish = (error?: Error, result?: ReturnType<typeof localMediaResult>) => {
       clearTimeout(timer); signal.removeEventListener('abort', abort); worker.terminate();
-      if (error) reject(error); else if (result) resolve(result); else reject(new Error('The backup returned no result.'));
+      if (error) reject(error); else if (result) resolve(result); else reject(new Error('Analysis returned no result.'));
     };
     const abort = () => finish(new Error('Analysis cancelled.'));
-    const timer = setTimeout(() => finish(new Error('The backup timed out. Check your connection and try again.')), 300000);
+    const timer = setTimeout(() => finish(new Error('Analysis timed out. Check your connection and try again.')), 300000);
     signal.addEventListener('abort', abort, { once: true });
     const id = crypto.randomUUID();
     worker.onmessage = event => {
       if (event.data.id !== id) return;
       if (event.data.type === 'progress') progress(event.data.message);
       else if (event.data.type === 'result') finish(undefined, event.data.result);
-      else finish(new Error(event.data.message ?? 'The backup could not run. No verdict was generated.'));
+      else finish(new Error(event.data.message ?? 'Analysis could not finish. Please try again.'));
     };
-    worker.onerror = () => finish(new Error('The backup worker could not run. Try a current desktop browser.'));
+    worker.onerror = () => finish(new Error('Analysis could not run in this browser. Try an up-to-date desktop browser.'));
     try { worker.postMessage({ id, kind, isVideo, frames }, frames.flatMap(frame => [frame.data.buffer, ...(frame.faces ?? []).map(face => face.data.buffer)])); }
-    catch { finish(new Error('The backup could not read the image pixels.')); }
+    catch { finish(new Error('The image pixels could not be read.')); }
   });
 }

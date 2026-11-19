@@ -24,12 +24,12 @@ function load(filename, modules, extra = {}) {
   return exports;
 }
 
-function scanRoute(kind, { fail = false, human = false, quota=false, partial=false, invalidImage=false } = {}) {
+function scanRoute(kind, { fail = false, human = false, quota=false, partial=false, invalidImage=false, aiScore, deepfakeScore } = {}) {
   const records = [];
   let providerCalls=0,externalCalls=0;
   const image = { status: 'success', request: { id: 'provider-id', timestamp: 1, operations: 1 },
-    type: { ai_generated: human ? 0.01 : 0.95, photo: human ? 0.99 : 0.01, illustration: 0, other: 0 },
-    faces: [{ id: 1, deepfake: human ? 0.01 : 0.95 }] };
+    type: { ai_generated: aiScore ?? (human ? 0.01 : 0.95), photo: human ? 0.99 : 0.01, illustration: 0, other: 0,
+      deepfake: deepfakeScore ?? (human ? 0.01 : 0.95) } };
   const provider = async () => {providerCalls++;if(quota||(partial&&providerCalls===2))throw new providerErrors.ProviderError('Sightengine usage limit reached.',429,'PROVIDER_LIMIT_REACHED');return invalidImage?{status:'success',type:{}}:fail?{status:'failure',error:{message:'Unavailable'}}:image;};
   const route = load(`src/app/api/scan/${kind}/route.ts`, {
     'next/server': { NextResponse: { json: (data, init) => Response.json(data, init) } },
@@ -61,9 +61,9 @@ function scanRoute(kind, { fail = false, human = false, quota=false, partial=fal
       return Response.json({ organic_results: [] });
     },
   });
-  return { records,get providerCalls(){return providerCalls;},get externalCalls(){return externalCalls;}, post: () => route.POST(new Request('https://shield.test/api/scan/' + kind, {
-    method: 'POST', headers: { 'content-type': 'application/json', 'Idempotency-Key':'3f3ba00f-2b0d-438c-90d6-4541bff0fb24' },
-    body: JSON.stringify({ url: 'https://media.test/image.jpg', text: 'This is a substantial original sentence with enough words and characters for the plagiarism sampling procedure. '.repeat(5) }),
+  return { records,get providerCalls(){return providerCalls;},get externalCalls(){return externalCalls;}, post: (input) => route.POST(new Request('https://shield.test/api/scan/' + kind, {
+    method: 'POST', headers: { ...(input instanceof FormData ? {} : { 'content-type': 'application/json' }), 'Idempotency-Key':'3f3ba00f-2b0d-438c-90d6-4541bff0fb24' },
+    body: input ?? JSON.stringify({ url: 'https://media.test/image.jpg', text: 'This is a substantial original sentence with enough words and characters for the plagiarism sampling procedure. '.repeat(5) }),
   })) };
 }
 
@@ -139,3 +139,31 @@ test('optional image deepfake failure is disclosed rather than claimed authentic
 });
 
 test('invalid primary image result cannot spend another model call',async()=>{const route=scanRoute('image',{invalidImage:true});assert.equal((await route.post()).status,502);assert.equal(route.providerCalls,1);assert.equal(route.records.length,0);});
+
+for (const kind of ['image', 'video']) test(`${kind} uses type.deepfake even when generation score is low and faces are absent`, async () => {
+  const route = scanRoute(kind, { aiScore: .01, deepfakeScore: .95 });
+  const response = await route.post(); assert.equal(response.status, 200);
+  const body = await response.json(); assert.equal(body.result, 'deepfake');
+  if (kind === 'image') {
+    assert.equal(body.deepfakeAnalyzed, true); assert.equal(body.breakdown.deepfakeScore, 95);
+    assert.equal(body.breakdown.facesDetected, null);
+  } else {
+    assert.equal(body.breakdown.avgDeepfakeScore, 95); assert.equal(body.breakdown.deepfakeSuspiciousFrames, 1);
+    assert.equal(body.timeline[0].deepfakeScore, 95);
+  }
+  assert.equal(route.records[0].result, 'deepfake');
+});
+
+test('uploaded video uses canonical deepfake scores and preserves the submitted timestamps', async () => {
+  const route = scanRoute('video', { aiScore: .01, deepfakeScore: .9 });
+  const form = new FormData(); form.set('isFrames', 'true');
+  for (let i = 0; i < 3; i++) {
+    form.append(`frame_${i}`, new File(['frame'], `frame_${i}.jpg`, { type: 'image/jpeg' }));
+    form.set(`timestamp_${i}`, String(2.5 * (i + 1)));
+  }
+  const response = await route.post(form); assert.equal(response.status, 200);
+  const body = await response.json(); assert.equal(body.result, 'deepfake');
+  assert.equal(body.breakdown.avgDeepfakeScore, 90); assert.equal(body.breakdown.deepfakeSuspiciousFrames, 3);
+  assert.deepEqual(body.timeline.map(frame => frame.timestamp), [2.5, 5, 7.5]);
+  assert.equal(route.providerCalls, 3); assert.equal(route.records.length, 1);
+});

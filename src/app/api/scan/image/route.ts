@@ -8,6 +8,7 @@ import {
   checkImageUrl,
   interpretAiScore,
   interpretDeepfakeScore,
+  readDeepfakeScore,
 } from '@/lib/sightengine';
 
 // Node.js runtime — no Edge body-size limits, supports large multipart uploads
@@ -35,7 +36,7 @@ async function analyze(req: NextRequest) {
     }
 
     let aiResponse;
-    let deepfakeResponse;
+    let deepfakeRaw: number | null = null;
     let providerWarning: string | undefined;
 
     // ── Handle multipart file upload ──────────────────────────────────────────
@@ -62,13 +63,11 @@ async function analyze(req: NextRequest) {
       aiResponse = await checkImageFile(file, 'genai');
       requireAiResult(aiResponse);
 
-      // Step 2: Try deepfake separately — only succeeds when faces are detected
-      // Gracefully swallow errors (e.g. no faces found)
+      // Optional deepfake model returns type.deepfake, not individual faces.
       try {
-        deepfakeResponse = await checkImageFile(file, 'deepfake');
+        deepfakeRaw = readDeepfakeScore(await checkImageFile(file, 'deepfake'));
       } catch {
         providerWarning = 'The deepfake check was unavailable. This verdict covers AI image generation only.';
-        deepfakeResponse = null;
       }
 
     // ── Handle JSON with image URL ────────────────────────────────────────────
@@ -79,8 +78,8 @@ async function analyze(req: NextRequest) {
       if(!body.url)return NextResponse.json({error:'Provide an image URL.'},{status:400});
       aiResponse=await checkImageUrl(body.url,'genai');
       requireAiResult(aiResponse);
-      try {deepfakeResponse=await checkImageUrl(body.url,'deepfake');}
-      catch {deepfakeResponse=null;providerWarning='The deepfake check was unavailable. This verdict covers AI image generation only.';}
+      try {deepfakeRaw=readDeepfakeScore(await checkImageUrl(body.url,'deepfake'));}
+      catch {providerWarning='The deepfake check was unavailable. This verdict covers AI image generation only.';}
     }
 
     // ── Check for Sightengine-level failure on the primary (ai-generated) call ─
@@ -97,13 +96,11 @@ async function analyze(req: NextRequest) {
     const finalAiLabel  = isEnhanced ? 'Likely Enhanced / Edited' : ai.label;
 
     // ── Deepfake scores (from separate call, may be null) ──────────────────────
-    const faces = (deepfakeResponse?.status === 'success' ? deepfakeResponse.faces : null) ?? [];
-    const highestDeepfakeRaw = faces.reduce((max, f) => Math.max(max, f.deepfake), 0);
+    const highestDeepfakeRaw = deepfakeRaw ?? 0;
     const deepfake = interpretDeepfakeScore(highestDeepfakeRaw);
 
     // ── Dominant verdict ───────────────────────────────────────────────────────
-    const hasFaces  = faces.length > 0;
-    const isDeepfake = hasFaces && deepfake.result === 'deepfake';
+    const isDeepfake = deepfakeRaw !== null && deepfake.result === 'deepfake';
     const finalResult = isDeepfake ? 'deepfake' : finalAiResult;
     
     let finalScore = 0;
@@ -148,17 +145,17 @@ async function analyze(req: NextRequest) {
       });
     }
 
-    if (hasFaces) {
+    if (deepfakeRaw !== null) {
       signals.push({
         name: 'Deepfake Face Score',
         score: highestDeepfakeRaw,
-        description: `${faces.length} face(s) scanned — highest deepfake manipulation probability`,
+        description: 'Image-level visual deepfake model score; individual face counts are not supplied',
       });
     }
     return NextResponse.json({
       isReal: true,
       providerWarning,
-      deepfakeAnalyzed: deepfakeResponse?.status === 'success',
+      deepfakeAnalyzed: deepfakeRaw !== null,
       scanId: `img_${Date.now()}`,
       status: 'completed',
       provider: 'Sightengine',
@@ -171,18 +168,13 @@ async function analyze(req: NextRequest) {
         aiGenerated:   Math.round(aiRaw * 100),
         photo:         Math.round(photoRaw * 100),
         illustration:  Math.round(illustrationRaw * 100),
-        facesDetected: faces.length,
-        deepfakeScore: Math.round(highestDeepfakeRaw * 100),
+        facesDetected: null,
+        deepfakeScore: deepfakeRaw === null ? null : Math.round(deepfakeRaw * 100),
         isEnhanced,
       },
 
       signals,
-      faces: faces.map((f) => ({
-        id: f.id,
-        deepfakeScore: Math.round(f.deepfake * 100),
-        verdict: f.deepfake >= 0.5 ? 'Deepfake' : 'Authentic',
-        position: f.position,
-      })),
+      faces: [],
 
       limitations: [
         'Heavy JPEG compression can mask AI generation artifacts',

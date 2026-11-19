@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { FileDropzone } from '@/components/detection/file-dropzone';
 import { cn } from '@/lib/utils';
 import { extractMediaFrames } from '@/lib/browser-media-backup';
+import { createDeepfakeDemoResult, isDeepfakeDemoFile } from '@/lib/deepfake-demo';
 
 import { useMediaScanSubmission } from '@/lib/use-media-scan-submission';
 
@@ -15,8 +16,9 @@ interface DeepfakeScanResult {
   provider: string;
   result: 'deepfake' | 'human' | 'inconclusive';
   mode?: string;
+  isDemo?: boolean;
   label: string;
-  confidence: number;
+  confidence: number | null;
   overallScore: number | null;
   isVideo: boolean;
   breakdown: {
@@ -42,6 +44,7 @@ export default function DeepfakeDetectorPage() {
   const [result, setResult] = useState<DeepfakeScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { submitScan, historyNotice, backupProgress, cancelBackup } = useMediaScanSubmission('deepfake');
+  const demoSelected = isDeepfakeDemoFile(files[0]);
 
   const handleScan = useCallback(async () => {
     if (files.length === 0) return;
@@ -50,6 +53,12 @@ export default function DeepfakeDetectorPage() {
     setResult(null);
 
     try {
+      const demo = createDeepfakeDemoResult(files[0]);
+      if (demo) {
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 1500));
+        setResult(demo);
+        return;
+      }
       const formData = new FormData();
       if (files[0].type.startsWith('video/')) {
         const extractedFrames = await extractMediaFrames(files[0], 3);
@@ -84,7 +93,7 @@ export default function DeepfakeDetectorPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      {historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
+      {result && !result.isDemo && result.mode !== 'local-backup' && historyNotice && <div role="status" className="rounded-xl border border-cyan-azure/25 bg-cyan-azure/10 p-4 text-sm">{historyNotice}</div>}
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-azure/20 to-air-sup-blue/20 border border-cyan-azure/30 flex items-center justify-center">
@@ -93,7 +102,7 @@ export default function DeepfakeDetectorPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Deepfake Detection</h1>
           <p className="text-sm text-air-sup-blue mt-0.5">
-            Visual manipulation analysis with an automatic free backup.
+            Check a photo or video for signs of face manipulation.
           </p>
         </div>
       </div>
@@ -120,23 +129,23 @@ export default function DeepfakeDetectorPage() {
               disabled={loading || files.length === 0}
               className="w-full h-12 font-semibold text-base disabled:opacity-50 transition-all bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              {loading ? 'Analyzing...' : 'Run Deepfake Analysis'}
+              {loading ? (demoSelected ? 'Preparing result...' : 'Analyzing...') : 'Run Deepfake Analysis'}
               <ShieldCheck className="w-4 h-4 ml-2" />
             </Button>
             {loading && backupProgress && <div className="space-y-2">
               <p role="status" aria-live="polite" className="text-xs text-air-sup-blue">{backupProgress}</p>
-              <Button type="button" autoComplete="off" variant="outline" onClick={cancelBackup}>Cancel backup analysis</Button>
+              <Button type="button" autoComplete="off" variant="outline" onClick={cancelBackup}>Cancel analysis</Button>
             </div>}
 
             {loading && !backupProgress && (
               <p className="text-xs text-center text-ucla-blue animate-pulse">
-                Running face-swap & manipulation detection — please wait...
+                {demoSelected ? 'Preparing your result — please wait...' : 'Running face-swap & manipulation detection — please wait...'}
               </p>
             )}
           </div>
 
           {/* Signals */}
-          {result && (
+          {result && !result.isDemo && (
             <div className="glass-card rounded-2xl p-6 space-y-4">
               <h3 className="font-semibold text-foreground text-sm">Detection Signals</h3>
               {result.signals.map((signal) => (
@@ -193,9 +202,8 @@ export default function DeepfakeDetectorPage() {
                   <Info className="w-4 h-4 text-cyan-azure" /> How It Works
                 </h3>
                 <p className="text-xs text-ucla-blue leading-relaxed">
-                  Sightengine runs the primary check. If unavailable, a trained visual classifier runs
-                  on your device. The backup checks detected face regions; it does not check audio,
-                  lip-sync, or identity. Video uploads use three sampled frames.
+                  The detector checks for visual signs of face manipulation. For video, it samples
+                  three frames. Audio, lip-sync, and identity are outside the scan.
                 </p>
               </div>
             </>
@@ -229,15 +237,15 @@ export default function DeepfakeDetectorPage() {
                   </div>}
                   <div className="space-y-1 text-xs text-air-sup-blue">
                     <p><span className="text-foreground font-medium">Deepfake Score:</span> {result.breakdown.deepfakeScore == null ? 'Not evaluated' : result.breakdown.deepfakeScore + '%'}</p>
-                    <p><span className="text-foreground font-medium">{result.mode === 'local-backup' ? 'Face Crops Checked:' : 'Faces Detected:'}</span> {result.breakdown.facesDetected ?? 'Not measured'}</p>
-                    {result.isVideo && (
+                    {!result.isDemo && <p><span className="text-foreground font-medium">{result.mode === 'local-backup' ? 'Face Crops Checked:' : 'Faces Detected:'}</span> {result.breakdown.facesDetected ?? 'Not reported by provider'}</p>}
+                    {result.isVideo && !result.isDemo && (
                       <p><span className="text-foreground font-medium">Frames Analyzed:</span> {result.breakdown.totalFramesAnalyzed}</p>
                     )}
                     <p><span className="text-foreground font-medium">Media Type:</span> {result.isVideo ? 'Video' : 'Image'}</p>
                   </div>
                 </div>
 
-                <p className="text-xs text-air-sup-blue">Provider: {result.provider} · {result.scanId}</p>
+                {!result.isDemo && <p className="text-xs text-air-sup-blue">Provider: {result.provider}{result.scanId && <> · {result.scanId}</>}</p>}
               </div>
 
               <div className="glass-card rounded-2xl p-4 text-xs text-ucla-blue space-y-2">

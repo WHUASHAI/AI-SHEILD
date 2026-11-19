@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { load } from './history-loader.mjs';
 const core = load('src/lib/local-media-detector.ts', {});
-const fallback = load('src/lib/media-fallback.ts', {}, { TypeError });
+const fallback = load('src/lib/detector-fallback.ts', {}, { TypeError });
 
 test('media fallback validates both model classes and never turns missing scores into a verdict', () => {
   assert.equal(core.readMediaScore([{label:'REAL',score:.1},{label:'FAKE',score:.9}], 'image'), .9);
@@ -37,35 +37,35 @@ test('local media output reflects real frame scores and does not invent faces, p
 
 test('provider success is preserved and quota triggers one real local inference without another paid request', async () => {
   let now = 0, paid = 0, local = 0, switched = 0;
-  const policy = fallback.createMediaFallbackPolicy(() => now);
+  const policy = fallback.createProviderCooldown(() => now);
   const primary = async () => { paid++; return Response.json({code:'PROVIDER_LIMIT_REACHED'},{status:429,headers:{'Retry-After':'2'}}); };
   const backup = async () => { local++; return core.localMediaResult('image',[{timestamp:0,ai:.9}],false); };
-  const response = await fallback.submitWithMediaBackup(primary,backup,policy,()=>{switched++;});
+  const response = await fallback.submitWithDetectorBackup(primary,backup,policy,()=>{switched++;});
   assert.equal(response.status,200); assert.equal((await response.json()).mode,'local-backup');
-  await fallback.submitWithMediaBackup(primary,backup,policy);
+  await fallback.submitWithDetectorBackup(primary,backup,policy);
   assert.equal(paid,1); assert.equal(local,2); assert.equal(switched,1);
   now=2001;
   const success=Response.json({provider:'Sightengine',historySaved:true});
-  assert.equal(await fallback.submitWithMediaBackup(async()=>success,backup,policy),success);
+  assert.equal(await fallback.submitWithDetectorBackup(async()=>success,backup,policy),success);
   assert.equal(local,2);
 });
 
 test('authentication, invalid input, operation conflicts, and unrelated limits do not invoke local fallback', async () => {
   for(const status of [400,401,403,404,409,413,415,422,429]) {
     const response=Response.json({code:status===429?'ACCOUNT_RATE_LIMIT':'INVALID_REQUEST'},{status});
-    assert.equal(await fallback.submitWithMediaBackup(async()=>response,()=>{throw Error('Backup should not run');},fallback.createMediaFallbackPolicy()),response);
+    assert.equal(await fallback.submitWithDetectorBackup(async()=>response,()=>{throw Error('Backup should not run');},fallback.createProviderCooldown()),response);
   }
 });
 
 test('service outages can use backup but model failure and cancellation produce no invented success', async () => {
   for(const status of [402,502,503,504]) {
     let calls=0;
-    const response=await fallback.submitWithMediaBackup(async()=>Response.json({error:'Unavailable'},{status}),async()=>{calls++;return {mode:'local-backup'};},fallback.createMediaFallbackPolicy());
+    const response=await fallback.submitWithDetectorBackup(async()=>Response.json({error:'Unavailable'},{status}),async()=>{calls++;return {mode:'local-backup'};},fallback.createProviderCooldown());
     assert.equal(response.status,200); assert.equal(calls,1);
   }
-  await assert.rejects(()=>fallback.submitWithMediaBackup(async()=>Response.json({},{status:429}),async()=>{throw Error('Model failed');},fallback.createMediaFallbackPolicy()),/Model failed/);
-  await assert.rejects(()=>fallback.submitWithMediaBackup(async()=>{throw Error('Analysis cancelled');},async()=>({}),fallback.createMediaFallbackPolicy()),/cancelled/);
-  const cached=await fallback.submitWithMediaBackup(async()=>{throw new TypeError('Failed to fetch');},async()=>({mode:'local-backup'}),fallback.createMediaFallbackPolicy());
+  await assert.rejects(()=>fallback.submitWithDetectorBackup(async()=>Response.json({},{status:429}),async()=>{throw Error('Model failed');},fallback.createProviderCooldown()),/Model failed/);
+  await assert.rejects(()=>fallback.submitWithDetectorBackup(async()=>{throw Error('Analysis cancelled');},async()=>({}),fallback.createProviderCooldown()),/cancelled/);
+  const cached=await fallback.submitWithDetectorBackup(async()=>{throw new TypeError('Failed to fetch');},async()=>({mode:'local-backup'}),fallback.createProviderCooldown());
   assert.equal((await cached.json()).mode,'local-backup');
 });
 
